@@ -1,0 +1,1 @@
+export const API_PATH = process.env.NODE_ENV=="development"?process.env.LOCAL_PATH:process.env.DEPLOY_PATH
