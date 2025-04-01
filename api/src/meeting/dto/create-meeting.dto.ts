@@ -52,6 +52,13 @@ export class CreateMeetingDto {
   date: Date;
 
   @ApiProperty({
+    example: 'https://example.com/image.jpg',
+    description: '미팅 이미지 URL',
+  })
+  @IsString()
+  imgUrl: string;
+
+  @ApiProperty({
     example: '14:00',
     description: '미팅 시작 시간',
   })

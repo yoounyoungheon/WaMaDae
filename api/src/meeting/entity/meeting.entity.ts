@@ -29,6 +29,9 @@ export class MeetingEntity extends BaseEntity {
   date: Date;
 
   @Column()
+  imgUrl: string;
+
+  @Column()
   startTime: string;
 
   @Column()
@@ -41,6 +44,7 @@ export class MeetingEntity extends BaseEntity {
     place: string,
     fee: number,
     date: Date,
+    imgUrl: string,
     startTime: string,
     endTime: string,
   ): void {
@@ -50,6 +54,7 @@ export class MeetingEntity extends BaseEntity {
     this.place = place;
     this.fee = fee;
     this.date = date;
+    this.imgUrl = imgUrl;
     this.startTime = startTime;
     this.endTime = endTime;
   }
@@ -62,6 +67,7 @@ export class MeetingEntity extends BaseEntity {
     place: string,
     fee: number,
     date: Date,
+    imgUrl: string,
     startTime: string,
     endTime: string,
   ): MeetingEntity {
@@ -73,6 +79,7 @@ export class MeetingEntity extends BaseEntity {
     meeting.place = place;
     meeting.fee = fee;
     meeting.date = date;
+    meeting.imgUrl = imgUrl;
     meeting.startTime = startTime;
     meeting.endTime = endTime;
     return meeting;

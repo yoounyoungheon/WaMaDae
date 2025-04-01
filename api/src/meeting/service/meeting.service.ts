@@ -34,6 +34,7 @@ export class MeetingService {
       place,
       fee,
       date,
+      imgUrl,
       startTime,
       endTime,
     } = dto;
@@ -46,6 +47,7 @@ export class MeetingService {
       place,
       fee,
       date,
+      imgUrl,
       startTime,
       endTime,
     );
@@ -93,6 +95,7 @@ export class MeetingService {
       place,
       fee,
       date,
+      imgUrl,
       startTime,
       endTime,
     } = dto;
@@ -104,6 +107,7 @@ export class MeetingService {
       place,
       fee,
       date,
+      imgUrl,
       startTime,
       endTime,
     );
