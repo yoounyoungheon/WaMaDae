@@ -4,8 +4,8 @@ import { IsNotEmpty, IsString, IsNumber, IsDate } from 'class-validator';
 
 export class CreateMeetingDto {
   @ApiProperty({
-    example: 'ONLINE',
-    description: '미팅 유형 (예: ONLINE, OFFLINE)',
+    example: 'class',
+    description: '미팅 유형 (club, class)',
   })
   @IsNotEmpty()
   sort: MeetingType;

@@ -3,7 +3,7 @@ import { Card } from "@/app/ui/molecule/card";
 import Link from "next/link";
 
 
-export default function Home({
+export default function CustomerHome({
   searchParams,
 }: {
   searchParams: { [key: string]: string | undefined };
