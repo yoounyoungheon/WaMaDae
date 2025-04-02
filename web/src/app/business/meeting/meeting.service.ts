@@ -16,8 +16,6 @@ export const createMeetingReqest = async (prevState: FormState ,formDate: FormDa
   const startTime = formDate.get("startTime") as string;
   const endTime = formDate.get("endTime") as string;
 
-  console.log(formDate);
-
   const dto: CreateMeetingReqestDto = {
     sort, description, meetingName, place, fee: parseInt(fee), date: new Date(date), imgUrl, startTime, endTime
   }

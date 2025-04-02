@@ -23,6 +23,9 @@ export const CreateMeetingForm = () => {
     console.log(createMeetinfFormState);
     if(createMeetinfFormState.isSuccess){
       alert('모임을 생성했습니다.')
+      setTimeout(()=>{
+        window.location.reload();
+      })
     }
   }, [createMeetinfFormState])
 
