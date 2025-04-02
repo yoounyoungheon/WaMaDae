@@ -10,8 +10,8 @@ const globalFont = localFont({
 })
 
 export const metadata: Metadata = {
-  title: "SPLAW",
-  description: "SPLAW WEB",
+  title: "WaMaDae",
+  description: "WaMaDae WEB",
 };
 
 export default function RootLayout({

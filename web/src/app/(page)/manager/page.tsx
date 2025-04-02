@@ -16,7 +16,6 @@ export default async function ManagerHome({
   if(date){
     loadMeetingsResponse = await loadMeetings(date);
   }
-  console.log(loadMeetingsResponse);
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();

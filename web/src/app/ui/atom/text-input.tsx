@@ -2,32 +2,9 @@
 import React from 'react';
 import { cn } from '@/app/utils/style/helper';
 import { getInputColors } from '@/app/utils/style/helper';
-import { cva, type VariantProps } from 'class-variance-authority';
-
-const textInputVariants = cva(
-  'relative flex w-full min-w-[10rem] items-center rounded-lg border outline-none transition duration-100',
-  {
-    variants: {
-      variant: {
-        default: 'border-gray-300 shadow-md has-[:focus]:ring-2 has-[:focus]:border-blue-400 has-[:focus]:ring-blue-200',
-        secondary: 'rounded-none border-x-0 border-t-0 border-b-2 border-gray-400 has-[:focus]:border-blue-400',
-      },
-      sizeVariants: {
-        default: 'py-1 text-lg',
-        sm: 'py-0 text-sm',
-        lg: 'py-1 text-3xl',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-      sizeVariants: 'default',
-    },
-  }
-);
 
 export interface TextInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement>,
-    VariantProps<typeof textInputVariants> {
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   type?: 'text' | 'password' | 'number';
   icon?: React.ElementType;
   error?: boolean;
@@ -38,15 +15,12 @@ export interface TextInputProps
 
 const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(function TextInput(
   {
-    variant,
-    sizeVariants,
     type,
     icon,
     error = false,
     errorMessages,
     disabled = false,
     placeholder,
-    className,
     onValueChange,
     ...props
   },
@@ -58,7 +32,6 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(function Te
     <>
       <div
         className={cn(
-          textInputVariants({ variant, sizeVariants, className }),
           getInputColors(disabled, error),
         )}
       >
@@ -68,7 +41,10 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(function Te
           ref={ref}
           type={type}
           className={cn(
-            'w-full rounded-lg border-none bg-transparent transition duration-100 focus:outline-none focus:ring-0',
+            'w-full rounded-lg border border-gray-300 p-3 resize-none ring-gray-200 focus:border-none focus:outline-none focus:ring-2 focus:ring-blue-200',
+            
+            'ring-gray-200',
+            'shadow-none',
             'py-1' ,
             'text-black-1',
             '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',

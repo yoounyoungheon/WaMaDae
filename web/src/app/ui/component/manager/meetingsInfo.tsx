@@ -1,5 +1,7 @@
 import { Meeting } from "@/app/business/meeting/meeting.domain"
 import { Card, CardContent } from "../../molecule/card"
+import Button from "../../atom/button";
+import { CreateMeetingDialog } from "./create-meeting-dialog";
 interface MeetingInfoProps {
   meetings: Meeting[] | undefined;
 }
@@ -14,8 +16,13 @@ export const MeetingsInfoView = ({meetings}:MeetingInfoProps) => {
   })
   return (
 
-    <Card className="grid grid-cols-1 gap-3 overflow-y-auto">
-      {views}
+    <Card className="">
+      <div className="grid grid-cols-1 gap-3 overflow-y-auto">
+        {views}
+      </div>
+      <div className="text-right p-5">
+        <CreateMeetingDialog/>
+      </div>
     </Card>
   )
 }
@@ -46,6 +53,9 @@ const MeetingInfoView = ({meeting}: {meeting: Meeting}) => {
     )}
     <div className="text-sm text-gray-600">
         <span className="font-medium text-gray-700">시간:</span> {`${startTime} ~ ${endTime}`}
+    </div>
+    <div className="text-right">
+      <Button>수정</Button>
     </div>
     </CardContent>
   )
