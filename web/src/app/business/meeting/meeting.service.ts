@@ -40,8 +40,61 @@ export const createMeetingReqest = async (prevState: FormState ,formDate: FormDa
   }
 }
 
-export const loadMeetings = async (date: string): Promise<APIResponseType<Meeting[]>> => {
+export const loadMeeting = async (id: string): Promise<APIResponseType<Meeting>> => {
   try {
+    const response = await instance.get(`${API_PATH}/meeting/${id}`);
+    checkResponseStatus(response.status);
+
+    const responseDate:MeetingAPIResponseDto = response.data
+    const meeting: Meeting = createMeeting(responseDate);
+    return {
+      isSuccess: true,
+      isFailure: false,
+      data: meeting
+    }
+  } catch (error) {
+    return {
+      isSuccess: false,
+      isFailure: true,
+      data: null,
+      message: error instanceof Error ? error.message : String(error)
+    }
+  }
+}
+export const loadMeetings = async (): Promise<APIResponseType<Meeting[]>> => {
+  try {
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 7);
+    
+    const formattedStartDate = startDate.toISOString().split('T')[0];
+    const formattedEndDate = endDate.toISOString().split('T')[0];
+    const response = await instance.get(`${API_PATH}/meeting/date?startDate=${formattedStartDate}&endDate=${formattedEndDate}`);
+
+    checkResponseStatus(response.status);
+
+    const results: Meeting[] = response.data.map((meeting: MeetingAPIResponseDto)=>{
+      return createMeeting(meeting);
+    })
+
+    return {
+      isSuccess: true,
+      isFailure: false,
+      data: results,
+    }
+  } catch (error) {
+    return {
+      isSuccess: false,
+      isFailure: true,
+      data: null,
+      message: error instanceof Error ? error.message : String(error)
+    }
+  }
+}
+
+export const loadMeetingsForManager = async (date: string): Promise<APIResponseType<Meeting[]>> => {
+  try {
+    
     const response = await instance.get(`${API_PATH}/meeting/date?startDate=${date}&endDate=${date}`);
 
     checkResponseStatus(response.status);

@@ -16,12 +16,14 @@ export const MeetingsInfoView = ({meetings}:MeetingInfoProps) => {
   })
   return (
 
-    <Card className="">
-      <div className="grid grid-cols-1 gap-3 overflow-y-auto">
-        {views}
-      </div>
-      <div className="text-right p-5">
+    <Card>
+      <div className="text-right mt-3 mr-5">
         <CreateMeetingDialog/>
+      </div>
+      <div className="overflow overflow-y-scroll">
+        <div className="grid grid-cols-1 gap-3">
+          {views}
+        </div>
       </div>
     </Card>
   )
@@ -54,8 +56,11 @@ const MeetingInfoView = ({meeting}: {meeting: Meeting}) => {
     <div className="text-sm text-gray-600">
         <span className="font-medium text-gray-700">시간:</span> {`${startTime} ~ ${endTime}`}
     </div>
-    <div className="text-right">
-      <Button>수정</Button>
+    <hr/>
+    <div className="text-center grid grid-cols-3 gap-4">
+      <Button variant={'ghost'}>예약 현황</Button>
+      <Button variant={'ghost'}>수정</Button>
+      <Button variant={'ghost'}>삭제</Button>
     </div>
     </CardContent>
   )

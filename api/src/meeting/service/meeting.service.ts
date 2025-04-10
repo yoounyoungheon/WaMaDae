@@ -75,6 +75,11 @@ export class MeetingService {
   }
 
   @Transactional()
+  async loadMeeting(id: string) {
+    return await this.meetingRepository.findOneBy({ id });
+  }
+
+  @Transactional()
   async deleteMeeting(id: string): Promise<void> {
     const meeting = await this.meetingRepository.findOneBy({ id });
     const books = await this.bookRepository.findBy({ meeting });

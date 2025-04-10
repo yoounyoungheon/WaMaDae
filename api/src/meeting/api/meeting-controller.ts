@@ -51,6 +51,12 @@ export class MeetingController {
     );
   }
 
+  @ApiOperation({ summary: '미팅 조회' })
+  @Get(':id')
+  async loadMeeting(@Param('id') id: string) {
+    return await this.meetingService.loadMeeting(id);
+  }
+
   @ApiOperation({ summary: '미팅 삭제' })
   @UseGuards(AuthGuard())
   @ApiBearerAuth('access-token')
