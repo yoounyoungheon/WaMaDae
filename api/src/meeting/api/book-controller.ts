@@ -17,6 +17,18 @@ import { BookEntity } from '../entity/book.entity';
 export class BookController {
   constructor(private readonly bookService: BookService) {}
 
+  @ApiOperation({ summary: '예약 조회' })
+  @Get(':id')
+  async loadBook(@Param('id') id: string) {
+    return await this.bookService.loadBook(id);
+  }
+
+  @ApiOperation({ summary: '미팅 별 예약 리스트 조회' })
+  @Get('/project/:projectId')
+  async loadBooks(@Param('projectId') projectId: string) {
+    return await this.bookService.loadBooksByMeetingId(projectId);
+  }
+
   @ApiOperation({ summary: '예약 생성' })
   @Post('/:meetingId')
   async createBook(

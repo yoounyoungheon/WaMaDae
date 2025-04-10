@@ -27,6 +27,29 @@ export class BookService {
   }
 
   @Transactional()
+  async loadBook(id: string) {
+    const book = await this.bookRepository.findOneBy({ id });
+    if (!book) {
+      throw new NotFoundException();
+    }
+    return book;
+  }
+
+  @Transactional()
+  async loadBooksByMeetingId(meetingId: string) {
+    const meeting = await this.meetingRepository.findOneBy({ id: meetingId });
+    if (!meeting) {
+      throw new NotFoundException();
+    }
+    const books = await this.bookRepository.find({
+      where: { meeting: { id: meetingId } },
+      relations: ['meeting'],
+    });
+
+    return books;
+  }
+
+  @Transactional()
   async loadBookByPhoneNumber(phoneNumber: string) {
     const meetings = await this.bookRepository.findBy({ phoneNumber });
     return meetings;

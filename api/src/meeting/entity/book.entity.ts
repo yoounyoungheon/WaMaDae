@@ -19,7 +19,7 @@ export class BookEntity extends BaseEntity {
   @Column()
   isPaid: boolean;
 
-  @ManyToOne(() => MeetingEntity, { eager: false })
+  @ManyToOne(() => MeetingEntity, { eager: true })
   meeting: MeetingEntity;
 
   static create(

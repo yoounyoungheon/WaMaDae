@@ -2,6 +2,7 @@ import { Meeting } from "@/app/business/meeting/meeting.domain"
 import { Card, CardContent } from "../../molecule/card"
 import Button from "../../atom/button";
 import { CreateMeetingDialog } from "./create-meeting-dialog";
+import Link from "next/link";
 interface MeetingInfoProps {
   meetings: Meeting[] | undefined;
 }
@@ -58,7 +59,9 @@ const MeetingInfoView = ({meeting}: {meeting: Meeting}) => {
     </div>
     <hr/>
     <div className="text-center grid grid-cols-3 gap-4">
-      <Button variant={'ghost'}>예약 현황</Button>
+      <Link href={`/manager/book?id=${meeting.id}`}>
+        <Button variant={'ghost'}>예약 현황</Button>
+      </Link>
       <Button variant={'ghost'}>수정</Button>
       <Button variant={'ghost'}>삭제</Button>
     </div>
