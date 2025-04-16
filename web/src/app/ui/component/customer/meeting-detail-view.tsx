@@ -4,7 +4,7 @@ interface MeetingDetailViewProps {
   meeting: Meeting
 }
 export function MeetingDetailView({meeting}:MeetingDetailViewProps){
-  const { startTime, endTime, date, place, fee, description} = meeting
+  const { startTime, endTime, date, place, fee, description } = meeting
 
   return (
     <main>

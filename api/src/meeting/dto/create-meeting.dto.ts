@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsString, IsNumber, IsDate } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsDate,
+  IsOptional,
+} from 'class-validator';
 
 export class CreateMeetingDto {
   @ApiProperty({
@@ -38,6 +44,7 @@ export class CreateMeetingDto {
     example: 10000,
     description: '미팅 참가비',
   })
+  @Type(() => Number)
   @IsNumber()
   @IsNotEmpty()
   fee: number;
@@ -52,11 +59,14 @@ export class CreateMeetingDto {
   date: Date;
 
   @ApiProperty({
-    example: 'https://example.com/image.jpg',
-    description: '미팅 이미지 URL',
+    type: 'string',
+    format: 'binary',
+    isArray: true,
+    description: '업로드할 파일',
   })
+  @IsOptional()
   @IsString()
-  imgUrl: string;
+  imgUrl?: string;
 
   @ApiProperty({
     example: '14:00',

@@ -7,15 +7,23 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { MeetingService } from '../service/meeting.service';
 import { CreateMeetingDto } from '../dto/create-meeting.dto';
 import { MeetingEntity } from '../entity/meeting.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { Member } from 'src/utils/decorater/get-member.decorator';
 import { MemberEntity } from 'src/auth/member/member.entity';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Meeting Controller')
 @Controller('/meeting')
@@ -24,13 +32,20 @@ export class MeetingController {
 
   @ApiOperation({ summary: '미팅 생성' })
   @UseGuards(AuthGuard())
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('imgUrl'))
   @ApiBearerAuth('access-token')
   @Post()
   async createMeeting(
     @Body() dto: CreateMeetingDto,
+    @UploadedFile() imgUrl: Express.Multer.File,
     @Member() member: MemberEntity,
   ): Promise<MeetingEntity> {
-    return await this.meetingService.createMeeting(dto, member.memberId);
+    return await this.meetingService.createMeeting(
+      dto,
+      imgUrl,
+      member.memberId,
+    );
   }
 
   @ApiOperation({ summary: '모든 미팅 조회' })

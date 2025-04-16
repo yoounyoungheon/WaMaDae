@@ -9,11 +9,14 @@ import { MeetingService } from './service/meeting.service';
 import { BookService } from './service/book.service';
 import { MeetingController } from './api/meeting-controller';
 import { BookController } from './api/book-controller';
+import { S3Module } from 'src/s3/s3.module';
+import { S3Service } from 'src/s3/s3.service';
 
 @Module({
   controllers: [MeetingController, BookController],
-  providers: [MeetingService, BookService],
+  providers: [MeetingService, BookService, S3Service],
   imports: [
+    S3Module,
     AuthModule,
     HttpModule.registerAsync({
       useFactory: () => ({

@@ -66,3 +66,23 @@ export const createBookRequest = async(
     }
   }
 }
+
+export const updateBookFeeStatus = async (bookId: string):Promise<APIResponseType<string>> => {
+  try {
+    const response = await instance.patch(`${API_PATH}/book/${bookId}`);
+    checkResponseStatus(response.status);
+
+    return {
+      isSuccess: true,
+      isFailure: false,
+      data: null,
+    }
+  } catch (error) {
+    return {
+      isSuccess: false,
+      isFailure: true,
+      data: null,
+      message: error instanceof Error ? error.message : String(error)
+    }
+  }
+}

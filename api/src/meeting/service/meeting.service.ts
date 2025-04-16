@@ -6,6 +6,7 @@ import { Transactional } from 'typeorm-transactional';
 import { CreateMeetingDto } from '../dto/create-meeting.dto';
 import { MemberEntity } from 'src/auth/member/member.entity';
 import { BookEntity } from '../entity/book.entity';
+import { S3Service } from 'src/s3/s3.service';
 
 @Injectable()
 export class MeetingService {
@@ -16,17 +17,28 @@ export class MeetingService {
     private readonly memberRepository: Repository<MemberEntity>,
     @InjectRepository(BookEntity)
     private readonly bookRepository: Repository<BookEntity>,
+    private readonly s3Service: S3Service,
   ) {}
 
   @Transactional()
   async createMeeting(
     dto: CreateMeetingDto,
+    fileUrl: Express.Multer.File,
     memberId: string,
   ): Promise<MeetingEntity> {
     const member = await this.memberRepository.findOneBy({ memberId });
     if (!member) {
       throw new NotFoundException(`Member with ID "${memberId}" not found`);
     }
+    const fileExtension = fileUrl.originalname.split('.').pop();
+    const fileName = `${Date.now()}-${fileUrl.originalname}`;
+    const uploadedFileUrl = await this.s3Service.uploadFile(
+      fileName,
+      fileUrl,
+      fileExtension,
+    );
+
+    dto.imgUrl = uploadedFileUrl;
     const {
       sort,
       meetingName,
