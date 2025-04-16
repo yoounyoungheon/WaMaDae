@@ -32,7 +32,7 @@ export function BookFormView ({meeting}:BookFormViewProps){
         phoneNumberInputRef.current?.value
       ).then((res)=>{
         console.log(res)
-        if(res.isSuccess){router.push('/customer')}
+        if(res.isSuccess){router.push('/customer/complete')}
       })
     }
   }
