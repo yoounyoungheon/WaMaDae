@@ -4,6 +4,7 @@ import Button from "../../atom/button";
 import { CreateMeetingDialog } from "./create-meeting-dialog";
 import Link from "next/link";
 import Image from "next/image"
+import { RemoveMeetingButton } from "./meeting-control-button";
 interface MeetingInfoProps {
   meetings: Meeting[] | undefined;
 }
@@ -64,7 +65,7 @@ const MeetingInfoView = ({meeting}: {meeting: Meeting}) => {
         <Button variant={'ghost'}>예약 현황</Button>
       </Link>
       <Button variant={'ghost'}>수정</Button>
-      <Button variant={'ghost'}>삭제</Button>
+      <RemoveMeetingButton id={meeting.id}/>
     </div>
     </CardContent>
   )

@@ -133,3 +133,24 @@ export const loadMeetingsForManager = async (date: string): Promise<APIResponseT
     }
   }
 }
+
+export const removeMeeting = async (meetingId: string): Promise<APIResponseType<string>> => {
+  try {
+    const response = await instance.delete(`${API_PATH}/meeting/${meetingId}`);
+
+    checkResponseStatus(response.status);
+
+    return {
+      isSuccess: true,
+      isFailure: false,
+      data: '삭제 성공',
+    }
+  } catch (error) {
+    return {
+      isSuccess: false,
+      isFailure: true,
+      data: null,
+      message: error instanceof Error ? error.message : String(error)
+    }
+  }
+}

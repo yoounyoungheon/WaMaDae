@@ -46,7 +46,7 @@ export const CreateMeetingForm = () => {
           placeholder="모임에 대한 설명을 입력해주세요."
         />
         <TextInput name="place" form="create-meeting-form" placeholder="모임 장소를 입력해주세요."/>
-        <TextInput name="fee" form="create-meeting-form" placeholder="모임 비용을 입력해주세요."/>
+        <TextInput name="fee" form="create-meeting-form" placeholder="모임 비용을 입력해주세요. (숫자로 입력해주세요!)"/>
         <input
           type="file"
           className="w-full mt-3 p-2 border border-gray-300 rounded-lg"
