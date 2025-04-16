@@ -2,8 +2,10 @@
 import { APIResponseType, checkResponseStatus, instance } from "@/app/utils/http";
 import { API_PATH } from "@/app/utils/http/api-query";
 import { createMeeting, Meeting } from "./meeting.domain";
-import { CreateMeetingReqestDto, MeetingAPIResponseDto } from "./meeting.dto";
+import { MeetingAPIResponseDto } from "./meeting.dto";
 import { FormState } from "@/app/utils/type/type";
+import axios from "axios";
+import { cookies } from "next/headers";
 
 export const createMeetingReqest = async (prevState: FormState ,formDate: FormData): Promise<FormState> => {
   const sort = formDate.get("sort") as string;
@@ -12,15 +14,29 @@ export const createMeetingReqest = async (prevState: FormState ,formDate: FormDa
   const place = formDate.get("place") as string;
   const fee = formDate.get("fee") as string;
   const date = formDate.get("date") as string;
-  const imgUrl = formDate.get("imgUrl") as string;
+  const imgUrl = formDate.get("imgUrl") as File;
   const startTime = formDate.get("startTime") as string;
   const endTime = formDate.get("endTime") as string;
 
-  const dto: CreateMeetingReqestDto = {
-    sort, description, meetingName, place, fee: parseInt(fee), date: new Date(date), imgUrl, startTime, endTime
-  }
+  const form = new FormData();
+  form.append('sort', sort);
+  form.append('meetingName', meetingName);
+  form.append('description', description);
+  form.append('place', place);
+  form.append('fee', fee);
+  form.append('date', date)
+  form.append('imgUrl', imgUrl)
+  form.append('startTime', startTime)
+  form.append('endTime', endTime)
+
   try {
-    const response = await instance.post(`${API_PATH}/meeting`, dto);
+    const token = cookies().get("token")?.value;
+    const response = await axios.post(`${API_PATH}/meeting`, 
+      form,
+      {
+        headers: { 'Content-Type': 'multipart/form-data', 'Authorization':`Bearer ${token}` },
+      }
+    );
 
     checkResponseStatus(response.status);
 

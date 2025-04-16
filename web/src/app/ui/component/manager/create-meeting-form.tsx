@@ -47,7 +47,12 @@ export const CreateMeetingForm = () => {
         />
         <TextInput name="place" form="create-meeting-form" placeholder="모임 장소를 입력해주세요."/>
         <TextInput name="fee" form="create-meeting-form" placeholder="모임 비용을 입력해주세요."/>
-        <input type="hidden" name="imgUrl" value={'www.example.com'} form="create-meeting-form" placeholder="모임 이름을 입력해주세요."/>
+        <input
+          type="file"
+          className="w-full mt-3 p-2 border border-gray-300 rounded-lg"
+          name="imgUrl"
+          form="create-meeting-form"
+        />
         <TextInput name="endTime" form="create-meeting-form" placeholder="모임 시작 시간을 입력해주세요."/>
         <TextInput name="startTime" form="create-meeting-form" placeholder="모임 종료 시간을 입력해주세요."/>
         <Button type="submit" form="create-meeting-form">생성</Button>

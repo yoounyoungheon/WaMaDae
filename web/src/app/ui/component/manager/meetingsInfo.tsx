@@ -3,6 +3,7 @@ import { Card, CardContent } from "../../molecule/card"
 import Button from "../../atom/button";
 import { CreateMeetingDialog } from "./create-meeting-dialog";
 import Link from "next/link";
+import Image from "next/image"
 interface MeetingInfoProps {
   meetings: Meeting[] | undefined;
 }
@@ -50,9 +51,9 @@ const MeetingInfoView = ({meeting}: {meeting: Meeting}) => {
         <span className="font-medium text-gray-700">장소:</span> {place}
     </div>
     {imgUrl && (
-        <div className="text-sm text-gray-600">
-          {imgUrl}
-        </div>
+        <Card className="relative text-gray-600 h-32 w-32">
+          <Image src={imgUrl} alt={""} fill className="rounded-lg"/>
+        </Card>
     )}
     <div className="text-sm text-gray-600">
         <span className="font-medium text-gray-700">시간:</span> {`${startTime} ~ ${endTime}`}
