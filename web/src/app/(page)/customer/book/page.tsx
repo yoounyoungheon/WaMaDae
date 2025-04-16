@@ -1,4 +1,3 @@
-import ExampleImage from "@/app/assets/ExampleImage.png"
 import { Meeting } from "@/app/business/meeting/meeting.domain";
 import { loadMeeting } from "@/app/business/meeting/meeting.service";
 import { BookFormView } from "@/app/ui/component/customer/book-form-view";
@@ -21,7 +20,7 @@ export default async function BookPage({
   return (
   <main>
     <div className="relative w-full aspect-[5/5] mb-4">
-      <Image src={ExampleImage.src} alt={""} fill className="object-cover"/>
+      <Image src={meeting?.imgUrl as string} alt={""} fill className="object-cover"/>
     </div>
     <div className="p-3 px-7">
       <div className="text-2xl text-start font-bold mb-5">{meeting?.meetingName}</div>
