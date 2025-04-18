@@ -81,13 +81,16 @@ export class MeetingController {
   }
 
   @ApiOperation({ summary: '미팅 업데이트' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('imgUrl'))
   @UseGuards(AuthGuard())
   @ApiBearerAuth('access-token')
   @Patch('/:id')
   async updateMeeting(
     @Param('id') id: string,
+    @UploadedFile() imgUrl: Express.Multer.File,
     @Body() dto: CreateMeetingDto,
   ): Promise<MeetingEntity> {
-    return await this.meetingService.updateMeeting(id, dto);
+    return await this.meetingService.updateMeeting(id, imgUrl, dto);
   }
 }

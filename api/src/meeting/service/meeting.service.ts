@@ -102,9 +102,25 @@ export class MeetingService {
   @Transactional()
   async updateMeeting(
     id: string,
+    fileUrl: Express.Multer.File,
     dto: CreateMeetingDto,
   ): Promise<MeetingEntity> {
     const meeting = await this.meetingRepository.findOneBy({ id });
+
+    if (!meeting) {
+      throw new NotFoundException(`Meeting is not found`);
+    }
+
+    const fileExtension = fileUrl.originalname.split('.').pop();
+    const fileName = `${Date.now()}-${fileUrl.originalname}`;
+    const uploadedFileUrl = await this.s3Service.uploadFile(
+      fileName,
+      fileUrl,
+      fileExtension,
+    );
+
+    dto.imgUrl = uploadedFileUrl;
+
     const {
       sort,
       meetingName,
