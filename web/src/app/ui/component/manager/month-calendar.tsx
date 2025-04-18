@@ -57,18 +57,21 @@ export function MonthCalendar({ year, month }: { year: number; month: number; })
             const linkHref = `?date=${dateInfo.year}-${paddedMonth}-${paddedDate}${isNextMonth ? '&isNextMonth=true' : ''}`;
 
             return (
-              <Card key={index}>
-              <CardContent className={`p-8 text-center ${isPastDate ? 'text-gray-400 cursor-not-allowed' : ''}`}>
-                {dateInfo.date !== 0 ? (
-                isPastDate ? (
-                  <span>{dateInfo.date}</span>
-                ) : (
-                  <Link href={`${linkHref}`}>
-                  {dateInfo.date}
-                  </Link>
-                )) : ('')}
-                </CardContent>
-                </Card>
+              <Card key={index} className="aspect-square flex items-center justify-center">
+                <div className={`text-center ${isPastDate ? 'text-gray-400 cursor-not-allowed' : ''}`}>
+                  {dateInfo.date !== 0 ? (
+                    isPastDate ? (
+                      <span>{dateInfo.date}</span>
+                    ) : (
+                      <Link href={linkHref}>
+                        {dateInfo.date}
+                      </Link>
+                    )
+                  ) : (
+                    ''
+                  )}
+                </div>
+              </Card>
             );
             })}
 

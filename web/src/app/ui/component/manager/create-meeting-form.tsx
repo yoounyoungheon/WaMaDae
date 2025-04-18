@@ -3,7 +3,7 @@
 import { createMeetingReqest } from "@/app/business/meeting/meeting.service"
 import { FormState } from "@/app/utils/type/type";
 import { useEffect, useState } from "react";
-import { useFormState } from "react-dom"
+import { useFormState, useFormStatus } from "react-dom"
 import { CardContent } from "../../molecule/card";
 import TextInput from "../../atom/text-input";
 import Button from "../../atom/button";
@@ -18,6 +18,7 @@ export const CreateMeetingForm = () => {
   };
   const [selectdMeetingType, setSelectedMeetingType] = useState<string>('class');
   const [createMeetinfFormState, dispatch] = useFormState(createMeetingReqest, initialState);
+  const { pending } = useFormStatus();
 
   useEffect(()=>{
     console.log(createMeetinfFormState);
@@ -26,6 +27,8 @@ export const CreateMeetingForm = () => {
       setTimeout(()=>{
         window.location.reload();
       })
+    }else if(createMeetinfFormState.message === `Request failed with status code 401`){
+      alert('세션이 만료되었습니다. 다시 로그인해주세요!')
     }
   }, [createMeetinfFormState])
 
@@ -55,7 +58,7 @@ export const CreateMeetingForm = () => {
         />
         <TextInput name="endTime" form="create-meeting-form" placeholder="모임 시작 시간을 입력해주세요."/>
         <TextInput name="startTime" form="create-meeting-form" placeholder="모임 종료 시간을 입력해주세요."/>
-        <Button type="submit" form="create-meeting-form">생성</Button>
+        <Button type="submit" form="create-meeting-form">{pending?`!등록중!`:`등록하기`}</Button>
       </form>
     </CardContent>
   )

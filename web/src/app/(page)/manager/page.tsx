@@ -20,11 +20,16 @@ export default async function ManagerHome({
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1;
+
   return (
     <main>
       <div className="p-10 grid grid-cols-[5fr_3fr] gap-10">
         <MonthCalendar year={currentYear} month={isNextMonth==='true'?currentMonth+1:currentMonth}/>
-        {<MeetingsInfoView meetings={loadMeetingsResponse?.data as Meeting[]}/>}
+        {loadMeetingsResponse?.message !== `Request failed with status code 401`?
+          (loadMeetingsResponse?.isSuccess?
+          <MeetingsInfoView meetings={loadMeetingsResponse?.data as Meeting[]}/>:
+          <div className="text-center">날짜를 선택해주세요.</div>):
+        <div className="text-center">로그인 세션이 만료되었습니다.</div>}
       </div>
     </main>
   );
