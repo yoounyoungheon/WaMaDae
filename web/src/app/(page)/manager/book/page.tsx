@@ -23,7 +23,7 @@ export default async function ManagerBookPage({
     {books&&(
       books.map((book, index)=>{
         return (
-          <BookInfo key={index} book={book}/>
+          <BookInfo key={index} book={book} isManager={true}/>
         )
       })
     )}

@@ -43,6 +43,25 @@ export const loadBook = async (id: string):Promise<APIResponseType<Book>> => {
   }
 }
 
+export const loadBookByPhoneNumber = async (phoneNumber: string):Promise<APIResponseType<Book[]>> => {
+  try {
+    const response = await instance.get(`${API_PATH}/book/phone/${phoneNumber}`);
+    checkResponseStatus(response.status)
+    return {
+      isSuccess: true,
+      isFailure:  false,
+      data: response.data,
+    }
+  } catch(error) {
+    return {
+      isSuccess: false,
+      isFailure: true,
+      data: null,
+      message: error instanceof Error ? error.message : String(error)
+    }
+  }
+}
+
 export const createBookRequest = async(
   meetingId: string,
   name: string, 

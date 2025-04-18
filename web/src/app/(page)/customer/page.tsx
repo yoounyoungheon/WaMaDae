@@ -27,7 +27,7 @@ export default async function CustomerHome({
         <Image src={Main.src} alt={""} fill className="rounded-lg object-cover"/>
       </div>
       <div className="px-10 mt-5 mb-5">
-        <div className="py-5 grid grid-cols-2 gap-3">
+        <div className="py-5 grid grid-cols-3 gap-3">
           <Link href={"/customer?current=club"}>
             <Button className={cn('w-full', current==='club'?``:'bg-white text-slate-700 hover:bg-slate-100 ')}>
               정기모임
@@ -37,6 +37,12 @@ export default async function CustomerHome({
           <Link href={"/customer?current=class"}>
             <Button className={cn('w-full', current==='class'?``:'bg-white text-slate-700 hover:bg-slate-100 ')}>
               클래스
+            </Button>
+          </Link>
+
+          <Link href={"/customer/my-book"}>
+            <Button className={cn('w-full bg-white text-slate-700')}>
+              나의 예약
             </Button>
           </Link>
         </div>

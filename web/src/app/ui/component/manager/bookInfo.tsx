@@ -1,7 +1,8 @@
 import { Book } from "@/app/business/book/book.domain";
+import { UpdateBookFeeStatusButton } from "./update-book-fee-status-button";
 
-export function BookInfo({ book }: { book: Book }) {
-  const { name, nickname, phoneNumber, isPaid } = book;
+export function BookInfo({ book, isManager }: { book: Book, isManager: boolean }) {
+  const { name, nickname, phoneNumber, isPaid, id } = book;
 
   return (
     <main className="p-5 bg-white rounded-lg shadow-md border border-gray-200">
@@ -28,6 +29,9 @@ export function BookInfo({ book }: { book: Book }) {
             {isPaid ? "결제 완료" : "미결제"}
           </span>
         </div>
+        {isManager&& <div className="text-end">
+          <UpdateBookFeeStatusButton bookId={id}/>
+        </div>}
       </div>
     </main>
   );
