@@ -5,6 +5,7 @@ import { CreateMeetingDialog } from "./create-meeting-dialog";
 import Link from "next/link";
 import Image from "next/image"
 import { RemoveMeetingButton } from "./meeting-control-button";
+import { UpdateMeetingDialog } from "./update-meeting-dialog";
 interface MeetingInfoProps {
   meetings: Meeting[] | undefined;
 }
@@ -37,19 +38,19 @@ const MeetingInfoView = ({meeting}: {meeting: Meeting}) => {
   return (
     <CardContent className="p-5 grid grid-cols-1 gap-4 bg-gray-50 rounded-lg shadow-md">
     <div className="text-lg font-semibold text-gray-800">
-        {`${meetingName} (${sort})`}
+      {`${meetingName} (${sort})`}
     </div>
     <div className="text-sm text-gray-600">
-        <span className="font-medium text-gray-700">날짜:</span> {date.toLocaleDateString()}
+      <span className="font-medium text-gray-700">날짜:</span> {date.toLocaleDateString("ko-KR", { year: "numeric", month: "numeric", day: "numeric" })}
     </div>
     <div className="text-sm text-gray-600">
-        <span className="font-medium text-gray-700">설명:</span> {description}
+      <span className="font-medium text-gray-700">설명:</span> {description}
     </div>
     <div className="text-sm text-gray-600">
-        <span className="font-medium text-gray-700">참가비:</span> {`${fee.toLocaleString()} 원`}
+      <span className="font-medium text-gray-700">참가비:</span> {`${fee.toLocaleString()} 원`}
     </div>
     <div className="text-sm text-gray-600">
-        <span className="font-medium text-gray-700">장소:</span> {place}
+      <span className="font-medium text-gray-700">장소:</span> {place}
     </div>
     {imgUrl && (
         <Card className="relative text-gray-600 h-32 w-32">
@@ -64,7 +65,7 @@ const MeetingInfoView = ({meeting}: {meeting: Meeting}) => {
       <Link href={`/manager/book?id=${meeting.id}`}>
         <Button variant={'ghost'}>예약 현황</Button>
       </Link>
-      <Button variant={'ghost'}>수정</Button>
+      <UpdateMeetingDialog meeting={meeting}/>
       <RemoveMeetingButton id={meeting.id}/>
     </div>
     </CardContent>
