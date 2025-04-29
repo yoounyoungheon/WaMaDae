@@ -11,7 +11,7 @@ export function MeetingDetailView({meeting}:MeetingDetailViewProps){
       <div className="text-start space-y-3">
         <div className="space-x-3">
           <span className="font-semibold text-sky-700">일시</span>
-          <span>{`${date.getFullYear()}.${date.getMonth()+1}.${date.getDay()} (${convertDateCodeToString(date.getDay())}) ${startTime}~${endTime}`}</span>
+          <span>{`${date.getFullYear()}.${date.getMonth()+1}.${date.getDate()} (${convertDateCodeToString(date.getDay())}) ${startTime}~${endTime}`}</span>
         </div>
         <div className="space-x-3">
           <span className="font-semibold text-sky-700">장소</span>
