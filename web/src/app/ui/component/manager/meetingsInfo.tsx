@@ -41,7 +41,7 @@ const MeetingInfoView = ({meeting}: {meeting: Meeting}) => {
       {`${meetingName} (${sort})`}
     </div>
     <div className="text-sm text-gray-600">
-      <span className="font-medium text-gray-700">날짜:</span> {`${date.getFullYear()}.${date.getMonth()+1}.${date.getDay()}`}
+      <span className="font-medium text-gray-700">날짜:</span> {`${date.getFullYear()}.${date.getMonth()+1}.${date.getDate()}`}
     </div>
     <div className="text-sm text-gray-600">
       <span className="font-medium text-gray-700">설명:</span> {description}
