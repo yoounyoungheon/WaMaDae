@@ -26,10 +26,12 @@ export default async function MyBookPage({
       <div className="w-full mb-5">
       {typeof phoneNumber === 'undefined' || phoneNumber === ''?
         <PhoneNumberInput/>:
-        ((loadBookByPhoneNumberResponse&&loadBookByPhoneNumberResponse.data)&&(
+        <div className="p-3 space-y-3">
+          {(loadBookByPhoneNumberResponse&&loadBookByPhoneNumberResponse.data)&&(
           loadBookByPhoneNumberResponse?.data.map((book, index)=>{
             return (<BookInfo key={index} book={book} isManager={false}/>)
-        })))}
+        }))}
+        </div>}
       </div>
     </main>
   )
