@@ -38,6 +38,7 @@ export function MainCarouselView() {
           alt={`Carousel Image ${currentIndex + 1}`}
           fill
           className="object-cover"
+          priority={currentIndex === 0}
         />
       </div>
       <div
