@@ -130,7 +130,7 @@ export const loadMeetings = async (): Promise<APIResponseType<Meeting[]>> => {
   try {
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + 7);
+    endDate.setDate(endDate.getDate() + 60);
     
     const formattedStartDate = startDate.toISOString().split('T')[0];
     const formattedEndDate = endDate.toISOString().split('T')[0];
