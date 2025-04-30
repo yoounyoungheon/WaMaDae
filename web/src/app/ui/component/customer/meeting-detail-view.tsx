@@ -30,6 +30,6 @@ export function MeetingDetailView({meeting}:MeetingDetailViewProps){
 }
 
 export function convertDateCodeToString(dateCode: number): string {
-    const days = ['월', '화', '수', '목', '금', '토', '일'];
+    const days = [ '일', '월', '화', '수', '목', '금', '토'];
     return days[dateCode];
   }

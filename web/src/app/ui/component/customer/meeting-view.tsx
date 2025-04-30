@@ -2,6 +2,7 @@ import { Meeting } from "@/app/business/meeting/meeting.domain";
 import { Card, CardTitle } from "../../molecule/card";
 import Link from "next/link";
 import Image from "next/image";
+import { convertDateCodeToString } from "./meeting-detail-view";
 
 interface MeetingViewProps {
   meeting: Meeting;
@@ -20,9 +21,10 @@ export function MeetingView({ meeting }: MeetingViewProps) {
         <div className="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/40 to-transparent z-10" />
         <div className="relative z-20">
           <CardTitle className="text-lg font-bold text-white">
-            {meeting.meetingName}
+            {`${meeting.meetingName}`}
           </CardTitle>
-          <div className="p-10" />
+          <div className="py-2 text-white">{`${meeting.date.getFullYear()}.${meeting.date.getMonth()+1}.${meeting.date.getDate()} (${convertDateCodeToString(meeting.date.getDay())})`}</div>
+          <div className="p-7" />
           <div className="mt-auto inline-block text-white text-sm">
             자세히 보기 &gt;
           </div>

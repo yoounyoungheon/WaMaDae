@@ -4,13 +4,7 @@ import Button from "@/app/ui/atom/button";
 import { MeetingView } from "@/app/ui/component/customer/meeting-view";
 import { cn } from "@/app/utils/style/helper";
 import Link from "next/link";
-import Image from "next/image";
-import Cattot1 from "@/app/assets/carrot1.png"
-// import Cattot2 from "@/app/assets/carrot2.jpeg"
-// import Cattot4 from "@/app/assets/carrot4.jpeg"
-// import Cattot5 from "@/app/assets/carrot5.jpeg"
-// import Cattot6 from "@/app/assets/carrot6.jpeg"
-// import Cattot7 from "@/app/assets/carrot7.jpeg"
+import { MainCarouselView } from "@/app/ui/component/customer/main-carousel-view";
 
 
 export default async function CustomerHome({
@@ -25,12 +19,9 @@ export default async function CustomerHome({
   if(loadMeetingsResponse.isSuccess && loadMeetingsResponse.data){
     meetings = loadMeetingsResponse.data.filter((meeting)=>{return meeting.sort==current});
   }
-  // const carrots = [Cattot1.src, Cattot2.src, Cattot4.src, Cattot5.src, Cattot6.src, Cattot7.src];
   return (
     <main>
-      <div className="relative w-full aspect-square mb-4">
-        <Image src={Cattot1.src} alt={""} fill className="rounded-lg object-cover"/>
-      </div>
+      <MainCarouselView/>
       <div className="px-10 mt-5 mb-5">
         <div className="py-5 grid grid-cols-3 gap-3">
           <Link href={"/customer?current=club"}>
