@@ -19,8 +19,9 @@ export function PhoneNumberInput() {
   };
 
   return (
-    <main className="w-full px-5 text-center">
-      <div className="flex space-x-2">
+    <main className="w-full px-5">
+      <div className="py-3 text-sky-700 font-semibold">전화번호로 예약 확인하기</div>
+      <div className="flex space-x-2 text-center">
         <TextInput ref={phoneNumberInputRef} placeholder="전화번호를 입력해주세요." />
         <Button onClick={handleSubmit}>입력</Button>
       </div>
