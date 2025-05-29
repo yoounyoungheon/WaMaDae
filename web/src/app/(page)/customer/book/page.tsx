@@ -24,10 +24,9 @@ export default async function BookPage({
 
     const loadBooksReponse = await loadBooksByMeetingId(meetingId);
     if(loadBooksReponse.isSuccess && loadBooksReponse.data){
-      books = loadBooksReponse.data.filter((book)=>{return book.isPaid});
+      books = loadBooksReponse.data
     }
   }
-  console.log(books);
 
   return (
   <main>

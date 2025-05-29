@@ -21,7 +21,6 @@ export function BookListView({ books }: { books: Book[] }) {
             <div className="text-base font-medium text-gray-800">
               {bookedMember.nickname}
             </div>
-            <div className="text-sm text-slate-500">{bookedMember.name}</div>
           </div>
         ))}
       </div>
