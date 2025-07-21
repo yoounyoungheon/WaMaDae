@@ -1,16 +1,10 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import Cattot1 from "@/app/assets/carrot1.png";
-import Cattot2 from "@/app/assets/carrot2.jpeg";
-import Cattot4 from "@/app/assets/carrot4.jpeg";
-import Cattot5 from "@/app/assets/carrot5.jpeg";
-import Cattot6 from "@/app/assets/carrot6.jpeg";
-import Cattot7 from "@/app/assets/carrot7.jpeg";
 import Image from "next/image";
 
 export function MainCarouselView() {
-  const carrots = [Cattot1.src, Cattot2.src, Cattot4.src, Cattot5.src, Cattot6.src, Cattot7.src];
+  const carrots = ["/carrot1.png", "/carrot2.jpeg", "/carrot4.jpeg", "/carrot5.jpeg","/carrot6.jpeg", "/carrot7.jpeg"];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isSliding, setIsSliding] = useState(false);
 

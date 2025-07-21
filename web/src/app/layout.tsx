@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import localFont from 'next/font/local';
 import "./globals.css";
 import { cn } from "./utils/style/helper";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
+import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
 
 const globalFont = localFont({
   src: './PretendardVariable.woff2',
@@ -22,9 +24,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={cn(globalFont.variable, 'font-pretendard', 'bg-gray-50')}
+        className={cn(globalFont.variable, 'font-pretendard', 'flex justify-center', )}
       >
-        {children} 
+        <AppRouterCacheProvider>
+          <div>
+            <div className="flex flex-row justify-between gap-3 bg-white px-5 py-3 font-bold text-xl items-center ">
+              <div className="flex flex-row items-center gap-3"> 
+                <p>🍷</p>
+                <p>마이솜</p>
+              </div>
+
+              <ShareOutlinedIcon />
+            </div>
+            {children}
+          </div>
+        </AppRouterCacheProvider> 
       </body>
     </html>
   );
