@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="w-[350px] bg-white">
 
-      <div className="grid grid-cols-2 text-white font-bold">
+      <div className="grid grid-cols-2 text-white font-semibold">
         <div className="bg-red-900 p-3 text-center">와인 검색</div>
         <div className="bg-sky-950 p-3 text-center">오 술 추</div>
       </div>

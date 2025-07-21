@@ -31,7 +31,7 @@ export default function RootLayout({
             <div className="flex flex-row justify-between gap-3 bg-white px-5 py-3 font-bold text-xl items-center ">
               <div className="flex flex-row items-center gap-3"> 
                 <p>🍷</p>
-                <p>마이솜</p>
+                <p>MySom</p>
               </div>
 
               <ShareOutlinedIcon />
