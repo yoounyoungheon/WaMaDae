@@ -1,1 +1,0 @@
-type MeetingType = 'club' | 'class';
