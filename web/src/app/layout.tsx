@@ -37,8 +37,8 @@ export default function RootLayout({
               <ShareOutlinedIcon />
             </div>
 
-            {/* 바디 영역: w-360 고정 */}
-            <div className="w-[360px] h-screen bg-white">
+            {/* 바디 영역: w-350 고정 */}
+            <div className="w-[350px] h-screen bg-white">
               {children}
             </div>
           </div>
