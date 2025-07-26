@@ -5,11 +5,6 @@ export interface FormState {
   message: string;
 }
 
-export type DayType = 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat';
+export type MemberRole = 'ADIMIN' | 'USER' | 'STORE';
 
-export interface DateInfo {
-  day: DayType;
-  date: number;
-  month: number;
-  year: number;
-}
+export type DayType = 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat';
