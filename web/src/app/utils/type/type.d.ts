@@ -5,6 +5,4 @@ export interface FormState {
   message: string;
 }
 
-export type MemberRole = 'ADIMIN' | 'USER' | 'STORE';
-
-export type DayType = 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat';
+export type MemberRole = 'ADIMIN' | 'USER' | 'SHOP';
