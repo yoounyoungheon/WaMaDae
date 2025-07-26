@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { ShopCarousel } from "./component/shop-carousel";
 
 export default function Page() {
-  const menuName = ['와인관리', '메뉴관리', '업장관리'];
+  const menuProps = [{name: '와인관리', routeUrl: '/shop/winew'}, {name: '메뉴관리', routeUrl: '/shop/menus'}, {name: '업장관리', routeUrl: '/shop/management'}];
 
   return (
     <div className="flex flex-col ">
@@ -15,23 +16,25 @@ export default function Page() {
         </p>
 
         <div className="flex flex-row gap-5 pt-3">
-        {menuName.map((name, index) => 
-            <MenuCard key={index} menuName={name} />)}
+        {menuProps.map((menu, index) => 
+            <MenuCard key={index} menuName={menu.name} routeUrl={menu.routeUrl} />)}
         </div>
       </div>
     </div>
   )
 }
 
-function MenuCard({menuName}: {menuName: string}) {
+function MenuCard({menuName, routeUrl}: {menuName: string, routeUrl: string}) {
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="h-16 w-16 rounded-full bg-mysom-secondary"/>
-      <p className="text-xs">
-        {menuName}
-      </p>
-    </div>
+    <Link href={routeUrl}>
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-16 w-16 rounded-full bg-mysom-secondary"/>
+        <p className="text-xs">
+          {menuName}
+        </p>
+      </div>
+    </Link>
   )
 
 }

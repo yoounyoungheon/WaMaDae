@@ -3,7 +3,8 @@ import localFont from 'next/font/local';
 import "./globals.css";
 import { cn } from "./utils/style/helper";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
-import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
+import { BellIcon } from "@radix-ui/react-icons";
+
 
 const globalFont = localFont({
   src: './PretendardVariable.woff2',
@@ -34,7 +35,7 @@ export default function RootLayout({
                 <p>🍷</p>
                 <p>MySom</p>
               </div>
-              <ShareOutlinedIcon />
+              <BellIcon width={25} height={25}/>
             </div>
 
             {/* 바디 영역: w-350 고정 */}
