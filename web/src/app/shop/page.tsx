@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ShopCarousel } from "./component/shop-carousel";
 
 export default function Page() {
-  const menuProps = [{name: '와인관리', routeUrl: '/shop/winew'}, {name: '메뉴관리', routeUrl: '/shop/menus'}, {name: '업장관리', routeUrl: '/shop/management'}];
+  const menuProps = [{name: '와인관리', routeUrl: '/shop/wines'}, {name: '메뉴관리', routeUrl: '/shop/menus'}, {name: '업장관리', routeUrl: '/shop/management'}];
 
   return (
     <div className="flex flex-col ">
