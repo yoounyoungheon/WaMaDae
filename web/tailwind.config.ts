@@ -9,6 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        'mysom-primary': "#713DF6",
+        'mysom-secondary': "#B46FF7",
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
