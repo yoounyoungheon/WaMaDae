@@ -3,7 +3,8 @@ import localFont from 'next/font/local';
 import "./globals.css";
 import { cn } from "./utils/style/helper";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
-import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
+import { BellIcon } from "@radix-ui/react-icons";
+
 
 const globalFont = localFont({
   src: './PretendardVariable.woff2',
@@ -28,15 +29,19 @@ export default function RootLayout({
       >
         <AppRouterCacheProvider>
           <div>
-            <div className="flex flex-row justify-between gap-3 bg-white px-5 py-3 font-bold text-xl items-center ">
+            {/* 상단 배너 영역 */}
+            <div className="flex flex-row justify-between gap-3 bg-mysom-primary text-white px-5 py-3 font-bold text-xl items-center ">
               <div className="flex flex-row items-center gap-3"> 
                 <p>🍷</p>
                 <p>MySom</p>
               </div>
-
-              <ShareOutlinedIcon />
+              <BellIcon width={25} height={25}/>
             </div>
-            {children}
+
+            {/* 바디 영역: w-350 고정 */}
+            <div className="w-[350px] h-screen bg-white">
+              {children}
+            </div>
           </div>
         </AppRouterCacheProvider> 
       </body>
