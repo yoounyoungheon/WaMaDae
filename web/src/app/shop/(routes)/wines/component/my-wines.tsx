@@ -7,7 +7,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { DeleteWineButton } from "./button/delete-wine-button";
 
-export const MyWines = ({shopId, selectedWineId}:{shopId: number, selectedWineId?: number}) => {
+interface MyWinesProps {
+  shopId: number;
+  selectedWineId?: number; // 선택된 와인 ID (선택적)
+}
+
+export const MyWines = ({shopId, selectedWineId}: MyWinesProps) => {
   const wineViewModels = useShopMyWines({ shopId });
 
   return (
@@ -62,14 +67,14 @@ const SelectedWineInfoCard = ({wine, shopId}: {wine: ShopWineViewModel, shopId: 
         <ScaleInfo label="타닌" scale={wine.tannin} />
         <ScaleInfo label="산도" scale={wine.acidity} />
         <div className="text-end mb-3">
-          <DeleteWineButton wineId={wine.id} shopId={wine.id} />
+          <DeleteWineButton wineId={wine.id} shopId={shopId} />
         </div>
       </div>
     </Card>
   )
 }
 
-const ScaleInfo = ({label, scale}:{label:string, scale: number}) => {
+const ScaleInfo = ({label, scale}: {label:string, scale: number}) => {
   return (
     <div className="flex flex-row gap-1 text-mysom-darkgray" style={{ fontSize: '10px' }}>
       <p className="w-8">{label}</p>
