@@ -12,6 +12,7 @@ const config: Config = {
         'mysom-primary': "#6F4CA5",
         'mysom-secondary': "#EEE2FF",
         'mysom-lightgray': "#EDEDED",
+        'mysom-darkgray': "#818181",
         background: "var(--background)",
         foreground: "var(--foreground)",
       },

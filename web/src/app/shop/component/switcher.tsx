@@ -54,9 +54,9 @@ export default function RoutingSwitcher({ values }: RoutingSwitcherProps) {
         aria-label="shop switcher"
         size="small"
         sx={{
-          gap: '20px',
+          gap: '10px',
           '& .MuiToggleButton-root': {
-            width: '120px',
+            width: '100px',
             fontSize: '10px',
             borderRadius: '25px !important', 
             border: 'none',
