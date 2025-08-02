@@ -6,8 +6,34 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Box from '@mui/material/Box';
 import { useState } from 'react';
 
-export default function ExclusiveSelection() {
-  const [view, setView] = useState('list'); 
+interface SwitcherValue {
+  name: string;
+  value: string;
+}
+
+interface ShopSwitcherProps {
+  values: SwitcherValue[];
+  onChange?: () => void;
+}
+
+export default function ShopSwitcher({ values, onChange }: ShopSwitcherProps) {
+  const [value, setValue] = useState(values[0].value); 
+
+  const handleToggleChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newValue: string | null,
+  ) => {
+    if (newValue !== null) {
+      setValue(newValue);
+      onChange?.();
+    }
+  };
+
+  const toggleButtons = values.map((item) => (
+    <ToggleButton key={item.value} value={item.value}>
+      {item.name}
+    </ToggleButton>
+  ));
 
   return (
     <Box
@@ -20,11 +46,11 @@ export default function ExclusiveSelection() {
       }}
     >
       <ToggleButtonGroup
-        value={view}
-        onChange={()=> setView(view === 'list' ? 'store' : 'list')}
-        aria-label="text alignment"
+        value={value}
+        exclusive
+        onChange={handleToggleChange}
+        aria-label="shop switcher"
         size="small"
-        
         sx={{
           gap: '20px',
           '& .MuiToggleButton-root': {
@@ -35,16 +61,19 @@ export default function ExclusiveSelection() {
             '&.Mui-selected': { 
               backgroundColor: 'white',
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              '&:hover': {
+                backgroundColor: 'white',
+              },
             },
+            '&.Mui-focusVisible': {
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+            },
+            
           },
         }}
       >
-        <ToggleButton value="list">
-          전체 와인 리스트
-        </ToggleButton>
-        <ToggleButton value="store">
-          우리 매장 와인
-        </ToggleButton>
+        {toggleButtons}
       </ToggleButtonGroup>
     </Box>
   );
