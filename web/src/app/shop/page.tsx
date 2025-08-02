@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { ShopCarousel } from "./component/shop-carousel";
+import { ShopHeader } from "./component/header";
 
 export default function Page() {
   const menuProps = [{name: '와인관리', routeUrl: '/shop/wines'}, {name: '메뉴관리', routeUrl: '/shop/menus'}, {name: '업장관리', routeUrl: '/shop/management'}];
-
+  const headerTtile = "#업장명 예시"
   return (
     <div className="flex flex-col ">
-      <div className="p-5">
-        <ShopCarousel/>
-      </div>
+      {/* 상단 배너 영역 */}
+      <ShopHeader headerTitle={headerTtile}/>
       
       <div className='pl-5'>
         <p className="pt-3 font-semibold">
@@ -19,6 +19,10 @@ export default function Page() {
         {menuProps.map((menu, index) => 
             <MenuCard key={index} menuName={menu.name} routeUrl={menu.routeUrl} />)}
         </div>
+      </div>
+
+      <div className="p-5">
+        <ShopCarousel/>
       </div>
     </div>
   )
