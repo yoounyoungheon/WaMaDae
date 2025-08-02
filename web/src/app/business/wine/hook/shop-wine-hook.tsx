@@ -4,7 +4,7 @@ import { createShopWineViewModel, ShopWineViewModel } from "../view-model/shop-w
 export const useShopMyWines = ({shopId}:{shopId:  number}) => {
   console.log("useShopMyWines called with shopId:", shopId);
 
-  // mock 데이터
+  // mock 데이터 (서비스에서 받아오는 데이터로 대체해야함)
   const shopWinesViewModels: ShopWineViewModel[] = [
     createShopWineViewModel(
       1,

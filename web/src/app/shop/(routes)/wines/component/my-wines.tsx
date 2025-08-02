@@ -5,6 +5,7 @@ import { cn } from "@/app/utils/style/helper";
 import Grid from "@mui/material/Grid";
 import Image from "next/image";
 import Link from "next/link";
+import { DeleteWineButton } from "./button/delete-wine-button";
 
 export const MyWines = ({shopId, selectedWineId}:{shopId: number, selectedWineId?: number}) => {
   const wineViewModels = useShopMyWines({ shopId });
@@ -15,7 +16,7 @@ export const MyWines = ({shopId, selectedWineId}:{shopId: number, selectedWineId
       <div className="flex flex-col gap-2 w-full px-4">
         {wineViewModels.map((wine: ShopWineViewModel) => (
           selectedWineId === wine.id ? (
-            <SelectedWineInfoCard key={wine.id} wine={wine} />
+            <SelectedWineInfoCard key={wine.id} wine={wine} shopId={shopId} />
           ) : (
             <WineInfoCard key={wine.id} wine={wine} isSelected={false} />
           )
@@ -44,19 +45,25 @@ const WineInfoCard = ({wine, isSelected}: {wine: ShopWineViewModel, isSelected: 
   )
 }
 
-const SelectedWineInfoCard = ({wine}: {wine: ShopWineViewModel}) => {
+const SelectedWineInfoCard = ({wine, shopId}: {wine: ShopWineViewModel, shopId: number}) => {
   
   return (
     <Card className="rounded-lg shadow-lg border-none">
+
       {WineInfoCard({wine, isSelected: true})}
+
+      {/* 선택한 와인에 대한 추가 데이터 */}
       <div className="flex flex-col gap-1 p-2 px-4">
         <div className="text-sm font-semibold py-2">{wine.commentOfMySom}</div>
-        <div className="flex flex-row gap-1 text-mysom-darkgray" style={{ fontSize: '10px' }}>향, 맛: {wine.taseInfo.map((val, index) => (<p key={index}>{val}</p>))}</div>
-        <div className="text-mysom-darkgray" style={{ fontSize: '10px' }}>품종: {wine.variety}</div>
+        <div className="flex flex-row gap-1 text-mysom-darkgray" style={{ fontSize: '10px' }}> <p className="w-8">향, 맛</p> {wine.taseInfo.map((val, index) => (<p key={index}>{`${val}, `}</p>))}</div>
+        <div className="flex flex-row gap-1 text-mysom-darkgray" style={{ fontSize: '10px' }}> <p className="w-8">품종</p>  {wine.variety}</div>
         <ScaleInfo label="당도" scale={wine.sweetness} />
         <ScaleInfo label="바디감" scale={wine.body} />
         <ScaleInfo label="타닌" scale={wine.tannin} />
         <ScaleInfo label="산도" scale={wine.acidity} />
+        <div className="text-end mb-3">
+          <DeleteWineButton wineId={wine.id} shopId={wine.id} />
+        </div>
       </div>
     </Card>
   )
