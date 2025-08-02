@@ -1,31 +1,33 @@
 'use client';
 
-import * as React from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Box from '@mui/material/Box';
-import { useState } from 'react';
 
 interface SwitcherValue {
   name: string;
   value: string;
 }
 
-interface ShopSwitcherProps {
+interface RoutingSwitcherProps {
   values: SwitcherValue[];
-  onChange?: () => void;
 }
 
-export default function ShopSwitcher({ values, onChange }: ShopSwitcherProps) {
-  const [value, setValue] = useState(values[0].value); 
+export default function RoutingSwitcher({ values }: RoutingSwitcherProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams(); 
 
+  const initialValue = searchParams.get('list') || values[0].value; 
+  
   const handleToggleChange = (
     event: React.MouseEvent<HTMLElement>,
     newValue: string | null,
   ) => {
     if (newValue !== null) {
-      setValue(newValue);
-      onChange?.();
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set('list', newValue);
+      router.push(`?${newSearchParams.toString()}`);
     }
   };
 
@@ -46,7 +48,7 @@ export default function ShopSwitcher({ values, onChange }: ShopSwitcherProps) {
       }}
     >
       <ToggleButtonGroup
-        value={value}
+        value={initialValue}
         exclusive
         onChange={handleToggleChange}
         aria-label="shop switcher"
@@ -69,7 +71,6 @@ export default function ShopSwitcher({ values, onChange }: ShopSwitcherProps) {
               backgroundColor: 'transparent',
               boxShadow: 'none',
             },
-            
           },
         }}
       >
