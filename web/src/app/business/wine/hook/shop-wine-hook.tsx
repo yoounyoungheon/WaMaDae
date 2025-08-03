@@ -1,4 +1,4 @@
-import { createShopWineViewModel, ShopWineViewModel } from "../view-model/shop-wine-view-model";
+import { createShopSearchWineViewModel, createShopWineViewModel, ShopSearchWineViewModel, ShopWineViewModel } from "../view-model/shop-wine-view-model";
 
 // 업장에서 사용하는 와인 데이터를 처리하는 hook
 export const useShopMyWines = ({shopId}:{shopId:  number}) => {
@@ -37,13 +37,14 @@ export const useShopMyWines = ({shopId}:{shopId:  number}) => {
   return shopWinesViewModels;
 }
 
-export const useShopWineSearch = ({searchParams}:{searchParams: string}) => {
-  console.log("와인 검색어:", searchParams);
+// 업장에서 사용하는 와인 검색 hook
+export const useShopWineSearch = ({searchParam}:{searchParam: string}) => {
+  console.log("와인 검색어:", searchParam);
   
   // mock 데이터 (서비스에서 받아오는 데이터로 대체해야함)
-  const shopWinesViewModels: ShopWineViewModel[] = [
-    createShopWineViewModel(
-      1,
+  const shopWinesViewModels: ShopSearchWineViewModel[] = [
+    createShopSearchWineViewModel(
+      5,
       ["Fruity", "Crisp"],
       "소비뇨 블랑",
       "Chardonnay",
@@ -54,9 +55,10 @@ export const useShopWineSearch = ({searchParams}:{searchParams: string}) => {
       3,
       "/carrot1.png",
       "깔끔하고 괜찮은 와인.",
+      false
     ),
-    createShopWineViewModel(
-      2,
+    createShopSearchWineViewModel(
+      10,
       ["Fruity", "Crisp"],
       "소비뇨 블랑 레몬",
       "Merlot",
@@ -67,6 +69,7 @@ export const useShopWineSearch = ({searchParams}:{searchParams: string}) => {
       4,
       "/carrot2.jpeg",
       "당도가 괜찮은 와인.",
+      true
     ),
   ];
 

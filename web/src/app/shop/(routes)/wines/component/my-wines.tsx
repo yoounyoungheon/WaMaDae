@@ -1,15 +1,15 @@
 import { useShopMyWines } from "@/app/business/wine/hook/shop-wine-hook";
-import { ShopWineViewModel } from "@/app/business/wine/view-model/shop-wine-view-model";
 import { Card } from "@/app/ui/molecule/card";
 import { cn } from "@/app/utils/style/helper";
 import Grid from "@mui/material/Grid";
 import Image from "next/image";
 import Link from "next/link";
 import { DeleteWineButton } from "./delete-wine-button";
+import { ShopWineViewModel } from "@/app/business/wine/view-model/shop-wine-view-model";
 
 interface MyWinesProps {
   shopId: number;
-  selectedWineId?: number; // 선택된 와인 ID (선택적)
+  selectedWineId?: number;
 }
 
 export const MyWines = ({shopId, selectedWineId}: MyWinesProps) => {
@@ -21,9 +21,9 @@ export const MyWines = ({shopId, selectedWineId}: MyWinesProps) => {
       <div className="flex flex-col gap-2 w-full px-4">
         {wineViewModels.map((wine: ShopWineViewModel) => (
           selectedWineId === wine.id ? (
-            <SelectedWineInfoCard key={wine.id} wine={wine} shopId={shopId} />
+            <SelectedWineInfoCard key={wine.id} wine={wine} shopId={shopId}/>
           ) : (
-            <WineInfoCard key={wine.id} wine={wine} isSelected={false} />
+            <WineInfoCard key={wine.id} wine={wine} isSelected={false}/>
           )
         ))}
       </div>
@@ -31,7 +31,7 @@ export const MyWines = ({shopId, selectedWineId}: MyWinesProps) => {
   )
 }
 
-const WineInfoCard = ({wine, isSelected}: {wine: ShopWineViewModel, isSelected: boolean}) => {
+export const WineInfoCard = ({wine, isSelected}: {wine: ShopWineViewModel, isSelected: boolean}) => {
   return (
     <Link href={`/shop/wines?list=my-wine&wine=${wine.id}`}>
     <Card key={wine.id} className={cn("p-2 border shadow-none rounded-lg", isSelected ? "border-mysom-primary border-2" : "border-mysom-lightgray")}>
@@ -50,7 +50,7 @@ const WineInfoCard = ({wine, isSelected}: {wine: ShopWineViewModel, isSelected: 
   )
 }
 
-const SelectedWineInfoCard = ({wine, shopId}: {wine: ShopWineViewModel, shopId: number}) => {
+export const SelectedWineInfoCard = ({wine, shopId}: {wine: ShopWineViewModel, shopId: number}) => {
   
   return (
     <Card className="rounded-lg shadow-lg border-none">

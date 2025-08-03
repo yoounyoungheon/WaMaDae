@@ -14,14 +14,16 @@ export default function Page({
   return (
     <div className="flex flex-col">
       <ShopHeader headerTitle={"와인관리"} />
+
       <div className="flex flex-col justify-center items-center">
         <div className="py-4">
           <RoutingSwitcher values={[{name: "우리 매장 와인", value:"my-wine"}, {name: "전체 와인 리스트", value:"all-wine"}]}/>
         </div>
+        
         {listType === "my-wine" ? (
           <MyWines shopId={1} selectedWineId={wine} />
         ) : (
-          <SearchWines />
+          <SearchWines shopId={1} selectedWineId={wine} />
         )}
       </div>
     </div>

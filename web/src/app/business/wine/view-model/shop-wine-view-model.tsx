@@ -27,6 +27,10 @@ export interface ShopWineViewModel {
   description?: string | null;
 }
 
+export interface ShopSearchWineViewModel extends ShopWineViewModel {
+  isMine: boolean; // 내 와인 여부
+}
+
 export const createShopWineViewModel = (
   id: number,
   taseInfo: string[],
@@ -38,7 +42,7 @@ export const createShopWineViewModel = (
   tannin: number,
   acidity: number,
   image: string,
-  description?: string | null
+  description: string | null
 ): ShopWineViewModel => {
   return {
     id,
@@ -54,3 +58,25 @@ export const createShopWineViewModel = (
     description: description || null,
   };
 };
+
+export const createShopSearchWineViewModel = (
+  id: number,
+  taseInfo: string[],
+  name: string,
+  variety: string,
+  commentOfMySom: string | null,
+  sweetness: number,
+  body: number,
+  tannin: number,
+  acidity: number,
+  image: string,
+  description: string | null,
+  isMine: boolean,
+): ShopSearchWineViewModel => {
+  return {
+    ...createShopWineViewModel(
+      id, taseInfo, name, variety, commentOfMySom, sweetness, body, tannin, acidity, image, description
+    ),
+    isMine,
+  };
+};  
