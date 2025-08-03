@@ -1,6 +1,6 @@
 import { ShopHeader } from "../../component/header";
 import RoutingSwitcher from "../../component/switcher";
-import { AllWines } from "./component/all-wines";
+import { SearchWines } from "./component/search-wines";
 import { MyWines } from "./component/my-wines";
 
 
@@ -21,7 +21,7 @@ export default function Page({
         {listType === "my-wine" ? (
           <MyWines shopId={1} selectedWineId={wine} />
         ) : (
-          <AllWines />
+          <SearchWines />
         )}
       </div>
     </div>

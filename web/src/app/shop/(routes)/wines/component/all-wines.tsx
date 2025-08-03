@@ -1,6 +1,0 @@
-export const AllWines = () => {
-    return (
-      <>
-      </>
-    )
-  }
