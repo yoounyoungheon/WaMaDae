@@ -8,7 +8,7 @@ import { Card } from "@/app/ui/molecule/card";
 import { cn } from "@/app/utils/style/helper";
 import Grid from "@mui/material/Grid";
 import Image from "next/image";
-import { ShopSearchWineViewModel, ShopWineViewModel } from "@/app/business/wine/view-model/shop-wine-view-model";
+import { ShopSearchWineViewModel } from "@/app/business/wine/view-model/shop-wine-view-model";
 import Link from "next/link";
 import Button from "@/app/ui/atom/button";
 
@@ -20,7 +20,7 @@ interface AllWinesProps {
 export const SearchWines = ({shopId, selectedWineId}: AllWinesProps) => {
   const serchInputRef = useRef<HTMLInputElement>(null);
   const [searchParam, setSearchParam] = useState<string>("");
-  const wines = searchParam === "" ? [] : useShopWineSearch({ searchParam });
+  const wines = useShopWineSearch({ searchParam });
 
   return (
     <div className="flex flex-col w-full px-4">
@@ -29,7 +29,7 @@ export const SearchWines = ({shopId, selectedWineId}: AllWinesProps) => {
         <SearchButton onClick={()=>setSearchParam(serchInputRef.current?.value || "")}/>
       </div>
 
-      {wines.length === 0 ? <></> : <>
+      {wines.length === 0 || searchParam.length === 0 ? <></> : <>
         <div className="text-start text-sm mb-3 mt-5">{`"${searchParam}" 검색어는 총 ${wines.length}종입니다.`}</div>
         <div className="flex flex-col gap-2">
           {wines.map((wine) => (
@@ -79,7 +79,9 @@ const WineInfoCard = ({wine, isSelected}: {wine: ShopSearchWineViewModel, isSele
 }
 
 const SelectedWineInfoCard = ({wine, shopId}: {wine: ShopSearchWineViewModel, shopId: number}) => {
-  
+  // TODO: 추후 shopId를 이용해서 와인 추가 요청을 보낼 수 있음
+  console.log(shopId);
+
   return (
     <Card className="rounded-lg shadow-lg border-none">
 
