@@ -5,7 +5,7 @@ import { cn } from "@/app/utils/style/helper";
 import Grid from "@mui/material/Grid";
 import Image from "next/image";
 import Link from "next/link";
-import { DeleteWineButton } from "./button/delete-wine-button";
+import { DeleteWineButton } from "./delete-wine-button";
 
 interface MyWinesProps {
   shopId: number;
