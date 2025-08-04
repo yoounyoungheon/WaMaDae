@@ -18,6 +18,7 @@ export default function RoutingSwitcher({ values }: RoutingSwitcherProps) {
   const router = useRouter();
   const searchParams = useSearchParams(); 
 
+  // TODO: 쿼리 파라미터 네이밍 변경
   const initialValue = searchParams.get('list') || values[0].value; 
   
   const handleToggleChange = (
