@@ -24,8 +24,8 @@ export const SearchWines = ({shopId, selectedWineId}: AllWinesProps) => {
 
   return (
     <div className="flex flex-col w-full px-4">
-      <div className="flex flex-row gap-1 w-full justify-center items-center">
-        <TextInput ref={serchInputRef}/>
+      <div className="flex flex-row gap-1 w-full justify-center items-center px-8">
+        <input className='w-full border-b border-black p-3 resize-none focus:border-b focus:outline-none' ref={serchInputRef}/>
         <SearchButton onClick={()=>setSearchParam(serchInputRef.current?.value || "")}/>
       </div>
 
