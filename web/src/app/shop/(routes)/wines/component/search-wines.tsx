@@ -10,6 +10,7 @@ import Image from "next/image";
 import { ShopSearchWineViewModel } from "@/app/business/wine/view-model/shop-wine-view-model";
 import Link from "next/link";
 import Button from "@/app/ui/atom/button";
+import Divider from "@mui/material/Divider";
 
 interface AllWinesProps {
   shopId: number;
@@ -24,9 +25,13 @@ export const SearchWines = ({shopId, selectedWineId}: AllWinesProps) => {
   return (
     <div className="flex flex-col w-full px-4">
       <div className="flex flex-row gap-1 w-full justify-center items-center px-8">
-        <input className='border-b border-black focus:border-b focus:outline-none' ref={serchInputRef}/>
+        <input className='focus:outline-none' ref={serchInputRef}/>
         <SearchButton onClick={()=>setSearchParam(serchInputRef.current?.value || "")}/>
       </div>
+      <div className="flex w-full justify-center items-center px-14 mt-2">
+        <Divider className="w-full" style={{ backgroundColor: 'black' }} />
+      </div>
+      
 
       {wines.length === 0 || searchParam.length === 0 ? <></> : <>
         <div className="text-start text-sm mb-3 mt-5">{`"${searchParam}" 검색어는 총 ${wines.length}종입니다.`}</div>
