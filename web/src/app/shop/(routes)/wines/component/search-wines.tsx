@@ -28,7 +28,7 @@ export const SearchWines = ({shopId, selectedWineId}: AllWinesProps) => {
         <input className='focus:outline-none' ref={serchInputRef}/>
         <SearchButton onClick={()=>setSearchParam(serchInputRef.current?.value || "")}/>
       </div>
-      <div className="flex w-full justify-center items-center px-14 mt-2">
+      <div className="flex w-full justify-center items-center px-12 mt-2">
         <Divider className="w-full" style={{ backgroundColor: 'black' }} />
       </div>
       
