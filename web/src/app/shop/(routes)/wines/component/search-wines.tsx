@@ -23,11 +23,13 @@ export const SearchWines = ({shopId, selectedWineId}: AllWinesProps) => {
   const wines = useShopWineSearch({ searchParam });
 
   return (
-    <div className="flex flex-col w-full px-4">
-      <div className="flex flex-row gap-1 w-full justify-center items-center px-8">
+    <div className="flex flex-col w-full h-full px-4">
+      
+      <div className="flex flex-row gap-1 w-full justify-center items-center">
         <input className='focus:outline-none' ref={serchInputRef}/>
         <SearchButton onClick={()=>setSearchParam(serchInputRef.current?.value || "")}/>
       </div>
+
       <div className="flex w-full justify-center items-center px-12 mt-2">
         <Divider className="w-full" style={{ backgroundColor: 'black' }} />
       </div>

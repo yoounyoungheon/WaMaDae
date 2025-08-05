@@ -1,8 +1,16 @@
+'use server';
+
 import { APIResponseType, instance } from "@/app/utils/http"
 import { API_PATH } from "@/app/utils/http/api-query"
 import { WineModel } from "../model/wine-model";
 
-export const getShopWineList = async (shopId: string):Promise<APIResponseType<WineModel[]>> => {
+interface WineModelResponse {
+  data: WineModel[];
+  count: number;
+  nextPage: string | null;
+}
+
+export const getShopWineList = async (shopId: number):Promise<APIResponseType<WineModelResponse>> => {
   try{
     const response = await instance.get(`${API_PATH}/v1/restaurants/${shopId}/wines`);
 
@@ -19,7 +27,7 @@ export const getShopWineList = async (shopId: string):Promise<APIResponseType<Wi
     return {
       isSuccess: true,
       isFailure: false,
-      data: response.data as WineModel[],
+      data: response.data as WineModelResponse,
       message: "와인 리스트를 성공적으로 가져왔습니다."
     }
   } catch (error) {

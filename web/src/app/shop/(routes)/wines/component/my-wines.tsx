@@ -1,4 +1,4 @@
-import { useShopMyWines } from "@/app/business/wine/hook/shop-wine-hook";
+import { getShopMyWineViewModels } from "@/app/business/wine/hook/shop-wine-hook";
 import { Card } from "@/app/ui/molecule/card";
 import { cn } from "@/app/utils/style/helper";
 import Grid from "@mui/material/Grid";
@@ -12,12 +12,12 @@ interface MyWinesProps {
   selectedWineId?: number;
 }
 
-export const MyWines = ({shopId, selectedWineId}: MyWinesProps) => {
-  const wineViewModels = useShopMyWines({ shopId });
+export const MyWines = async ({shopId, selectedWineId}: MyWinesProps) => {
+  const wineViewModels = await getShopMyWineViewModels({ shopId });
 
   return (
     <>
-      <div className="font-semibold mb-5">{`현재 등록된 와인은 총${wineViewModels.length}종입니다.`}</div>
+      <div className="font-semibold mb-5">{`현재 등록된 와인은 총 ${wineViewModels.length}종입니다.`}</div>
       <div className="flex flex-col gap-2 w-full px-4">
         {wineViewModels.map((wine: ShopWineViewModel) => (
           selectedWineId === wine.id ? (
