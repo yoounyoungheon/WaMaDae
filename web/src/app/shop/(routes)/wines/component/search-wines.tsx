@@ -53,9 +53,9 @@ const SearchButton = ({onClick}:{onClick: ()=>void}) => {
 
 const WineInfoCard = ({wine}:{wine: ShopSearchWineViewModel}) => {
   return (
-    <label className="block cursor-pointer border shadow-none rounded-lg transition" >
+    <label className="block cursor-pointer border rounded-lg transition" >
         <input 
-          type="radio"
+          type="checkbox"
           name="menu"
           className="hidden peer"
         />

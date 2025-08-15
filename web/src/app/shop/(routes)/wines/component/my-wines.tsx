@@ -25,7 +25,7 @@ const WineInfoCard = ({wine}:{wine: ShopWineViewModel}) => {
   return (
     <label className="block cursor-pointer border shadow-none rounded-lg transition" >
         <input 
-          type="radio"
+          type="checkbox"
           name="menu"
           className="hidden peer"
         />

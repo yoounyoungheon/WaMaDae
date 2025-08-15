@@ -1,5 +1,5 @@
-export interface WineViewModel {
-  id: string
+export interface MenuViewModel {
+  id: number
   name: string
   price: string
   category: string[]
@@ -7,7 +7,7 @@ export interface WineViewModel {
   imageUrl: string
 }
 
-export const createWineViewModel = ({id, name, price, category, description, imageUrl}:WineViewModel): WineViewModel => {
+export const createMenuViewModel = ({id, name, price, category, description, imageUrl}:MenuViewModel): MenuViewModel => {
   return {
     id: id,
     name: name,
