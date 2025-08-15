@@ -11,15 +11,16 @@ interface SwitcherValue {
 }
 
 interface RoutingSwitcherProps {
+  query: string;
   values: SwitcherValue[];
 }
 
-export default function RoutingSwitcher({ values }: RoutingSwitcherProps) {
+export default function RoutingSwitcher({ query, values }: RoutingSwitcherProps) {
   const router = useRouter();
   const searchParams = useSearchParams(); 
 
   // TODO: 쿼리 파라미터 네이밍 변경
-  const initialValue = searchParams.get('type') || values[0].value; 
+  const initialValue = searchParams.get(query) || values[0].value; 
   
   const handleToggleChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -27,7 +28,7 @@ export default function RoutingSwitcher({ values }: RoutingSwitcherProps) {
   ) => {
     if (newValue !== null) {
       const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.set('type', newValue);
+      newSearchParams.set(query, newValue);
       router.push(`?${newSearchParams.toString()}`);
     }
   };
