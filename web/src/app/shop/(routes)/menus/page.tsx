@@ -6,7 +6,7 @@ export default function Page({
     searchParams,
   }: {
     searchParams: { [key: string]: string | undefined }}) {
-  const type = searchParams.type || "my-wine";
+  const type = searchParams.type || "shop-menus";
 
   return (
     <div className="flex flex-col">
@@ -14,9 +14,9 @@ export default function Page({
 
       <div className="flex flex-col justify-center items-center">
         <div className="py-4">
-          <RoutingSwitcher values={[{ name: "우리 가게 메뉴", value: "shop-menu" }, { name: "메뉴 추가", value: "create-menu" }]} query={"type"}/>
+          <RoutingSwitcher values={[{ name: "우리 가게 메뉴", value: "shop-menus" }, { name: "메뉴 추가", value: "create-menu" }]} query={"type"}/>
         </div>
-        {type === "shop-menu" ? (
+        {type === "shop-menus" ? (
           <>
             <ShopMenus />
           </>

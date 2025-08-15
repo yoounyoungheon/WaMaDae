@@ -7,7 +7,6 @@ import { ShopWineViewModel } from "@/app/business/wine/view-model/shop-wine-view
 
 export const MyWines = async ({shopId}:{shopId: number}) => {
   const wineViewModels = await getShopMyWineViewModels({ shopId, page: 1, size: 10 });
-  console.log("wineViewModels", wineViewModels);
 
   return (
     <>
