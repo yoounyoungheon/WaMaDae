@@ -31,11 +31,13 @@ export default function Page() {
 
       const reSequenced = updatedItems.map((item, idx) => ({
         ...item,
-        sequence: idx + 1,
+        sequenceNumber: idx + 1,
       }));
 
       setMenus(reSequenced);
     }
+
+    console.log(menus)
 
     dragItemIndex.current = null;
     dragOverItemIndex.current = null;
