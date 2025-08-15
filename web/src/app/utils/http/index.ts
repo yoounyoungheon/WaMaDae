@@ -8,6 +8,21 @@ export interface APIResponseType<T> {
   message?: string 
 }
 
+export interface PaginationRequestType<T = unknown> {
+  page: number;
+  size: number;
+  data?: T;
+}
+
+export const buildPaginationRequest = <T>(page: number, size: number, data: T) => {
+
+  return {
+    page,
+    size,
+    data
+  } as PaginationRequestType<T>;
+}
+
 export const checkResponseStatus = (statusCode: number) => {
   if (statusCode !== 200 && statusCode !== 201) {
     throw new AxiosError();

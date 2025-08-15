@@ -8,7 +8,7 @@ export default function Page({
     searchParams,
   }: {
     searchParams: { [key: string]: string | undefined }}) {
-  const listType = searchParams.list || "my-wine";
+  const type = searchParams.type || "my-wine";
   const wine = searchParams.wine ? parseInt(searchParams.wine) : undefined;
 
   return (
@@ -20,7 +20,7 @@ export default function Page({
           <RoutingSwitcher values={[{name: "우리 매장 와인", value:"my-wine"}, {name: "전체 와인 리스트", value:"all-wine"}]}/>
         </div>
         
-        {listType === "my-wine" ? (
+        {type === "my-wine" ? (
           <MyWines shopId={1} selectedWineId={wine} />
         ) : (
           <SearchWines shopId={1} selectedWineId={wine} />

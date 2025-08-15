@@ -19,7 +19,7 @@ export default function RoutingSwitcher({ values }: RoutingSwitcherProps) {
   const searchParams = useSearchParams(); 
 
   // TODO: 쿼리 파라미터 네이밍 변경
-  const initialValue = searchParams.get('list') || values[0].value; 
+  const initialValue = searchParams.get('type') || values[0].value; 
   
   const handleToggleChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -27,7 +27,7 @@ export default function RoutingSwitcher({ values }: RoutingSwitcherProps) {
   ) => {
     if (newValue !== null) {
       const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.set('list', newValue);
+      newSearchParams.set('type', newValue);
       router.push(`?${newSearchParams.toString()}`);
     }
   };

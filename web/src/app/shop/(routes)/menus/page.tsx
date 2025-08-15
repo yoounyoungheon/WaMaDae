@@ -1,11 +1,12 @@
 import { ShopHeader } from "../../component/header";
 import RoutingSwitcher from "../../component/switcher";
+import { ShopMenus } from "./component/shop-menus";
 
 export default function Page({
     searchParams,
   }: {
     searchParams: { [key: string]: string | undefined }}) {
-  const listType = searchParams.list || "my-wine";
+  const type = searchParams.type || "my-wine";
 
   return (
     <div className="flex flex-col">
@@ -15,8 +16,10 @@ export default function Page({
         <div className="py-4">
           <RoutingSwitcher values={[{name: "우리 가게 메뉴", value:"shop-menu"}, {name: "메뉴 추가", value:"create-menu"}]}/>
         </div>
-        {listType === "shop-menu" ? (
-          <></>
+        {type === "shop-menu" ? (
+          <>
+            <ShopMenus />
+          </>
         ) : (
           <></>
         )}
