@@ -5,15 +5,17 @@ export interface MenuViewModel {
   category: string[]
   description: string
   imageUrl: string
+  sequenceNumber: number
 }
 
-export const createMenuViewModel = ({id, name, price, category, description, imageUrl}:MenuViewModel): MenuViewModel => {
+export const createMenuViewModel = ({id, name, price, category, description, imageUrl, sequenceNumber: order}:MenuViewModel): MenuViewModel => {
   return {
-    id: id,
-    name: name,
-    price:price,
-    category: category,
-    description: description,
-    imageUrl: imageUrl,
+    id,
+    name,
+    price,
+    category,
+    description,
+    imageUrl,
+    sequenceNumber: order
   }
 }

@@ -1,15 +1,19 @@
-import { getShopMenus } from "@/app/business/shop/service/menu.service";
 import { MenuViewModel } from "@/app/business/shop/view-model/menu-view-model";
 import Button from "@/app/ui/atom/button";
 import { cn } from "@/app/utils/style/helper";
 import Image from "next/image";
+import Link from "next/link";
 
-export const ShopMenus = async () => {
-  const menus = await getShopMenus(1)
+export const ShopMenus = ({menus}:{menus: MenuViewModel[]}) => {
 
   return(
     <>
       <div className="flex flex-col gap-2 w-full px-4">
+        <Link href={"/shop/menus/order"}>
+          <Button variant={'ghost'}>
+            순서변경
+          </Button>
+        </Link>
         {menus.map((menu)=>{
           return <MenuInfoCard key={menu.id} menu={menu}/>
         })}
@@ -20,7 +24,7 @@ export const ShopMenus = async () => {
 
 const MenuInfoCard = ({menu}:{menu: MenuViewModel}) => {
   return (
-    <label className="block cursor-pointer border shadow-md rounded-lg transition" >
+    <label className="block border shadow-md rounded-lg transition" >
         <input 
           type="checkbox"
           name="menu"
@@ -39,10 +43,10 @@ const MenuInfoCard = ({menu}:{menu: MenuViewModel}) => {
                 fill
                 className="object-cover"
               />
-              </div>
-              <div className="flex flex-col flex-grow gap-1">
+            </div>
+            <div className="flex flex-col flex-grow gap-1">
               <div className="font-semibold">{menu.name}</div>
-              </div>
+            </div>
           </div> 
         </div>
   

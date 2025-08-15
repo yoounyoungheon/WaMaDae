@@ -1,12 +1,14 @@
+import { getShopMenus } from "@/app/business/shop/service/menu.service";
 import { ShopHeader } from "../../component/header";
 import RoutingSwitcher from "../../component/switcher";
 import { ShopMenus } from "./component/shop-menus";
 
-export default function Page({
+export default async function Page({
     searchParams,
   }: {
     searchParams: { [key: string]: string | undefined }}) {
   const type = searchParams.type || "shop-menus";
+  const menus = await getShopMenus(1)
 
   return (
     <div className="flex flex-col">
@@ -18,7 +20,7 @@ export default function Page({
         </div>
         {type === "shop-menus" ? (
           <>
-            <ShopMenus />
+            <ShopMenus menus={menus} />
           </>
         ) : (
           <></>
