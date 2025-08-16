@@ -8,8 +8,7 @@ export default function Page({
     searchParams,
   }: {
     searchParams: { [key: string]: string | undefined }}) {
-  const listType = searchParams.list || "my-wine";
-  const wine = searchParams.wine ? parseInt(searchParams.wine) : undefined;
+  const type = searchParams.type || "my-wine";
 
   return (
     <div className="flex flex-col">
@@ -17,13 +16,13 @@ export default function Page({
 
       <div className="flex flex-col justify-center items-center">
         <div className="py-4">
-          <RoutingSwitcher values={[{name: "우리 매장 와인", value:"my-wine"}, {name: "전체 와인 리스트", value:"all-wine"}]}/>
+          <RoutingSwitcher values={[{ name: "우리 매장 와인", value: "my-wine" }, { name: "전체 와인 리스트", value: "all-wine" }]} query={"type"}/>
         </div>
         
-        {listType === "my-wine" ? (
-          <MyWines shopId={1} selectedWineId={wine} />
+        {type === "my-wine" ? (
+          <MyWines shopId={1} />
         ) : (
-          <SearchWines shopId={1} selectedWineId={wine} />
+          <SearchWines shopId={1} />
         )}
       </div>
     </div>
