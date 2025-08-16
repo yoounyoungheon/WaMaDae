@@ -44,7 +44,7 @@ export default function Page() {
 
         return reordered.map((item, idx) => ({
           ...item,
-          sequence: idx + 1,
+          sequenceNumber: idx + 1,
         }));
       });
     }
