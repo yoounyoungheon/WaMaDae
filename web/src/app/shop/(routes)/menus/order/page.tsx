@@ -3,7 +3,7 @@ import { useShopMenus } from "@/app/business/shop/hook/menu-hook";
 import { ShopHeader } from "@/app/shop/component/header";
 import Button from "@/app/ui/atom/button";
 import { useRouter } from "next/navigation";
-import { Suspense, useRef } from "react";
+import { Suspense } from "react";
 import Image from "next/image";
 import {
   DndContext,
