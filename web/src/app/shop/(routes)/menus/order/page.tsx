@@ -21,6 +21,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { MenuViewModel } from "@/app/business/shop/view-model/menu-view-model";
+import { DragEndEvent } from "@dnd-kit/core";
 
 export default function Page() {
   const { menus, setMenus } = useShopMenus({shopId: 1})
@@ -31,7 +32,7 @@ export default function Page() {
     useSensor(TouchSensor)
   );
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
 
@@ -76,7 +77,7 @@ export default function Page() {
   )
 }
 
-export const DraggableMenuInfoCard = ({menu}:{menu: MenuViewModel}) => {
+const DraggableMenuInfoCard = ({menu}:{menu: MenuViewModel}) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: menu.id });
 
