@@ -31,7 +31,7 @@ export default function RootLayout({
 
 
             {/* 바디 영역: w-350 고정 */}
-            <div className="w-[350px] h-screen bg-white">
+            <div className="w-[350px] min-h-screen h-auto bg-white">
               {children}
             </div>
           </div>
