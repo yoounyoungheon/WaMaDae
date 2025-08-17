@@ -17,10 +17,11 @@ export function ShopCarousel() {
       sx={{
         backgroundColor: 'lightgray',
         borderRadius: '12px',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxShadow: 3
     }}>
       {items.map((item, index) => 
-        <div key={index} className="flex flex-col items-center justify-center aspect-[5/3] ">
+        <div key={index} className="flex flex-col items-center justify-center aspect-[5/2] ">
           <h2 className="text-lg font-bold">{item.name}</h2>
           <Image
             alt="메뉴 이미지를 불러오지 못했습니다."
