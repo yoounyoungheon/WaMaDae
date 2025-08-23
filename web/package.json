@@ -27,13 +27,15 @@
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.23.12",
     "next": "14.2.15",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-material-ui-carousel": "^3.4.2",
     "sockjs-client": "^1.6.1",
     "tailwind-merge": "^3.0.2",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@types/node": "^20",

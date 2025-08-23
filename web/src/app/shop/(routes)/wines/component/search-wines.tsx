@@ -13,14 +13,19 @@ import { useSearchShopWines } from "@/app/business/wine/hook/shop-wine-search-ho
 export const SearchWines = ({shopId}: {shopId: number}) => {
   const serchInputRef = useRef<HTMLInputElement>(null);
   const [searchParam, setSearchParam] = useState<string>("");
-  const wines = useSearchShopWines({ searchParam, shopId, page: 1, size: 10 });
+  const {shopWinesViewModels, callApi} = useSearchShopWines({ searchParam, shopId, page: 1, size: 10 });
+  const onClickSearchButton = () => {
+    if(!serchInputRef.current?.value) return
+    setSearchParam(serchInputRef.current?.value || "")
+    callApi()
+  }
 
   return (
     <div className="flex flex-col w-full h-full px-4">
       
       <div className="flex flex-row gap-1 w-full justify-center items-center">
         <input className='focus:outline-none' ref={serchInputRef}/>
-        <SearchButton onClick={()=>setSearchParam(serchInputRef.current?.value || "")}/>
+        <SearchButton onClick={onClickSearchButton}/>
       </div>
 
       <div className="flex w-full justify-center items-center px-12 mt-2">
@@ -28,10 +33,10 @@ export const SearchWines = ({shopId}: {shopId: number}) => {
       </div>
       
 
-      {wines.length === 0 || searchParam.length === 0 ? <></> : <>
-        <div className="text-start text-sm mb-3 mt-5">{`"${searchParam}" 검색어는 총 ${wines.length}종입니다.`}</div>
+      {shopWinesViewModels.length === 0 || searchParam.length === 0 ? <></> : <>
+        <div className="text-start text-sm mb-3 mt-5">{`"${searchParam}" 검색어는 총 ${shopWinesViewModels.length}종입니다.`}</div>
         <div className="flex flex-col gap-2">
-          {wines.map((wine) => (
+          {shopWinesViewModels.map((wine) => (
             <div key={wine.id}>
                 <WineInfoCard key={wine.id} wine={wine}/>
             </div>

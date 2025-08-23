@@ -2,18 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { createShopSearchWineViewModel, ShopSearchWineViewModel } from "../view-model/shop-wine-view-model";
+import { useToastStore } from "@/app/utils/toast/toast-store";
 
 // 업장에서 사용하는 와인 검색 hook
 export const useSearchShopWines = ({searchParam, shopId, page, size}:{searchParam: string, shopId: number, page: number, size:number}) => {
   const [shopWinesViewModels, setShopWinesViewModels] = useState<ShopSearchWineViewModel[]>([]);
+  const [isApiLoad, setIsApiLoad] = useState<boolean>(false)
+  const callApi = () => setIsApiLoad(true)
+  const { addToast } = useToastStore();
   
   useEffect(() => {
-    console.log(shopId)
-    setShopWinesViewModels(mockShopWinesViewModels)
-    
-  }, [searchParam, page, size, shopId]);
+    if(!isApiLoad) return
 
-  return shopWinesViewModels
+    const response = mockShopWinesViewModels;
+    if(response) addToast('와인리스트를 가져왔습니다.', 'success')
+    setShopWinesViewModels(mockShopWinesViewModels)
+
+    setIsApiLoad(false)
+  }, [searchParam, page, size, shopId, addToast, isApiLoad]);
+
+  return {shopWinesViewModels, callApi}
 }
   
 // mock 데이터 (서비스에서 받아오는 데이터로 대체해야함)
