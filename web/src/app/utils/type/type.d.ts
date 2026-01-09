@@ -6,3 +6,5 @@ export interface FormState {
 }
 
 export type MemberRole = 'ADIMIN' | 'USER' | 'SHOP';
+
+export type ToastType = "success" | "error" | "info";

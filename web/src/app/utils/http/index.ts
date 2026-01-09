@@ -25,7 +25,7 @@ export const buildPaginationRequest = <T>(page: number, size: number, data: T) =
 
 export const checkResponseStatus = (statusCode: number) => {
   if (statusCode !== 200 && statusCode !== 201) {
-    throw new AxiosError();
+    throw new AxiosError("에러가 발생했습니다. 잠시후 다시 시도해주세요.");
   }
 };
 

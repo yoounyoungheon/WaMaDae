@@ -1,19 +1,24 @@
-import type { Metadata } from "next";
-import localFont from 'next/font/local';
+import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
 import { cn } from "./utils/style/helper";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
-
 
 const globalFont = localFont({
-  src: './PretendardVariable.woff2',
-  display: 'swap',
-  variable: '--font-pretendard'
-})
+  src: "./PretendardVariable.woff2",
+  display: "swap",
+  variable: "--font-pretendard",
+});
 
 export const metadata: Metadata = {
   title: "WaMaDae",
   description: "WaMaDae WEB",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -22,20 +27,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full overflow-hidden">
       <body
-        className={cn(globalFont.variable, 'font-pretendard', 'flex justify-center', )}
+        className={cn(
+          globalFont.variable,
+          "font-pretendard",
+          "flex h-[100dvh] justify-center overflow-hidden"
+        )}
       >
-        <AppRouterCacheProvider>
-          <div>
-
-
-            {/* 바디 영역: w-350 고정 */}
-            <div className="w-[350px] min-h-screen h-auto bg-white">
-              {children}
-            </div>
+        <div className="h-full">
+          {/* 바디 영역: w-350 고정 */}
+          <div className="h-[100dvh] w-[350px] bg-white pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]">
+            {children}
           </div>
-        </AppRouterCacheProvider> 
+        </div>
       </body>
     </html>
   );
