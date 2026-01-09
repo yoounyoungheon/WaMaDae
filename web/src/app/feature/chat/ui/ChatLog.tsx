@@ -23,7 +23,8 @@ export const ChatLog = ({ chats }: ChatLogProps) => {
                   "w-full rounded-2xl px-3 py-2 text-sm shadow",
                   chat.isMine
                     ? "border border-mysom-secondary"
-                    : "border border-mysom-secondary"
+                    : "border border-mysom-secondary",
+                  chat.actionButton && "mb-2"
                 )}
               >
                 <p className="whitespace-pre-wrap leading-relaxed">
