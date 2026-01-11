@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ActionButton, SendButton } from "./SendMessageForm.part";
 
 type SendMessageFormProps = {
-  onSend: (payload: { message: string; imageUrl?: string }) => void;
+  onSend: (payload: { message: string }) => void;
   placeholder?: string;
 };
 

@@ -35,14 +35,7 @@ const ChatProvider = ({ children }: Props) => {
    * chattingRoom의 chats 상태에 단건 데이터를 add
    */
   const addChat = useCallback(
-    ({
-      message,
-      chatId,
-      isMine,
-      isloading,
-      copy,
-      actionButton,
-    }: AddChatType) => {
+    ({ message, chatId, isMine, isloading, copy, infoPanel }: AddChatType) => {
       setChattingRoom((prev) => {
         const newChat: ChatType = {
           chatId: chatId,
@@ -51,7 +44,7 @@ const ChatProvider = ({ children }: Props) => {
           isMine: isMine,
           isloading,
           copy,
-          actionButton,
+          infoPanel,
         };
 
         return {
@@ -67,12 +60,8 @@ const ChatProvider = ({ children }: Props) => {
    * 메세지 전송 함수
    */
   const sendMessage = useCallback(
-    ({ chatId, message, actionButton, copy, onSend }: SendMessageType) => {
-      addChat({ chatId, message, isMine: true, copy, actionButton });
-
-      if (onSend) {
-        onSend();
-      }
+    ({ chatId, message, infoPanel, copy }: SendMessageType) => {
+      addChat({ chatId, message, isMine: true, copy, infoPanel });
     },
     [addChat]
   );
@@ -81,26 +70,15 @@ const ChatProvider = ({ children }: Props) => {
    * 메세지 수신 함수
    */
   const receiveMessage = useCallback(
-    ({
-      chatId,
-      message,
-      isloading,
-      copy,
-      actionButton,
-      onReceive,
-    }: ReceiveMessageType) => {
+    ({ chatId, message, isloading, copy, infoPanel }: ReceiveMessageType) => {
       addChat({
         chatId,
         message,
         isMine: false,
         copy,
-        actionButton,
+        infoPanel,
         isloading,
       });
-
-      if (onReceive) {
-        onReceive();
-      }
     },
     [addChat]
   );
@@ -112,7 +90,7 @@ const ChatProvider = ({ children }: Props) => {
    * 1. 하나의 chat에 SSE로 받은 내용을 계속 업데이트하는 경우
    */
   const updateChat = useCallback(
-    ({ message, chatId, isloading, stream }: UpdateChatType) => {
+    ({ message, chatId, isloading, stream, infoPanel }: UpdateChatType) => {
       setChattingRoom((prev) => {
         const updatedChats = prev.chats.map((chat) => {
           if (chat.chatId === chatId) {
@@ -120,6 +98,7 @@ const ChatProvider = ({ children }: Props) => {
               ...chat,
               message: stream ? chat.message + message : message,
               isloading: isloading ?? chat.isloading,
+              infoPanel,
             };
           }
 

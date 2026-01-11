@@ -3,16 +3,14 @@ export type ReceiveMessageType = {
   chatId: string;
   isloading?: boolean;
   copy?: boolean;
-  actionButton?: React.JSX.Element;
-  onReceive?: () => void;
+  infoPanel?: React.JSX.Element;
 };
 
 export type SendMessageType = {
   message: string;
   chatId: string;
   copy?: boolean;
-  actionButton?: React.JSX.Element;
-  onSend?: () => void;
+  infoPanel?: React.JSX.Element;
 };
 
 export type UpdateChatType = {
@@ -20,7 +18,7 @@ export type UpdateChatType = {
   chatId: string;
   isloading?: boolean;
   stream?: boolean;
-  actionButton?: React.JSX.Element;
+  infoPanel?: React.JSX.Element;
 };
 
 export type AddChatType = {
@@ -29,33 +27,20 @@ export type AddChatType = {
   chatId: string;
   isloading?: boolean;
   copy?: boolean;
-  actionButton?: React.JSX.Element;
+  infoPanel?: React.JSX.Element;
 };
 
 export type ChatProviderType = {
   chattingRoom: ChattingRoomType;
-  sendMessage: ({
-    message,
-    chatId,
-    copy,
-    actionButton,
-    onSend,
-  }: SendMessageType) => void;
+  sendMessage: ({ message, chatId, copy, infoPanel }: SendMessageType) => void;
   receiveMessage: ({
     message,
     chatId,
     copy,
-    actionButton,
+    infoPanel,
     isloading,
-    onReceive,
   }: ReceiveMessageType) => void;
   updateChat: ({ message, chatId, isloading, stream }: UpdateChatType) => void;
-};
-
-export type ChattingHandlersType = {
-  send: (message: string, senderId: number) => void;
-  onReceive: (message: string, senderId: number) => void;
-  connect?: () => void;
 };
 
 export type ChatContentType = {
@@ -76,7 +61,7 @@ export type ChatType = {
   isMine: boolean;
   isloading?: boolean;
   copy?: boolean;
-  actionButton?: React.JSX.Element;
+  infoPanel?: React.JSX.Element;
 };
 
 export type ChatResponseType = {

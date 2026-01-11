@@ -4,10 +4,19 @@ import { useChat } from "@/app/feature/chat/hook/useChat";
 import { ChatLog } from "@/app/feature/chat/ui/ChatLog";
 import { SendMessageForm } from "@/app/feature/chat/ui/SendMessageForm";
 import uuid from "react-uuid";
-import Image from "next/image";
+import { WineRecommendView } from "./WineRecommendView";
 
 const ChatView = () => {
-  const { chattingRoom, sendMessage } = useChat();
+  const { chattingRoom, sendMessage, receiveMessage } = useChat();
+
+  const handleSendMessage = ({ message }: { message: string }) => {
+    sendMessage({ message, chatId: uuid() });
+    receiveMessage({
+      chatId: uuid(),
+      message: `${message}에 대한 결과입니다.`,
+      infoPanel: <WineRecommendView />,
+    });
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -15,23 +24,7 @@ const ChatView = () => {
         <ChatLog chats={chattingRoom.chats} />
       </div>
       <div className="w-full shrink-0 p-1.5">
-        <SendMessageForm
-          onSend={({ message, imageUrl }) =>
-            sendMessage({
-              message,
-              chatId: uuid(),
-              actionButton: imageUrl ? (
-                <Image
-                  src={imageUrl}
-                  height={28}
-                  width={28}
-                  alt="전송한 이미지"
-                  className="h-28 w-28 rounded object-cover"
-                />
-              ) : undefined,
-            })
-          }
-        />
+        <SendMessageForm onSend={handleSendMessage} />
       </div>
     </div>
   );
