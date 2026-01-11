@@ -1,6 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/app/shared/ui/molecule/dialog";
+import { DialogClose } from "@radix-ui/react-dialog";
 
 export const SendButton = ({ onClick }: { onClick: () => void }) => (
   <button
@@ -13,27 +18,31 @@ export const SendButton = ({ onClick }: { onClick: () => void }) => (
 );
 
 export const ActionButton = () => {
-  const [isOpen, setIsOpen] = useState(false);
-
   return (
-    <div className="relative ml-2">
-      <button
-        type="button"
-        className="flex text-lg shrink-0 items-center justify-center rounded-full text-mysom-darkgray bg-transparent transition focus:outline-none"
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((prev) => !prev)}
-      >
-        +
-      </button>
-
-      {isOpen ? (
-        <div className="absolute bottom-full left-0 mb-2 w-36 rounded-lg border bg-white shadow">
-          <button type="button" className="w-full px-3 py-2 text-left text-sm">
-            사진 업로드
+    <Dialog>
+      <DialogTrigger asChild>
+        <div className="relative ml-2">
+          <button
+            type="button"
+            className="flex text-lg shrink-0 items-center justify-center rounded-full text-mysom-darkgray bg-transparent transition focus:outline-none"
+            aria-haspopup="menu"
+          >
+            +
           </button>
         </div>
-      ) : null}
-    </div>
+      </DialogTrigger>
+      <DialogContent className="bottom-0 left-0 right-0 top-auto h-[90%] w-full max-w-none translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none data-[state=open]:animate-bottom-sheet-in data-[state=closed]:animate-bottom-sheet-out">
+        <div className="flex flex-col h-full gap-3">
+          <DialogClose>
+            <div className="flex justify-end text-xs text-mysom-darkgray">
+              닫기
+            </div>
+          </DialogClose>
+          <div className="flex h-[100%] bg-mysom-darkgray text-white justify-center p-3">
+            커스텀 화면
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };

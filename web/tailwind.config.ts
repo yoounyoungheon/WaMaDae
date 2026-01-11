@@ -19,6 +19,20 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      keyframes: {
+        "bottom-sheet-in": {
+          "0%": { transform: "translateY(100%)" },
+          "100%": { transform: "translateY(0)" },
+        },
+        "bottom-sheet-out": {
+          "0%": { transform: "translateY(0)" },
+          "100%": { transform: "translateY(100%)" },
+        },
+      },
+      animation: {
+        "bottom-sheet-in": "bottom-sheet-in 300ms ease-out",
+        "bottom-sheet-out": "bottom-sheet-out 200ms ease-in",
+      },
     },
   },
   plugins: [
