@@ -1,4 +1,5 @@
 import clsx from "clsx";
+import { useEffect, useRef } from "react";
 import { ChatType } from "../types/chat.types";
 
 type ChatLogProps = {
@@ -6,6 +7,13 @@ type ChatLogProps = {
 };
 
 export const ChatLog = ({ chats }: ChatLogProps) => {
+  const endRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (chats.length === 0) return;
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [chats]);
+
   return (
     <div className="flex flex-col gap-3 h-full">
       {chats.map((chat) => (
@@ -34,6 +42,7 @@ export const ChatLog = ({ chats }: ChatLogProps) => {
           {chat.infoPanel && <>{chat.infoPanel}</>}
         </div>
       ))}
+      <div ref={endRef} />
     </div>
   );
 };
