@@ -19,6 +19,7 @@ export const SendMessageForm = ({
 
   const handleSubmit = () => {
     const trimmed = message.trim();
+    if (!trimmed) return;
 
     onSend({ message: trimmed });
     setMessage("");

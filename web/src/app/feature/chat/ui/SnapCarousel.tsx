@@ -11,9 +11,11 @@ type Item = {
   img: string;
 };
 
+const FALLBACK_ITEM: Item = { title: "레드", img: "/carrot1.png" };
+
 export default function SnapCarousel({ items }: { items: Item[] }) {
   const [selectedItem, setSelectedItem] = useState<Item>(
-    items.at(0) ?? { title: "레드", img: "/carrot1.png" }
+    items.at(0) ?? FALLBACK_ITEM
   );
 
   return (
