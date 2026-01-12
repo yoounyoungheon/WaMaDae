@@ -6,16 +6,35 @@ import { SendMessageForm } from "@/app/feature/chat/ui/SendMessageForm";
 import uuid from "react-uuid";
 import { WineRecommendView } from "./WineRecommendView";
 
-const ChatView = () => {
-  const { chattingRoom, sendMessage, receiveMessage } = useChat();
+const RenderChatUI = () => {
+  const { chattingRoom, sendMessage, receiveMessage, updateChat } = useChat();
 
   const handleSendMessage = ({ message }: { message: string }) => {
     sendMessage({ message, chatId: uuid() });
-    receiveMessage({
-      chatId: uuid(),
-      message: `${message}에 대한 결과입니다.`,
-      infoPanel: <WineRecommendView />,
+
+    requestMessage(message);
+  };
+
+  // TODO: sse handler 로직 구현 예정 (현재 mocking)
+  const requestMessage = (message: string) => {
+    const chatId = uuid();
+    receiveMessage({ chatId, message: "", isloading: true });
+
+    const messageArr: string[] = `${message}에 대한 결과입니다.`.split("");
+    messageArr.forEach((delta, index) => {
+      setTimeout(() => {
+        const isLast = index === messageArr.length - 1;
+        updateChat({
+          chatId,
+          message: delta,
+          isloading: false,
+          stream: true,
+          ...(isLast && { infoPanel: <WineRecommendView /> }),
+        });
+      }, index * 50);
     });
+
+    return { chatId, messageArr };
   };
 
   return (
@@ -33,7 +52,7 @@ const ChatView = () => {
 const ChatUI = () => {
   return (
     <ChatProvider>
-      <ChatView />
+      <RenderChatUI />
     </ChatProvider>
   );
 };

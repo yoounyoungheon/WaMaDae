@@ -10,10 +10,10 @@ import { DialogClose } from "@radix-ui/react-dialog";
 export const SendButton = ({ onClick }: { onClick: () => void }) => (
   <button
     type="submit"
-    className="ml-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-mysom-lightpurple bg-mysom-lightpurple text-white transition focus:outline-none"
+    className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-mysom-lightpurple bg-mysom-lightpurple text-white transition focus:outline-none"
     onClick={onClick}
   >
-    <span className="text-sm font-medium">↑</span>
+    <span className="font-medium">↑</span>
   </button>
 );
 
@@ -24,7 +24,7 @@ export const ActionButton = () => {
         <div className="relative ml-2">
           <button
             type="button"
-            className="flex text-lg shrink-0 items-center justify-center rounded-full text-mysom-darkgray bg-transparent transition focus:outline-none"
+            className="flex text-2xl shrink-0 items-center justify-center rounded-full text-mysom-darkgray bg-transparent transition focus:outline-none"
             aria-haspopup="menu"
           >
             +
