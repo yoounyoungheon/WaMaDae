@@ -11,38 +11,47 @@ export const ChatLog = ({ chats }: ChatLogProps) => {
 
   useEffect(() => {
     if (chats.length === 0) return;
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    if (endRef.current) {
+      endRef.current.scrollTo({
+        top: endRef.current.scrollHeight,
+        behavior: "instant",
+      });
+    }
   }, [chats]);
 
   return (
-    <div className="flex flex-col gap-3 h-full">
-      {chats.map((chat) => (
-        <div key={chat.chatId}>
-          {chat.message && (
-            <div
-              className={clsx(
-                "flex",
-                chat.isMine ? "justify-end" : "justify-start"
-              )}
-            >
+    <div
+      className="flex-1 overflow-y-auto p-1.5 px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      ref={endRef}
+    >
+      <div className="flex flex-col gap-3 h-full">
+        {chats.map((chat) => (
+          <div key={chat.chatId}>
+            {chat.message && (
               <div
                 className={clsx(
-                  "flex rounded-2xl px-3 py-2 text-sm shadow",
-                  "border border-mysom-secondary",
-                  chat.infoPanel && "mb-3"
+                  "flex",
+                  chat.isMine ? "justify-end" : "justify-start"
                 )}
               >
-                <p className="whitespace-pre-wrap leading-relaxed">
-                  {chat.message}
-                </p>
+                <div
+                  className={clsx(
+                    "flex rounded-2xl px-3 py-2 text-sm shadow",
+                    "border border-mysom-secondary",
+                    chat.infoPanel && "mb-3"
+                  )}
+                >
+                  <p className="whitespace-pre-wrap leading-relaxed">
+                    {chat.message}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {chat.infoPanel && <>{chat.infoPanel}</>}
-        </div>
-      ))}
-      <div ref={endRef} />
+            {chat.infoPanel && <>{chat.infoPanel}</>}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

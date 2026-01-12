@@ -39,9 +39,7 @@ const RenderChatUI = () => {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto p-1.5 px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <ChatLog chats={chattingRoom.chats} />
-      </div>
+      <ChatLog chats={chattingRoom.chats} />
       <div className="w-full shrink-0 p-1.5">
         <SendMessageForm onSend={handleSendMessage} />
       </div>
