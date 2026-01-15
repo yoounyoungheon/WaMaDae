@@ -1,10 +1,11 @@
 "use client";
-import { ChatProvider } from "@/app/feature/chat/context/chat.context";
-import { useChat } from "@/app/feature/chat/hook/useChat";
+
 import { ChatLog } from "@/app/feature/chat/ui/ChatLog";
 import { SendMessageForm } from "@/app/feature/chat/ui/SendMessageForm";
 import uuid from "react-uuid";
 import { WineRecommendView } from "./WineRecommendView";
+import { ChatProvider } from "../business/context/chat.context";
+import { useChat } from "../business/hook/useChat";
 
 const RenderChatUI = () => {
   const { chattingRoom, sendMessage, receiveMessage, updateChat } = useChat();

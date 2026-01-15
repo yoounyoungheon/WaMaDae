@@ -1,9 +1,9 @@
 import clsx from "clsx";
 import { useEffect, useRef } from "react";
-import { ChatType } from "../types/chat.types";
+import { Chat } from "../types/view.model";
 
 type ChatLogProps = {
-  chats: ChatType[];
+  chats: Chat[];
 };
 
 export const ChatLog = ({ chats }: ChatLogProps) => {
