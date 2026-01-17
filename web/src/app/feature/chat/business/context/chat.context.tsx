@@ -1,16 +1,15 @@
 "use client";
 
 import { ReactNode, createContext, useCallback, useState } from "react";
-
 import {
-  AddChatType,
+  AddChat,
+  Chat,
+  ChattingRoom,
+  ReceiveMessage,
+  SendMessage,
+  UpdateChat,
   ChatProviderType,
-  ChattingRoomType,
-  ChatType,
-  ReceiveMessageType,
-  SendMessageType,
-  UpdateChatType,
-} from "../types/chat.types";
+} from "../../types/view.model";
 
 const defaultProvider: ChatProviderType = {
   chattingRoom: { id: "", chats: [] },
@@ -26,7 +25,7 @@ type Props = {
 };
 
 const ChatProvider = ({ children }: Props) => {
-  const [chattingRoom, setChattingRoom] = useState<ChattingRoomType>({
+  const [chattingRoom, setChattingRoom] = useState<ChattingRoom>({
     id: "",
     chats: [],
   });
@@ -35,9 +34,9 @@ const ChatProvider = ({ children }: Props) => {
    * chattingRoom의 chats 상태에 단건 데이터를 add
    */
   const addChat = useCallback(
-    ({ message, chatId, isMine, isloading, copy, infoPanel }: AddChatType) => {
+    ({ message, chatId, isMine, isloading, copy, infoPanel }: AddChat) => {
       setChattingRoom((prev) => {
-        const newChat: ChatType = {
+        const newChat: Chat = {
           chatId: chatId,
           message,
           time: new Date(),
@@ -60,7 +59,7 @@ const ChatProvider = ({ children }: Props) => {
    * 메세지 전송 함수
    */
   const sendMessage = useCallback(
-    ({ chatId, message, infoPanel, copy }: SendMessageType) => {
+    ({ chatId, message, infoPanel, copy }: SendMessage) => {
       addChat({ chatId, message, isMine: true, copy, infoPanel });
     },
     [addChat]
@@ -70,7 +69,7 @@ const ChatProvider = ({ children }: Props) => {
    * 메세지 수신 함수
    */
   const receiveMessage = useCallback(
-    ({ chatId, message, isloading, copy, infoPanel }: ReceiveMessageType) => {
+    ({ chatId, message, isloading, copy, infoPanel }: ReceiveMessage) => {
       addChat({
         chatId,
         message,
@@ -90,7 +89,7 @@ const ChatProvider = ({ children }: Props) => {
    * 1. 하나의 chat에 SSE로 받은 내용을 계속 업데이트하는 경우
    */
   const updateChat = useCallback(
-    ({ message, chatId, isloading, stream, infoPanel }: UpdateChatType) => {
+    ({ message, chatId, isloading, stream, infoPanel }: UpdateChat) => {
       setChattingRoom((prev) => {
         const updatedChats = prev.chats.map((chat) => {
           if (chat.chatId === chatId) {
