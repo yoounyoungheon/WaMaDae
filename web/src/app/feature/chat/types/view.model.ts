@@ -30,7 +30,7 @@ export type AddChat = {
   infoPanel?: React.JSX.Element;
 };
 
-export type ChatProvider = {
+export type ChatProviderType = {
   chattingRoom: ChattingRoom;
   sendMessage: ({ message, chatId, copy, infoPanel }: SendMessage) => void;
   receiveMessage: ({

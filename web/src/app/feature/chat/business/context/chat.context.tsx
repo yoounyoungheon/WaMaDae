@@ -1,18 +1,17 @@
 "use client";
 
 import { ReactNode, createContext, useCallback, useState } from "react";
-
 import {
   AddChat,
-  ChatProvider,
-  ChattingRoom,
   Chat,
+  ChattingRoom,
   ReceiveMessage,
   SendMessage,
   UpdateChat,
-} from "../types/chat.types";
+  ChatProviderType,
+} from "../../types/view.model";
 
-const defaultProvider: ChatProvider = {
+const defaultProvider: ChatProviderType = {
   chattingRoom: { id: "", chats: [] },
   sendMessage: () => undefined,
   receiveMessage: () => undefined,
@@ -114,7 +113,7 @@ const ChatProvider = ({ children }: Props) => {
     []
   );
 
-  const value: ChatProvider = {
+  const value: ChatProviderType = {
     chattingRoom,
     sendMessage,
     receiveMessage,
