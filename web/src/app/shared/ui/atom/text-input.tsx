@@ -1,11 +1,11 @@
-'use client';
-import React from 'react';
-import { cn } from '@/app/utils/style/helper';
-import { getInputColors } from '@/app/utils/style/helper';
+"use client";
+import React from "react";
+import { cn } from "@/app/utils/style/helper";
+import { getInputColors } from "@/app/utils/style/helper";
 
 export interface TextInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  type?: 'text' | 'password' | 'number';
+  type?: "text" | "password" | "number";
   icon?: React.ElementType;
   error?: boolean;
   errorMessages?: string[];
@@ -13,62 +13,64 @@ export interface TextInputProps
   onValueChange?: (value: string) => void;
 }
 
-const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(function TextInput(
-  {
-    type,
-    icon,
-    error = false,
-    errorMessages,
-    disabled = false,
-    placeholder,
-    onValueChange,
-    ...props
-  },
-  ref,
-) {
-  const Icon = icon;
+const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
+  function TextInput(
+    {
+      type,
+      icon,
+      error = false,
+      errorMessages,
+      disabled = false,
+      placeholder,
+      onValueChange,
+      ...props
+    },
+    ref
+  ) {
+    const Icon = icon;
 
-  return (
-    <>
-      <div
-        className={cn(
-          getInputColors(disabled, error),
-          'flex flex-row gap-1 items-center'
-        )}
-      >
-        <input
-          {...props}
-          ref={ref}
-          type={type}
+    return (
+      <>
+        <div
           className={cn(
-            'w-full border-b border-black p-3 resize-none focus:border-b focus:outline-none',
-            'shadow-none',
-            'py-1' ,
-            '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
-            Icon ? 'pl-2' : 'pl-3',
-            error ? 'pr-9' : 'pr-3',
-            disabled ? 'text-gray-6 placeholder:text-gray-6' : 'placeholder:text-gray-6',
+            getInputColors(disabled, error),
+            "flex flex-row gap-1 items-center"
           )}
-          placeholder={placeholder}
-          disabled={disabled}
-          onChange={(e) => {
-            onValueChange?.(e.target.value);
-          }}
-        />
-        {Icon ? <Icon className="ml-2.5 h-5 w-5 shrink-0" /> : null}
-        {error ? (
-          <div>Error</div>
-        ) : null}
-      </div>
-      {error && errorMessages
-        ? errorMessages.map((message, index) => (
-            <p key={index} className={cn('text-red-500 mt-1 text-sm')}>
-              {message}
-            </p>
-          ))
-        : null}
-    </>
-  );
-});
+        >
+          <input
+            {...props}
+            ref={ref}
+            type={type}
+            className={cn(
+              "w-full border-b border-black p-3 resize-none focus:border-b focus:outline-none",
+              "shadow-none",
+              "py-1",
+              "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+              Icon ? "pl-2" : "pl-3",
+              error ? "pr-9" : "pr-3",
+              disabled
+                ? "text-gray-6 placeholder:text-gray-6"
+                : "placeholder:text-gray-6"
+            )}
+            placeholder={placeholder}
+            disabled={disabled}
+            onChange={(e) => {
+              onValueChange?.(e.target.value);
+            }}
+          />
+          {Icon ? <Icon className="ml-2.5 h-5 w-5 shrink-0" /> : null}
+          {error ? <div>Error</div> : null}
+        </div>
+        {error && errorMessages
+          ? errorMessages.map((message, index) => (
+              <p key={index} className={cn("text-red-500 mt-1 text-sm")}>
+                {message}
+              </p>
+            ))
+          : null}
+      </>
+    );
+  }
+);
 
 export default TextInput;
