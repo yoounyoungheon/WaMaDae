@@ -38,7 +38,7 @@ export const Default: Story = {
         </p>
       </CardContent>
       <CardFooter>
-        <span className="text-xs text-slate-500">Footer 영역</span>
+        <span className="text-xs textㄴslate-500">Footer 영역</span>
       </CardFooter>
     </Card>
   ),

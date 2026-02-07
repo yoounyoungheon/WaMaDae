@@ -12,18 +12,23 @@ const meta: Meta<typeof TextInput> = {
       control: { type: "select" },
       options: ["text", "password", "number"],
     },
-    icon: { control: false },
-    error: { control: "boolean" },
-    errorMessages: { control: "object" },
+    status: {
+      control: { type: "select" },
+      options: ["default", "error", "success"],
+    },
+    withIcon: { control: false },
+    helperMessages: { control: "object" },
     disabled: { control: "boolean" },
     placeholder: { control: "text" },
+    onIconClick: { action: "iconClicked" },
     onValueChange: { action: "valueChanged" },
+    label: { control: "text" },
   },
   args: {
     type: "text",
     placeholder: "입력하세요",
     disabled: false,
-    error: false,
+    status: "default",
   },
   parameters: {
     layout: "centered",
@@ -48,16 +53,25 @@ export const Types: Story = {
 
 export const WithIcon: Story = {
   args: {
-    icon: SearchIcon,
+    withIcon: SearchIcon,
     placeholder: "Search",
   },
 };
 
 export const ErrorState: Story = {
   args: {
-    error: true,
-    errorMessages: ["필수 입력 항목입니다."],
+    status: "error",
+    withIcon: SearchIcon,
+    helperMessages: ["필수 입력 항목입니다."],
     placeholder: "오류 상태",
+  },
+};
+
+export const SuccessState: Story = {
+  args: {
+    status: "success",
+    withIcon: SearchIcon,
+    placeholder: "성공 상태",
   },
 };
 

@@ -9,18 +9,19 @@ const meta: Meta<typeof Button> = {
   argTypes: {
     variant: {
       control: { type: "select" },
-      options: [
-        "default",
-        "destructive",
-        "outline",
-        "secondary",
-        "ghost",
-        "link",
-      ],
+      options: ["solid", "outline", "text"],
     },
     type: {
       control: { type: "select" },
+      options: ["primary", "error", "cancel"],
+    },
+    size: {
+      control: { type: "select" },
       options: ["default", "icon"],
+    },
+    radius: {
+      control: { type: "select" },
+      options: ["sm", "lg", "full"],
     },
     asChild: {
       control: { type: "boolean" },
@@ -32,8 +33,10 @@ const meta: Meta<typeof Button> = {
   },
   args: {
     children: "Button",
-    variant: "default",
-    type: "default",
+    variant: "solid",
+    type: "primary",
+    size: "default",
+    radius: "lg",
     disabled: false,
     asChild: false,
   },
@@ -51,39 +54,67 @@ export const Default: Story = {};
 export const Variants: Story = {
   render: (args) => (
     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-      <Button {...args} variant="default">
-        default
-      </Button>
-      <Button {...args} variant="destructive">
-        destructive
+      <Button {...args} variant="solid">
+        solid
       </Button>
       <Button {...args} variant="outline">
         outline
       </Button>
-      <Button {...args} variant="secondary">
-        secondary
-      </Button>
-      <Button {...args} variant="ghost">
-        ghost
-      </Button>
-      <Button {...args} variant="link">
-        link
+      <Button {...args} variant="text">
+        text
       </Button>
     </div>
   ),
   args: {
-    type: "default",
+    type: "primary",
+    size: "default",
   },
 };
 
 export const Types: Story = {
   render: (args) => (
+    <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+      <Button {...args} type="primary">
+        primary
+      </Button>
+      <Button {...args} type="error">
+        error
+      </Button>
+      <Button {...args} type="cancel">
+        cancel
+      </Button>
+    </div>
+  ),
+  args: {
+    variant: "solid",
+    size: "default",
+  },
+};
+
+export const Sizes: Story = {
+  render: (args) => (
     <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-      <Button {...args} type="default">
+      <Button {...args} size="default">
         default
       </Button>
-      <Button {...args} type="icon" aria-label="icon button">
+      <Button {...args} size="icon" aria-label="icon button">
         +
+      </Button>
+    </div>
+  ),
+};
+
+export const Radius: Story = {
+  render: (args) => (
+    <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+      <Button {...args} radius="sm">
+        sm
+      </Button>
+      <Button {...args} radius="lg">
+        lg
+      </Button>
+      <Button {...args} radius="full">
+        full
       </Button>
     </div>
   ),
