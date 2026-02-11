@@ -35,6 +35,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# ai
+AGENTS.md
+
 .env
 *storybook.log
 storybook-static

@@ -1,0 +1,118 @@
+{
+  "generatedAt": "2026-02-10T15:35:53.406Z",
+  "version": 1,
+  "files": [
+    {
+      "filePath": "src/app/shared/ui/atom/button.stories.tsx",
+      "storyExports": [
+        "Variants",
+        "Types",
+        "Disabled",
+        "AsChildLink"
+      ]
+    },
+    {
+      "filePath": "src/app/shared/ui/atom/text-input.stories.tsx",
+      "storyExports": [
+        "WithIcon",
+        "ErrorState",
+        "SuccessState",
+        "Disabled"
+      ]
+    },
+    {
+      "filePath": "src/app/shared/ui/molecule/card.stories.tsx",
+      "storyExports": []
+    },
+    {
+      "filePath": "src/app/shared/ui/molecule/dialog.stories.tsx",
+      "storyExports": [
+        "Opened"
+      ]
+    }
+  ],
+  "stories": {
+    "(no-title)::Variants": {
+      "exportName": "Variants",
+      "args": {
+        "type": "primary",
+        "size": "default"
+      },
+      "argTypes": {},
+      "parameters": {},
+      "sourceFile": "src/app/shared/ui/atom/button.stories.tsx"
+    },
+    "(no-title)::Types": {
+      "exportName": "Types",
+      "args": {
+        "variant": "solid",
+        "size": "default"
+      },
+      "argTypes": {},
+      "parameters": {},
+      "sourceFile": "src/app/shared/ui/atom/button.stories.tsx"
+    },
+    "(no-title)::Disabled": {
+      "exportName": "Disabled",
+      "args": {
+        "disabled": true,
+        "placeholder": "비활성화"
+      },
+      "argTypes": {},
+      "parameters": {},
+      "sourceFile": "src/app/shared/ui/atom/text-input.stories.tsx"
+    },
+    "(no-title)::AsChildLink": {
+      "exportName": "AsChildLink",
+      "args": {
+        "asChild": true
+      },
+      "argTypes": {},
+      "parameters": {},
+      "sourceFile": "src/app/shared/ui/atom/button.stories.tsx"
+    },
+    "(no-title)::WithIcon": {
+      "exportName": "WithIcon",
+      "args": {
+        "placeholder": "Search"
+      },
+      "argTypes": {},
+      "parameters": {},
+      "sourceFile": "src/app/shared/ui/atom/text-input.stories.tsx"
+    },
+    "(no-title)::ErrorState": {
+      "exportName": "ErrorState",
+      "args": {
+        "status": "error",
+        "helperMessages": [
+          "필수 입력 항목입니다."
+        ],
+        "placeholder": "오류 상태"
+      },
+      "argTypes": {},
+      "parameters": {},
+      "sourceFile": "src/app/shared/ui/atom/text-input.stories.tsx"
+    },
+    "(no-title)::SuccessState": {
+      "exportName": "SuccessState",
+      "args": {
+        "status": "success",
+        "placeholder": "성공 상태"
+      },
+      "argTypes": {},
+      "parameters": {},
+      "sourceFile": "src/app/shared/ui/atom/text-input.stories.tsx"
+    },
+    "(no-title)::Opened": {
+      "exportName": "Opened",
+      "args": {
+        "defaultOpen": true,
+        "title": "기본 열림 상태",
+        "description": "Storybook에서 열려있는 상태로 확인할 수 있습니다."
+      },
+      "argTypes": {},
+      "parameters": {},
+      "sourceFile": "src/app/shared/ui/molecule/dialog.stories.tsx"
+    }
+  }
+}
