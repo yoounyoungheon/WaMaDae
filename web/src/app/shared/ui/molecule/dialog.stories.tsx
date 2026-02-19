@@ -15,12 +15,10 @@ const meta: Meta<typeof DialogContent> = {
     title: { control: "text" },
     description: { control: "text" },
     className: { control: "text" },
-    defaultOpen: { control: "boolean" },
   },
   args: {
     title: "Dialog title",
     description: "설명 텍스트가 들어갑니다.",
-    defaultOpen: false,
   },
 };
 
@@ -66,7 +64,6 @@ export const Default: Story = {
 
 export const Opened: Story = {
   args: {
-    defaultOpen: true,
     title: "기본 열림 상태",
     description: "Storybook에서 열려있는 상태로 확인할 수 있습니다.",
   },

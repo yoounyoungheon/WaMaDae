@@ -97,8 +97,8 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
                     status === "error"
                       ? "text-error-main"
                       : status === "success"
-                        ? "text-primary-main"
-                        : "text-text-03"
+                      ? "text-primary-main"
+                      : "text-text-03"
                   )}
                 />
               </button>
