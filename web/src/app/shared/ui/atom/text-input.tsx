@@ -61,7 +61,7 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
                 ref={ref}
                 type={type}
                 className={cn(
-                  "w-full rounded border text-text-03 p-1.5 resize-none focus:outline-none",
+                  "w-full rounded-3xl border text-text-03 p-1.5 resize-none focus:outline-none",
                   status === "error"
                     ? "border-error-main focus:border-error-main"
                     : status === "success"
@@ -70,8 +70,8 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
                   "shadow-none",
                   "py-2",
                   "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
-                  "pl-3",
-                  Icon ? "pr-10" : status === "error" ? "pr-9" : "pr-3",
+                  Icon ? "pl-10" : "pl-3",
+                  "pr-3",
                   disabled
                     ? "text-gray-6 placeholder:text-gray-6"
                     : "placeholder:text-gray-6"
@@ -88,7 +88,7 @@ const TextInput = React.forwardRef<HTMLInputElement, TextInputProps>(
                 type="button"
                 onClick={onIconClick}
                 disabled={!onIconClick}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1"
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-1"
               >
                 <Icon
                   className={cn(
