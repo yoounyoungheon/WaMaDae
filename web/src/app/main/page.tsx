@@ -1,9 +1,9 @@
-import ChatUI from "../feature/chat/ui/ChatUI";
+import HomePage from "../feature/home/ui/page/HomePage";
 
 export default function Page() {
   return (
     <>
-      <ChatUI />
+      <HomePage />
     </>
   );
 }

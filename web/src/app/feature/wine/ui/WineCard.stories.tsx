@@ -15,7 +15,6 @@ const meta: Meta<typeof WineCard> = {
     priceLabel: { control: "text" },
     isSelected: { control: "boolean" },
     className: { control: "text" },
-    onSelect: { action: "selectClicked" },
   },
   args: {
     name: "Chianti Classico",
