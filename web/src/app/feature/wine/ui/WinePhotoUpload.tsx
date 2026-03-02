@@ -5,6 +5,7 @@ import Image from "next/image";
 import Button from "@/app/shared/ui/atom/button";
 import { Card } from "@/app/shared/ui/molecule/card";
 import { cn } from "@/app/utils/style/helper";
+import Link from "next/link";
 
 export type PhotoAspect = "square" | "vertical" | "auto";
 export type ImageFit = "cover" | "contain";
@@ -70,6 +71,7 @@ export default function WinePhotoUpload({
   };
 
   const imageFitClass = fit === "contain" ? "object-contain" : "object-cover";
+  const hasUploadedPhoto = Boolean(selectedFile || previewUrl);
 
   const cardClassName = cn(
     "relative shrink-0 cursor-pointer transition-colors",
@@ -154,16 +156,20 @@ export default function WinePhotoUpload({
         </div>
       </Card>
 
-      <Button
-        variant="solid"
-        type="primary"
-        radius="lg"
-        className="min-w-1/2 w-3/4"
-        disabled={buttonDisabled}
-        onClick={() => onButtonClick?.(selectedFile)}
-      >
-        {buttonLabel}
-      </Button>
+      <div className="w-full">
+        <Link className="block w-full" href={"/main/recommend?status=analysis"}>
+          <Button
+            variant="solid"
+            type="primary"
+            radius="lg"
+            className="w-full"
+            disabled={buttonDisabled || !hasUploadedPhoto}
+            onClick={() => onButtonClick?.(selectedFile)}
+          >
+            {buttonLabel}
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 }

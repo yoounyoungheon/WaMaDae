@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
-import HomeIntroCard from "../HomeIntroCard";
+import HomeIntroCard from "../ui/HomeIntroCard";
 import WineHistorySection, {
   type WineHistoryItem,
-} from "../WineHistorySection";
-import WineRecommendSection from "@/app/feature/wine/ui/wine-reommend-section";
+} from "../ui/WineHistorySection";
+import WineCardList from "@/app/feature/wine/ui/WineCardList";
 import { type WineCardProps } from "@/app/feature/wine/ui/WineCard";
 import CommunityCardList from "@/app/feature/commnunity/ui/CommunityCardList";
 import { type CommnunitySummaryCardProps } from "@/app/feature/commnunity/ui/CommnunitySummaryCard";
@@ -68,7 +68,7 @@ const defaultCommunityCards: CommnunitySummaryCardProps[] = [
 
 export default function HomePage({
   userName = "와마다",
-  actionHref = "/wine/recommend",
+  actionHref = "/main/recommend",
   actionIcon = <span className="text-lg leading-none">+</span>,
   wineHistoryList = defaultWineHistoryList,
   wineRecommendCards = defaultWineRecommendCards,
@@ -97,7 +97,7 @@ export default function HomePage({
 
       <div className="col-span-4 p-3">
         <div className="font-semibold mb-3">오늘의 와인 추천</div>
-        <WineRecommendSection cards={wineRecommendCards} />
+        <WineCardList cards={wineRecommendCards} />
       </div>
 
       <div className="col-span-4 p-3">
