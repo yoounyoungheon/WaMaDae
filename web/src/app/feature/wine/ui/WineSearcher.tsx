@@ -168,7 +168,7 @@ export default function WineSearcher({
   return (
     <section
       className={cn(
-        "flex w-full max-w-md flex-col gap-4 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm",
+        "flex w-full max-w-md flex-col gap-4 bg-white p-4",
         className,
       )}
     >
