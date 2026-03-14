@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import WineCard, { type WineCardProps } from "./WineCard";
+import WineSearcher, {
+  type WineSearcherCompletedPayload,
+  type WineSearcherItem,
+} from "./WineSearcher";
 import { cn } from "@/app/utils/style/helper";
 import {
   Dialog,
@@ -16,6 +20,8 @@ export interface WineOcrResultProps {
   onDeSelect: (card: WineCardProps) => void;
   onAllSelect: (cards: WineCardProps[]) => void;
   onAllDeSelect: () => void;
+  fetchWineSearch: (query: string) => Promise<WineSearcherItem[]>;
+  onDirectAddCompleted?: (payload: WineSearcherCompletedPayload) => void;
   className?: string;
 }
 
@@ -28,6 +34,8 @@ export default function WineOcrResult({
   onDeSelect,
   onAllSelect,
   onAllDeSelect,
+  fetchWineSearch,
+  onDirectAddCompleted,
   className,
 }: WineOcrResultProps) {
   const [selectedCardList, setSelectedCardList] = useState<WineCardProps[]>([]);
@@ -115,29 +123,46 @@ export default function WineOcrResult({
 
       <div className="col-span-3 flex items-center gap-2 text-sm">
         <span className="text-slate-700">찾는 와인이 없나요?</span>
-        <ActionButton />
+        <ActionButton
+          fetchWineSearch={fetchWineSearch}
+          onCompleted={onDirectAddCompleted}
+        />
       </div>
     </section>
   );
 }
 
-const ActionButton = () => {
+interface ActionButtonProps {
+  fetchWineSearch: (query: string) => Promise<WineSearcherItem[]>;
+  onCompleted?: (payload: WineSearcherCompletedPayload) => void;
+}
+
+const ActionButton = ({ fetchWineSearch, onCompleted }: ActionButtonProps) => {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <button type="button" className="font-medium text-primary-main">
           직접 추가하기
         </button>
       </DialogTrigger>
       <DialogContent className="bottom-0 left-0 right-0 top-auto h-[90%] w-full max-w-none translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none data-[state=open]:animate-bottom-sheet-in data-[state=closed]:animate-bottom-sheet-out">
-        <div className="flex flex-col h-full gap-3">
+        <div className="flex h-full flex-col gap-3">
           <DialogClose>
             <div className="flex justify-end text-xs text-mysom-darkgray">
               닫기
             </div>
           </DialogClose>
-          <div className="flex h-[100%] bg-mysom-darkgray text-white justify-center p-3">
-            커스텀 화면
+          <div className="flex h-full justify-center overflow-y-auto p-3">
+            <WineSearcher
+              className="max-w-none"
+              fetchWineSearch={fetchWineSearch}
+              onCompleted={(payload) => {
+                onCompleted?.(payload);
+                setOpen(false);
+              }}
+            />
           </div>
         </div>
       </DialogContent>
