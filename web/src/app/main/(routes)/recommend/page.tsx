@@ -1,5 +1,6 @@
 import ReommendPage from "@/app/feature/wine/page/RecommendPage";
 import { getWineListForOcr } from "@/app/feature/wine/business/getWineListForOcr";
+import { recommendMenuCategoriesFromWineList } from "@/app/feature/wine/business/menuCategoryRecommendation";
 
 export default function Page({
   searchParams,
@@ -12,6 +13,7 @@ export default function Page({
     <ReommendPage
       analysisStatus={isAnalysisCompleted}
       getWineListForOcr={getWineListForOcr}
+      recommendMenuCategoriesFromWineList={recommendMenuCategoriesFromWineList}
     />
   );
 }

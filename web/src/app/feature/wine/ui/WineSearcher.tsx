@@ -8,6 +8,7 @@ import TextInput from "@/app/shared/ui/atom/text-input";
 import { cn } from "@/app/utils/style/helper";
 
 export interface WineSearcherItem {
+  id?: number;
   name: string;
   description: string;
   imageUrl: string;
