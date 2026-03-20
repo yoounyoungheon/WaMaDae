@@ -1,4 +1,5 @@
 import ReommendPage from "@/app/feature/wine/page/RecommendPage";
+import { getWineListForOcr } from "@/app/feature/wine/business/getWineListForOcr";
 
 export default function Page({
   searchParams,
@@ -7,5 +8,10 @@ export default function Page({
 }) {
   const isAnalysisCompleted = searchParams.status === "analysis";
 
-  return <ReommendPage analysisStatus={isAnalysisCompleted} />;
+  return (
+    <ReommendPage
+      analysisStatus={isAnalysisCompleted}
+      getWineListForOcr={getWineListForOcr}
+    />
+  );
 }

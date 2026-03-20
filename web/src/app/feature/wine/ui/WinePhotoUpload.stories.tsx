@@ -12,7 +12,6 @@ const meta: Meta<typeof WinePhotoUpload> = {
     buttonLabel: { control: "text" },
     title: { control: "text" },
     description: { control: "text" },
-    initialImageUrl: { control: "text" },
     className: { control: "text" },
     buttonDisabled: { control: "boolean" },
     onButtonClick: { action: "buttonClicked" },
@@ -31,13 +30,6 @@ export default meta;
 type Story = StoryObj<typeof WinePhotoUpload>;
 
 export const Default: Story = {};
-
-export const WithInitialImage: Story = {
-  args: {
-    initialImageUrl: "/carrot4.jpeg",
-    buttonLabel: "이미지 분석",
-  },
-};
 
 export const DisabledButton: Story = {
   args: {

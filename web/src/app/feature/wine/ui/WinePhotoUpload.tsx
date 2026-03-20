@@ -5,16 +5,14 @@ import Image from "next/image";
 import Button from "@/app/shared/ui/atom/button";
 import { Card } from "@/app/shared/ui/molecule/card";
 import { cn } from "@/app/utils/style/helper";
-import Link from "next/link";
 
 export type PhotoAspect = "square" | "vertical" | "auto";
 export type ImageFit = "cover" | "contain";
 
 export interface WinePhotoUploadProps {
   buttonLabel: string;
-  onButtonClick?: (file: File | null) => void;
+  onButtonClick?: (file: File | null) => Promise<void> | void;
   onImageChange?: (file: File | null) => void;
-  initialImageUrl?: string;
   title?: string;
   description?: string;
   className?: string;
@@ -22,13 +20,13 @@ export interface WinePhotoUploadProps {
   aspect?: PhotoAspect;
   fit?: ImageFit;
   fixedSize?: number;
+  isSubmitting?: boolean;
 }
 
 export default function WinePhotoUpload({
   buttonLabel,
   onButtonClick,
   onImageChange,
-  initialImageUrl,
   title = "와인 메뉴 사진 업로드",
   description = "카드를 눌러 와인 사진 1장을 선택하세요.",
   className,
@@ -36,16 +34,11 @@ export default function WinePhotoUpload({
   aspect = "square",
   fit = "cover",
   fixedSize = 280,
+  isSubmitting = false,
 }: WinePhotoUploadProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(
-    initialImageUrl ?? null
-  );
-
-  React.useEffect(() => {
-    setPreviewUrl(initialImageUrl ?? null);
-  }, [initialImageUrl]);
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!selectedFile) return;
@@ -71,7 +64,7 @@ export default function WinePhotoUpload({
   };
 
   const imageFitClass = fit === "contain" ? "object-contain" : "object-cover";
-  const hasUploadedPhoto = Boolean(selectedFile || previewUrl);
+  const hasUploadedPhoto = Boolean(selectedFile);
 
   const cardClassName = cn(
     "relative shrink-0 cursor-pointer transition-colors",
@@ -157,18 +150,16 @@ export default function WinePhotoUpload({
       </Card>
 
       <div className="w-full">
-        <Link className="block w-full" href={"/main/recommend?status=analysis"}>
-          <Button
-            variant="solid"
-            type="primary"
-            radius="lg"
-            className="w-full"
-            disabled={buttonDisabled || !hasUploadedPhoto}
-            onClick={() => onButtonClick?.(selectedFile)}
-          >
-            {buttonLabel}
-          </Button>
-        </Link>
+        <Button
+          variant="solid"
+          type="primary"
+          radius="lg"
+          className="w-full"
+          disabled={buttonDisabled || isSubmitting || !hasUploadedPhoto}
+          onClick={() => onButtonClick?.(selectedFile)}
+        >
+          {isSubmitting ? "분석 중..." : buttonLabel}
+        </Button>
       </div>
     </div>
   );
