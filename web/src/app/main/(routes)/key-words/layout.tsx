@@ -1,4 +1,4 @@
-export default function RecommendLayout({
+export default function KeywordsLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

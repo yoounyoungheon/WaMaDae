@@ -3,6 +3,7 @@ import { Card, CardContent, CardTitle } from "@/app/shared/ui/molecule/card";
 import { cn } from "@/app/utils/style/helper";
 
 export interface WineCardProps {
+  id?: number;
   name: string;
   description: string;
   imageUrl: string;
