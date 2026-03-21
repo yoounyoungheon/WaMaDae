@@ -1,17 +1,14 @@
-import { API_PATH } from "@/app/utils/http/api-query";
+import {
+  requestServerApi,
+} from "@/app/utils/http/server-api";
 
 interface PairingRequestBody {
   wines?: { id?: number; name: string }[];
   menuCategories?: string[];
 }
 
-const buildRequestUrl = () => {
-  if (!API_PATH) {
-    throw new Error("챗봇 API base URL이 설정되지 않았습니다.");
-  }
-
-  return new URL("/v1/ai/chat/pairing", API_PATH).toString();
-};
+export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   try {
@@ -25,7 +22,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const upstreamResponse = await fetch(buildRequestUrl(), {
+    const upstreamResponse = await requestServerApi("/v1/ai/chat/pairing", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

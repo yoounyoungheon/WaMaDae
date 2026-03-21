@@ -1,13 +1,10 @@
 import { type NextRequest } from "next/server";
-import { API_PATH } from "@/app/utils/http/api-query";
+import {
+  requestServerApi,
+} from "@/app/utils/http/server-api";
 
-const buildRequestUrl = () => {
-  if (!API_PATH) {
-    throw new Error("챗봇 API base URL이 설정되지 않았습니다.");
-  }
-
-  return new URL("/v1/ai/chat/answer", API_PATH).toString();
-};
+export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
   const chatId = request.nextUrl.searchParams.get("chatId");
@@ -18,7 +15,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const upstreamResponse = await fetch(buildRequestUrl(), {
+    const upstreamResponse = await requestServerApi("/v1/ai/chat/answer", {
       method: "GET",
       headers: {
         Accept: "text/event-stream",

@@ -2,6 +2,8 @@ import ReommendPage from "@/app/feature/wine/page/RecommendPage";
 import { getWineListForOcr } from "@/app/feature/wine/business/getWineListForOcr";
 import { recommendMenuCategoriesFromWineList } from "@/app/feature/wine/business/menuCategoryRecommendation";
 
+export const maxDuration = 60;
+
 export default function Page({
   searchParams,
 }: {

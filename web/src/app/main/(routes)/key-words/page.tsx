@@ -1,6 +1,8 @@
 import KeywordCardSelector from "@/app/feature/wine/ui/KeywordCardSelector";
 import { getMenuCategoryRecommendation } from "@/app/feature/wine/business/menuCategoryRecommendation";
 
+export const maxDuration = 60;
+
 export default async function Page({
   searchParams,
 }: {
