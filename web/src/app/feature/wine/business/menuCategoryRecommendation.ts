@@ -1,7 +1,10 @@
 "use server";
 
 import { type APIResponseType } from "@/app/utils/http";
-import { API_PATH } from "@/app/utils/http/api-query";
+import {
+  parseServerApiError,
+  requestServerApi,
+} from "@/app/utils/http/server-api";
 
 export interface MenuCategoryRecommendationWine {
   id?: number;
@@ -40,33 +43,6 @@ export interface MenuCategoryRecommendationDetail {
   error?: MenuCategoryRecommendationError;
 }
 
-interface ApiErrorResponse {
-  status?: number;
-  message?: string;
-}
-
-const buildRequestUrl = (path: string) => {
-  if (!API_PATH) {
-    throw new Error("추천 API base URL이 설정되지 않았습니다.");
-  }
-
-  return new URL(path, API_PATH).toString();
-};
-
-const parseApiError = async (response: Response) => {
-  try {
-    const errorBody = (await response.json()) as ApiErrorResponse;
-
-    if (errorBody.message) {
-      return errorBody.message;
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
-};
-
 const parseRecommendationId = (location: string) => {
   const segments = location.split("/").filter(Boolean);
   return segments.at(-1) ?? "";
@@ -81,8 +57,8 @@ export async function recommendMenuCategoriesFromWineList(
       throw new Error("추천할 와인 목록이 필요합니다.");
     }
 
-    const response = await fetch(
-      buildRequestUrl("/v1/menu-category-recommendations"),
+    const response = await requestServerApi(
+      "/v1/menu-category-recommendations",
       {
         method: "POST",
         headers: {
@@ -90,12 +66,11 @@ export async function recommendMenuCategoriesFromWineList(
           "Idempotency-Key": idempotencyKey,
         },
         body: JSON.stringify(payload),
-        cache: "no-store",
       },
     );
 
     if (response.status !== 200 && response.status !== 202) {
-      const apiErrorMessage = await parseApiError(response);
+      const apiErrorMessage = await parseServerApiError(response);
 
       throw new Error(
         apiErrorMessage ??
@@ -139,16 +114,15 @@ export async function getMenuCategoryRecommendation(
       throw new Error("추천 조회 ID가 필요합니다.");
     }
 
-    const response = await fetch(
-      buildRequestUrl(`/v1/menu-category-recommendations/${recommendationId}`),
+    const response = await requestServerApi(
+      `/v1/menu-category-recommendations/${recommendationId}`,
       {
         method: "GET",
-        cache: "no-store",
       },
     );
 
     if (!response.ok) {
-      const apiErrorMessage = await parseApiError(response);
+      const apiErrorMessage = await parseServerApiError(response);
 
       throw new Error(
         apiErrorMessage ??

@@ -1,7 +1,10 @@
 "use server";
 
 import { type APIResponseType } from "@/app/utils/http";
-import { API_PATH } from "@/app/utils/http/api-query";
+import {
+  parseServerApiError,
+  requestServerApi,
+} from "@/app/utils/http/server-api";
 
 const OCR_SUPPORTED_IMAGE_TYPES = ["image/png", "image/jpeg"] as const;
 
@@ -16,39 +19,12 @@ interface WineListForOcrResponse {
   count: number;
 }
 
-interface ApiErrorResponse {
-  status?: number;
-  message?: string;
-}
-
 const isSupportedImageType = (
   imageType: string,
 ): imageType is (typeof OCR_SUPPORTED_IMAGE_TYPES)[number] =>
   OCR_SUPPORTED_IMAGE_TYPES.includes(
     imageType as (typeof OCR_SUPPORTED_IMAGE_TYPES)[number],
   );
-
-const buildRequestUrl = () => {
-  if (!API_PATH) {
-    throw new Error("OCR API base URL이 설정되지 않았습니다.");
-  }
-
-  return new URL("/v1/ocr/menu/wine", API_PATH).toString();
-};
-
-const parseApiError = async (response: Response) => {
-  try {
-    const errorBody = (await response.json()) as ApiErrorResponse;
-
-    if (errorBody.message) {
-      return errorBody.message;
-    }
-  } catch {
-    return null;
-  }
-
-  return null;
-};
 
 export async function getWineListForOcr(
   formData: FormData,
@@ -64,7 +40,7 @@ export async function getWineListForOcr(
       throw new Error("PNG 또는 JPEG 형식의 이미지만 업로드할 수 있습니다.");
     }
 
-    const response = await fetch(buildRequestUrl(), {
+    const response = await requestServerApi("/v1/ocr/menu/wine", {
       method: "POST",
       headers: {
         "Content-Type": imageFile.type,
@@ -74,7 +50,7 @@ export async function getWineListForOcr(
     });
 
     if (!response.ok) {
-      const apiErrorMessage = await parseApiError(response);
+      const apiErrorMessage = await parseServerApiError(response);
 
       throw new Error(
         apiErrorMessage ??
