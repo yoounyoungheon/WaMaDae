@@ -99,13 +99,21 @@ const SSEProvider = ({ children }: Props) => {
 
     // 재시도 로직은 브라우저 내부 정책을 따름
     es.onerror = (event) => {
-      setSSEState("CONNECTING");
-
       const target = event.currentTarget as EventSource;
+      const readyState = target?.readyState;
+
+      console.error("[SSE] EventSource error", {
+        url: target?.url ?? null,
+        readyState,
+      });
+
+      setSSEState(
+        readyState === EventSource.CLOSED ? "CLOSED" : "CONNECTING"
+      );
       setErrorMessage(
-        `[SSE]: 서버에서 메세지를 수신하는 중 오류가 발생했습니다. url: ${
-          target?.url ?? null
-        }`
+        readyState === EventSource.CLOSED
+          ? `[SSE]: 연결이 종료되었습니다. url: ${target?.url ?? null}`
+          : `[SSE]: 연결 재시도 중입니다. url: ${target?.url ?? null}`
       );
     };
 

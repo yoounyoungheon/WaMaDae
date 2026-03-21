@@ -66,6 +66,8 @@ export async function getWineListForOcr(
       data: result.items,
     };
   } catch (error) {
+    console.error("와인 메뉴 OCR 요청 중 오류 발생:", error);
+
     return {
       isSuccess: false,
       isFailure: true,
