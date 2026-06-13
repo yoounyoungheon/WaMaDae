@@ -4,7 +4,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: process.env.S3_HOST,
+        hostname: process.env.S3_HOST ?? 'temp_data',
         port: '',
         pathname: '/**',
       },
