@@ -38,8 +38,9 @@ instance.interceptors.response.use((response: AxiosResponse) => {
 });
 
 instance.interceptors.request.use(
-  function (config) {
-    const token = cookies().get("token")?.value;
+  async function (config) {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       config.headers["Content-Type"] = "application/json";

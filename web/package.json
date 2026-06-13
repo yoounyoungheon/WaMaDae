@@ -16,8 +16,8 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
-    "@headlessui/react": "^1.7.18",
-    "@headlessui/tailwindcss": "^0.2.0",
+    "@headlessui/react": "^2.2.10",
+    "@headlessui/tailwindcss": "^0.2.2",
     "@radix-ui/react-dialog": "^1.1.5",
     "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/react-slot": "^1.1.1",
@@ -25,9 +25,9 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.12",
-    "next": "14.2.15",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "next": "^15.5.19",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "react-uuid": "^2.0.0",
     "tailwind-merge": "^3.0.2",
     "zod": "^3.24.2",
@@ -42,12 +42,13 @@
     "@storybook/addon-vitest": "^10.2.1",
     "@storybook/nextjs-vite": "^10.2.1",
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "@vitest/browser-playwright": "^4.0.18",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitest/browser": "^4.1.8",
+    "@vitest/browser-playwright": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^8",
-    "eslint-config-next": "14.2.26",
+    "eslint-config-next": "^15.5.19",
     "eslint-plugin-storybook": "^10.2.1",
     "fast-glob": "^3.3.3",
     "playwright": "^1.58.0",
@@ -55,7 +56,13 @@
     "storybook": "^10.2.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
-    "vite": "^7.3.1",
-    "vitest": "^4.0.18"
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8"
+  },
+  "overrides": {
+    "esbuild": "0.28.1",
+    "next": {
+      "postcss": "8.5.10"
+    }
   }
 }

@@ -17,6 +17,11 @@ export interface FormSelectProps extends React.HTMLAttributes<HTMLInputElement> 
   onValueChange?: (value: unknown) => void;
 }
 
+type FormSelectItemElement = React.ReactElement<{
+  value: string;
+  placeholder: string;
+}>;
+
 export const FormSelectRoot = React.forwardRef<HTMLInputElement, FormSelectProps>(function Select(
   {
     defaultValue,
@@ -40,10 +45,12 @@ export const FormSelectRoot = React.forwardRef<HTMLInputElement, FormSelectProps
 
   const selectedPlaceholder = useMemo(() => {
     const reactElementChildren = React.Children.toArray(children).filter(
-      (child) => React.isValidElement(child) && child.props.value === selectedValue,
+      (child): child is FormSelectItemElement =>
+        React.isValidElement(child) &&
+        (child as FormSelectItemElement).props.value === selectedValue,
     );
     return reactElementChildren.length > 0
-      ? (reactElementChildren[0] as React.ReactElement).props.placeholder
+      ? reactElementChildren[0].props.placeholder
       : placeholder;
   }, [selectedValue, children, placeholder]);
 
@@ -111,9 +118,7 @@ export const FormSelectRoot = React.forwardRef<HTMLInputElement, FormSelectProps
             <ChevronDownIcon className={twMerge("h-5 w-5 flex-none", "text-gray-400")} />
           </span>
         </Listbox.Button>
-        {/* 1.9.18 버전 이상부터는 Transition에서 className 지원하지 않음 - 리팩토링 필요 */}
         <Transition
-          className="absolute z-20 w-full"
           enter="transition ease duration-100 transform"
           enterFrom="opacity-0 -translate-y-4"
           enterTo="opacity-100 translate-y-0"
@@ -121,14 +126,16 @@ export const FormSelectRoot = React.forwardRef<HTMLInputElement, FormSelectProps
           leaveFrom="opacity-100 translate-y-0"
           leaveTo="opacity-0 -translate-y-4"
         >
-          <Listbox.Options
-            className={twMerge(
-              "left-0 my-1 max-h-[228px] divide-y overflow-y-auto rounded-lg border outline-none",
-              "divide-gray-200 border-gray-200 bg-white shadow-md	",
-            )}
-          >
-            {children}
-          </Listbox.Options>
+          <div className="absolute z-20 w-full">
+            <Listbox.Options
+              className={twMerge(
+                "left-0 my-1 max-h-[228px] divide-y overflow-y-auto rounded-lg border outline-none",
+                "divide-gray-200 border-gray-200 bg-white shadow-md	",
+              )}
+            >
+              {children}
+            </Listbox.Options>
+          </div>
         </Transition>
       </Listbox>
       {error && errorMessages
