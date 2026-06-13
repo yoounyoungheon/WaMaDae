@@ -275,7 +275,7 @@ Story 작성 시 components.meta.json의 originalSources를 참고하되, Featur
 
 ### 5.1 기본 메타 규칙
 
-- 스토리 파일은 `@storybook/nextjs`에서 `Meta`, `StoryObj`를 import 하는 패턴을 기본으로 사용한다 (SHOULD)
+- 스토리 파일은 `@storybook/nextjs-vite`에서 `Meta`, `StoryObj`를 import 하는 패턴을 기본으로 사용한다 (SHOULD)
 - 기본 메타는 `const meta: Meta<typeof ComponentName> = { ... }` 형태로 작성한다 (SHOULD)
 - `export default meta` 이후에는 `type Story = StoryObj<typeof ComponentName>` 별칭을 선언한다 (SHOULD)
 - `parameters.layout`은 특별한 이유가 없으면 `"centered"`를 기본값으로 사용한다 (SHOULD)
