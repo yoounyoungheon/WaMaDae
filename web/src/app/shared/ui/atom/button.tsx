@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Button as ShadcnButton } from "../shadcn/button";
 import { cn } from "@/app/utils/style/helper";
 
 const buttonVariants = cva(
@@ -93,52 +94,52 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "type">,
+  extends Omit<React.ComponentPropsWithRef<"button">, "type">,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
-  htmlType?: React.ButtonHTMLAttributes<HTMLButtonElement>["type"];
+  htmlType?: React.ComponentProps<"button">["type"];
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      className,
-      variant,
-      disabled,
-      type,
-      size,
-      radius,
-      asChild = false,
-      htmlType,
-      ...props
-    },
-    ref
-  ) => {
-    const Comp = asChild ? Slot : "button";
-    const disabledClassName = disabled
-      ? {
-          primary:
-            "bg-primary-disabled text-slate-50 border-transparent shadow-none hover:bg-primary-disabled",
-          error:
-            "bg-error-cancel text-slate-50 border-transparent shadow-none hover:bg-error-cancel",
-          cancel:
-            "bg-main-gray-300 text-slate-50 border-transparent shadow-none hover:bg-main-gray-300",
-        }[type ?? "primary"]
-      : "";
-    return (
+function Button({
+  className,
+  variant,
+  disabled,
+  type,
+  size,
+  radius,
+  asChild = false,
+  htmlType,
+  ref,
+  ...props
+}: ButtonProps) {
+  const Comp = asChild ? Slot : "button";
+  const disabledClassName = disabled
+    ? {
+        primary:
+          "bg-primary-disabled text-slate-50 border-transparent shadow-none hover:bg-primary-disabled",
+        error:
+          "bg-error-cancel text-slate-50 border-transparent shadow-none hover:bg-error-cancel",
+        cancel:
+          "bg-main-gray-300 text-slate-50 border-transparent shadow-none hover:bg-main-gray-300",
+      }[type ?? "primary"]
+    : "";
+  return (
+    <ShadcnButton
+      asChild
+      className={cn(
+        buttonVariants({ variant, type, size, radius, className }),
+        disabledClassName
+      )}
+    >
       <Comp
-        className={cn(
-          buttonVariants({ variant, type, size, radius, className }),
-          disabledClassName
-        )}
         ref={ref}
         type={asChild ? undefined : htmlType}
         disabled={asChild ? undefined : disabled}
         {...props}
       />
-    );
-  }
-);
+    </ShadcnButton>
+  );
+}
 Button.displayName = "Button";
 
 export default Button;

@@ -1,8 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Listbox, Transition } from "@headlessui/react";
-import { ChevronDownIcon } from "@radix-ui/react-icons";
 import React, { useMemo, useRef, useState } from "react";
-import { twMerge } from "tailwind-merge";
+import {
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+} from "../../shadcn/select";
+import { cn } from "@/app/utils/style/helper";
 
 export interface FormSelectProps extends React.HTMLAttributes<HTMLInputElement> {
   placeholder: string;
@@ -15,6 +18,7 @@ export interface FormSelectProps extends React.HTMLAttributes<HTMLInputElement> 
   children?: React.ReactNode;
   required?: boolean;
   onValueChange?: (value: unknown) => void;
+  ref?: React.Ref<HTMLInputElement>;
 }
 
 type FormSelectItemElement = React.ReactElement<{
@@ -22,45 +26,48 @@ type FormSelectItemElement = React.ReactElement<{
   placeholder: string;
 }>;
 
-export const FormSelectRoot = React.forwardRef<HTMLInputElement, FormSelectProps>(function Select(
-  {
-    defaultValue,
-    icon,
-    error = false,
-    errorMessages,
-    disabled = false,
-    name,
-    children,
-    placeholder,
-    id,
-    required,
-    onValueChange,
-  },
+function getFormSelectItems(children: React.ReactNode) {
+  return React.Children.toArray(children).filter(
+    (child): child is FormSelectItemElement =>
+      React.isValidElement(child) &&
+      typeof (child as FormSelectItemElement).props.value === "string" &&
+      typeof (child as FormSelectItemElement).props.placeholder === "string",
+  );
+}
+
+export function FormSelectRoot({
+  defaultValue,
+  icon,
+  error = false,
+  errorMessages,
+  disabled = false,
+  name,
+  children,
+  placeholder,
+  id,
+  required,
+  onValueChange,
   ref,
-) {
+}: FormSelectProps) {
   const [selectedValue, setSelectedValue] = useState<string | undefined>(defaultValue);
   const listboxButtonRef = useRef<HTMLButtonElement | null>(null);
-  const childrenArray = React.Children.toArray(children);
+  const selectItems = useMemo(() => getFormSelectItems(children), [children]);
   const Icon = icon;
 
   const selectedPlaceholder = useMemo(() => {
-    const reactElementChildren = React.Children.toArray(children).filter(
-      (child): child is FormSelectItemElement =>
-        React.isValidElement(child) &&
-        (child as FormSelectItemElement).props.value === selectedValue,
-    );
-    return reactElementChildren.length > 0
-      ? reactElementChildren[0].props.placeholder
+    const selectedItem = selectItems.find((child) => child.props.value === selectedValue);
+    return selectedItem
+      ? selectedItem.props.placeholder
       : placeholder;
-  }, [selectedValue, children, placeholder]);
+  }, [selectedValue, selectItems, placeholder]);
 
   return (
     <div className="relative w-full text-base">
       <select
         required={required}
         title="select-hidden"
-        className={twMerge("absolute left-0 top-0 z-0 h-full w-full opacity-0")}
-        value={selectedValue}
+        className={cn("absolute left-0 top-0 z-0 h-full w-full opacity-0")}
+        value={selectedValue ?? ""}
         onChange={(e) => {
           e.preventDefault();
           onValueChange?.(e.target.value);
@@ -77,9 +84,8 @@ export const FormSelectRoot = React.forwardRef<HTMLInputElement, FormSelectProps
         <option className="hidden" value="" hidden>
           {placeholder}
         </option>
-        {childrenArray.map((child: any) => {
-          const value = child.props.value;
-          const placeholder = child.props.placeholder;
+        {selectItems.map((child) => {
+          const { value, placeholder } = child.props;
           return (
             <option className="hidden" key={value} value={value}>
               {placeholder}
@@ -87,20 +93,17 @@ export const FormSelectRoot = React.forwardRef<HTMLInputElement, FormSelectProps
           );
         })}
       </select>
-      <Listbox
-        as="div"
-        ref={ref}
+      <Select
         value={selectedValue ?? ""}
-        onChange={(value: string) => {
+        onValueChange={(value: string) => {
           onValueChange?.(value);
           setSelectedValue(value);
         }}
         disabled={disabled}
-        className="relative"
       >
-        <Listbox.Button
+        <SelectTrigger
           ref={listboxButtonRef}
-          className={twMerge(
+          className={cn(
             "w-full  truncate whitespace-nowrap rounded-xl border py-2 pr-8 text-left outline-none transition duration-100 focus:ring-2",
             "border-gray-800 text-gray-700 shadow-sm focus:border-blue-400 focus:ring-blue-200",
             Icon ? "pl-10" : "pl-3",
@@ -108,43 +111,33 @@ export const FormSelectRoot = React.forwardRef<HTMLInputElement, FormSelectProps
         >
           {Icon && (
             <span className="absolute inset-y-0 left-0 ml-px flex items-center pl-2.5">
-              <Icon className={twMerge("h-5 w-5 flex-none", "text-gray-600")} />
+              <Icon className={cn("h-5 w-5 flex-none", "text-gray-600")} />
             </span>
           )}
-          <span className={twMerge("block truncate p-0", disabled && "text-gray-6")}>
+          <SelectValue asChild>
+            <span className={cn("block truncate p-0", disabled && "text-gray-6")}>
             {selectedPlaceholder}
-          </span>
-          <span className="pointer-events-none absolute inset-y-0 right-0 mr-3 flex items-center">
-            <ChevronDownIcon className={twMerge("h-5 w-5 flex-none", "text-gray-400")} />
-          </span>
-        </Listbox.Button>
-        <Transition
-          enter="transition ease duration-100 transform"
-          enterFrom="opacity-0 -translate-y-4"
-          enterTo="opacity-100 translate-y-0"
-          leave="transition ease duration-100 transform"
-          leaveFrom="opacity-100 translate-y-0"
-          leaveTo="opacity-0 -translate-y-4"
+            </span>
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent
+          className={cn(
+            "z-20 max-h-[228px] w-[var(--radix-select-trigger-width)] divide-y overflow-y-auto rounded-lg border outline-none",
+            "divide-gray-200 border-gray-200 bg-white shadow-md",
+          )}
+          position="popper"
+          sideOffset={4}
         >
-          <div className="absolute z-20 w-full">
-            <Listbox.Options
-              className={twMerge(
-                "left-0 my-1 max-h-[228px] divide-y overflow-y-auto rounded-lg border outline-none",
-                "divide-gray-200 border-gray-200 bg-white shadow-md	",
-              )}
-            >
               {children}
-            </Listbox.Options>
-          </div>
-        </Transition>
-      </Listbox>
+        </SelectContent>
+      </Select>
       {error && errorMessages
         ? errorMessages.map((message, index) => (
-            <p key={index} className={twMerge("text-etc-red mt-1 text-sm")}>
+            <p key={index} className={cn("text-etc-red mt-1 text-sm")}>
               {message}
             </p>
           ))
         : null}
     </div>
   );
-});
+}

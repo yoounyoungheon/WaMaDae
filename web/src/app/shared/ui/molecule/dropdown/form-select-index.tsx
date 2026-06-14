@@ -1,7 +1,7 @@
-import { FormSelectRoot } from './form-select-root';
-import { FormSelectItem } from './form-select-item';
+import { FormSelectRoot } from "./form-select-root";
+import { FormSelectItem } from "./form-select-item";
 
-const  FormSelect = Object.assign(FormSelectRoot, {
+const FormSelect = Object.assign(FormSelectRoot, {
   Item: FormSelectItem,
 });
 

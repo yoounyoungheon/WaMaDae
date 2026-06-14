@@ -1,8 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import React from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
 import Button from "../atom/button";
-import { Dialog, DialogContent, DialogTrigger } from "./dialog";
+import { Dialog, DialogClose, DialogContent, DialogTrigger } from "./dialog";
 
 const meta: Meta<typeof DialogContent> = {
   title: "Components/Dialog",
@@ -44,16 +43,16 @@ export const Default: Story = {
               다이얼로그 콘텐츠 영역입니다. 필요한 내용을 자유롭게 배치하세요.
             </p>
             <div className="flex justify-end gap-2">
-              <DialogPrimitive.Close asChild>
+              <DialogClose asChild>
                 <Button type="cancel" variant="text">
                   취소
                 </Button>
-              </DialogPrimitive.Close>
-              <DialogPrimitive.Close asChild>
+              </DialogClose>
+              <DialogClose asChild>
                 <Button type="primary" variant="solid">
                   확인
                 </Button>
-              </DialogPrimitive.Close>
+              </DialogClose>
             </div>
           </div>
         </DialogContent>
