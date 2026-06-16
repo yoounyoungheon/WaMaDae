@@ -4,7 +4,7 @@ import { z } from "zod";
 import { listGuideIds, readGuide, resolveGuides } from "./guides.js";
 
 const server = new McpServer({
-  name: "frontend-guidance-mcp",
+  name: "mysom-frontend-guidance-mcp",
   version: "0.1.0",
 });
 

@@ -1,4 +1,4 @@
-# Frontend Guidance MCP
+# Mysom Frontend Guidance MCP
 
 `web` 프론트엔드 작업 전에 참고해야 할 가이드를 추천하고, 선택한 가이드 markdown 본문을 반환하는 MCP 서버입니다.
 
@@ -38,7 +38,7 @@ MCP 클라이언트에 등록할 때는 이 프로젝트를 working directory로
 Codex CLI와 Codex IDE extension은 같은 MCP 설정을 공유합니다. 사용자 전체에 적용하려면 `~/.codex/config.toml`에, 이 저장소에서만 쓰려면 신뢰한 프로젝트의 `.codex/config.toml`에 추가합니다.
 
 ```toml
-[mcp_servers.frontend-guidance-mcp]
+[mcp_servers.mysom-frontend-guidance-mcp]
 command = "node"
 args = ["dist/index.js"]
 cwd = "/Users/yun-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp"
@@ -50,7 +50,7 @@ enabled = true
 Codex CLI에서 직접 추가할 수도 있습니다. 이 방식은 `cwd`를 따로 적지 않으므로 `dist/index.js`의 절대 경로를 사용합니다.
 
 ```bash
-codex mcp add frontend-guidance-mcp -- node /Users/yun-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp/dist/index.js
+codex mcp add mysom-frontend-guidance-mcp -- node /Users/yun-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp/dist/index.js
 ```
 
 등록 후 새 Codex 세션을 시작하거나 기존 세션을 재시작합니다. Codex TUI에서는 `/mcp`로 서버 연결 상태와 노출된 도구를 확인할 수 있습니다.
@@ -62,14 +62,14 @@ codex mcp add frontend-guidance-mcp -- node /Users/yun-yeongheon/dev/WaMaDae/mys
 Claude Code에서는 local stdio MCP 서버로 추가합니다.
 
 ```bash
-claude mcp add --transport stdio frontend-guidance-mcp -- \
+claude mcp add --transport stdio mysom-frontend-guidance-mcp -- \
   node /Users/yun-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp/dist/index.js
 ```
 
 현재 프로젝트에서만 쓰는 기본 local scope 대신 팀 공유용 `.mcp.json`을 만들려면 `--scope project`를 붙입니다.
 
 ```bash
-claude mcp add --transport stdio --scope project frontend-guidance-mcp -- \
+claude mcp add --transport stdio --scope project mysom-frontend-guidance-mcp -- \
   node /Users/yun-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp/dist/index.js
 ```
 
@@ -77,7 +77,7 @@ claude mcp add --transport stdio --scope project frontend-guidance-mcp -- \
 
 ```bash
 claude mcp list
-claude mcp get frontend-guidance-mcp
+claude mcp get mysom-frontend-guidance-mcp
 ```
 
 Claude Code 세션 안에서는 `/mcp`로 연결 상태를 확인합니다. project scope로 추가한 서버는 보안상 최초 사용 전에 Claude Code에서 승인해야 할 수 있습니다.
@@ -94,7 +94,7 @@ Claude Desktop은 설정 화면에서 MCP config 파일을 열어 등록합니�
 ```json
 {
   "mcpServers": {
-    "frontend-guidance-mcp": {
+    "mysom-frontend-guidance-mcp": {
       "command": "node",
       "args": [
         "/Users/yun-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp/dist/index.js"
