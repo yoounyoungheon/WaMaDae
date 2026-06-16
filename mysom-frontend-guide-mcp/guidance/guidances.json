@@ -1,0 +1,181 @@
+{
+  "guidances": [
+    {
+      "id": "data-flow-layering",
+      "title": "데이터 흐름 레이어링 가이드",
+      "summary": "API 응답은 api-model, domain, view-model을 순서대로 거쳐야 하며 service는 domain까지만 반환하고 presenter가 UI용 데이터를 만들어야 합니다.",
+      "triggers": {
+        "paths": [
+          "web/src/app/**/hooks/**",
+          "web/src/app/**/business/**",
+          "web/src/app/**/page.tsx",
+          "web/src/app/**/layout.tsx"
+        ],
+        "keywords": [
+          "api model",
+          "view model",
+          "domain model",
+          "presenter",
+          "presentation",
+          "service",
+          "mapper",
+          "data flow",
+          "ui props",
+          "api to ui",
+          "layering"
+        ]
+      },
+      "sources": ["guidance/data-flow-layering.md"],
+      "canonicalSources": ["guidance/data-flow-layering.md"],
+      "guideFiles": ["guidance/data-flow-layering.md"]
+    },
+    {
+      "id": "bff-api-gateway",
+      "title": "BFF API Gateway 가이드",
+      "summary": "브라우저의 백엔드 호출은 app/api Route Handler를 경유하고, 백엔드 origin과 서버 토큰은 server-only 계층에 숨깁니다.",
+      "triggers": {
+        "paths": [
+          "web/src/app/api/**",
+          "web/src/app/**/route.ts",
+          "web/src/app/utils/http/**",
+          "web/src/app/**/hooks/**",
+          "web/src/app/**/business/**"
+        ],
+        "keywords": [
+          "bff",
+          "backend for frontend",
+          "app/api",
+          "route handler",
+          "route.ts",
+          "proxy",
+          "backend api",
+          "server api",
+          "hide backend",
+          "backend origin",
+          "api gateway",
+          "authorization",
+          "cookie",
+          "cors",
+          "requestserverapi",
+          "local_path",
+          "deploy_path"
+        ]
+      },
+      "sources": ["guidance/bff-api-gateway.md"],
+      "canonicalSources": ["guidance/bff-api-gateway.md"],
+      "guideFiles": ["guidance/bff-api-gateway.md"]
+    },
+    {
+      "id": "rsc-rendering",
+      "title": "Server Component 가이드",
+      "summary": "기본값은 Server Component이며, page/layout은 서버에 유지하고 데이터 조회와 초기 렌더링 책임도 서버에 둬야 합니다.",
+      "triggers": {
+        "paths": ["web/src/app/**/page.tsx", "web/src/app/**/layout.tsx"],
+        "keywords": [
+          "server component",
+          "rsc",
+          "page.tsx",
+          "layout.tsx",
+          "seo",
+          "initial data"
+        ]
+      },
+      "sources": ["guidance/RSC-guide.md"],
+      "canonicalSources": ["guidance/RSC-guide.md"],
+      "guideFiles": ["guidance/RSC-guide.md"]
+    },
+    {
+      "id": "rcc-rendering",
+      "title": "Client Component 가이드",
+      "summary": "Client Component는 예외적으로만 사용하고, `use client` 범위를 최소화하며 상호작용이 필요한 최소 단위만 분리해야 합니다.",
+      "triggers": {
+        "paths": [],
+        "keywords": [
+          "client component",
+          "rcc",
+          "use client",
+          "usestate",
+          "useeffect",
+          "onclick",
+          "browser api",
+          "window",
+          "document"
+        ]
+      },
+      "sources": ["guidance/RCC-guide.md"],
+      "canonicalSources": ["guidance/RCC-guide.md"],
+      "guideFiles": ["guidance/RCC-guide.md"]
+    },
+    {
+      "id": "css-only-state",
+      "title": "CSS-Only 상태 가이드",
+      "summary": "단순한 선택/열림/닫힘 상태는 React state 대신 radio, checkbox, label, peer-checked 조합으로 구현해 Server Component를 유지할 수 있습니다.",
+      "triggers": {
+        "paths": ["web/src/app/**/*.tsx", "web/src/app/**/*.css"],
+        "keywords": [
+          "css-only",
+          "peer-checked",
+          "peer checked",
+          "radio",
+          "checkbox",
+          "label",
+          "toggle",
+          "tab",
+          "accordion",
+          "server component",
+          "without javascript"
+        ]
+      },
+      "sources": ["guidance/css-only-state.md"],
+      "canonicalSources": ["guidance/css-only-state.md"],
+      "guideFiles": ["guidance/css-only-state.md"]
+    },
+    {
+      "id": "storybook-authoring",
+      "title": "Storybook 작성 가이드",
+      "summary": "story는 컴포넌트 옆에 두고, Default를 먼저 제공하며, 실제 레이아웃 맥락을 재현하는 최소 wrapper만 사용해야 합니다.",
+      "triggers": {
+        "paths": [
+          "web/src/app/shared/ui/**/*.stories.tsx",
+          "web/src/app/feature/*/ui/**/*.stories.tsx",
+          "web/docs/storybook/index.json",
+          "web/docs/storybook/components.meta.json"
+        ],
+        "keywords": [
+          "story",
+          "storybook",
+          "argtypes",
+          "meta",
+          "autodocs",
+          "components.meta.json"
+        ]
+      },
+      "sources": ["guidance/story-guide.md"],
+      "canonicalSources": ["guidance/story-guide.md"],
+      "guideFiles": ["guidance/story-guide.md"]
+    },
+    {
+      "id": "style-implementation",
+      "title": "스타일 구현 가이드",
+      "summary": "스타일은 mobile-first와 가독성 우선 원칙으로 설계하고, width/flow 관점에서 원인을 먼저 파악한 뒤 Tailwind를 적용해야 합니다.",
+      "triggers": {
+        "paths": ["web/src/app/**/*.css", "web/src/app/**/*.tsx"],
+        "keywords": [
+          "style",
+          "tailwind",
+          "css",
+          "className",
+          "layout",
+          "responsive",
+          "animation",
+          "grid",
+          "flex",
+          "width"
+        ]
+      },
+      "sources": ["guidance/style-guide.md"],
+      "canonicalSources": ["guidance/style-guide.md"],
+      "guideFiles": ["guidance/style-guide.md"]
+    }
+  ]
+}
