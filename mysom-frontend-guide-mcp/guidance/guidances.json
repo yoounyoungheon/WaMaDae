@@ -2,26 +2,36 @@
   "guidances": [
     {
       "id": "data-flow-layering",
-      "title": "데이터 흐름 레이어링 가이드",
-      "summary": "API 응답은 api-model, domain, view-model을 순서대로 거쳐야 하며 service는 domain까지만 반환하고 presenter가 UI용 데이터를 만들어야 합니다.",
+      "title": "프론트엔드 상태 관리 가이드",
+      "summary": "서버 상태는 TanStack Query, 공유 클라이언트 UI 상태는 Zustand, 컴포넌트 내부 상태는 useState, 공유 가능한 조건은 searchParams로 관리합니다.",
       "triggers": {
         "paths": [
           "web/src/app/**/hooks/**",
           "web/src/app/**/business/**",
+          "web/src/app/**/api/**",
+          "web/src/app/**/model/**",
+          "web/src/app/**/providers.tsx",
           "web/src/app/**/page.tsx",
           "web/src/app/**/layout.tsx"
         ],
         "keywords": [
-          "api model",
-          "view model",
-          "domain model",
-          "presenter",
-          "presentation",
-          "service",
-          "mapper",
+          "tanstack query",
+          "react query",
+          "zustand",
+          "query key",
+          "querykey",
+          "usequery",
+          "usemutation",
+          "invalidatequeries",
+          "server state",
+          "client state",
+          "ui state",
+          "state management",
+          "searchparams",
+          "상태 관리",
+          "서버 상태",
+          "클라이언트 상태",
           "data flow",
-          "ui props",
-          "api to ui",
           "layering"
         ]
       },
