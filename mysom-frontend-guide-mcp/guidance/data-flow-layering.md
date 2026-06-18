@@ -7,7 +7,10 @@
 이 프로젝트의 상태는 출처와 생명주기에 따라 구분한다.
 
 ```text
-서버 상태(Server State)
+초기 렌더링용 서버 데이터
+-> Server Component
+
+Client Component의 서버 상태 캐시
 -> TanStack Query
 
 공유 클라이언트 상태(Client/UI State)
@@ -34,9 +37,9 @@ API를 통해 서버에서 가져오고 서버가 원본을 소유하는 데이�
 - 알림 목록
 - 예약 정보
 
-Client Component에서 사용하는 서버 상태는 TanStack Query로 관리한다. 같은 API 응답을 Zustand나 `useState`에 복제하지 않는다.
+초기 렌더링에 필요한 서버 데이터는 Server Component에서 우선 조회한다. Client Component에서 상호작용 이후 다시 조회하거나 캐싱해야 하는 서버 상태는 TanStack Query로 관리한다. 같은 API 응답을 Zustand나 `useState`에 복제하지 않는다.
 
-Server Component가 초기 데이터를 조회하는 경우에도 서버 데이터의 원본은 서버에 있다. Client Component에서 이어서 조회하거나 갱신해야 한다면 TanStack Query의 prefetch/dehydrate와 hydration 사용을 검토한다.
+Server Component가 조회한 데이터를 Client Component에서 이어서 사용해야 한다면 TanStack Query의 prefetch/dehydrate와 hydration을 사용해 동일한 query key의 캐시를 전달한다. 서버 조회 직후 클라이언트에서 같은 데이터를 다시 요청하는 구조를 만들지 않는다.
 
 ### 클라이언트 상태
 
@@ -56,6 +59,8 @@ Server Component가 초기 데이터를 조회하는 경우에도 서버 데이�
 공유 클라이언트 상태는 Zustand로 관리한다. 단일 컴포넌트 안에서만 사용하는 짧은 생명주기의 상태는 `useState`를 사용한다.
 
 SSE/WebSocket으로 수신한 서버 데이터 자체를 Zustand에 원본처럼 누적하지 않는다. 연결 여부 같은 UI 상태는 Zustand에 두고, 서버 데이터는 TanStack Query 캐시 갱신 또는 해당 데이터 계층의 정책에 따라 관리한다.
+
+로그인 여부, 현재 사용자 권한, Feature Flag처럼 대부분의 화면에서 UI 분기 조건으로 반복 사용하는 파생 상태는 예외적으로 Zustand에 둘 수 있다. 이 경우에도 사용자 API 응답 전체를 복제하지 않고 필요한 값만 저장한다.
 
 ## 2. 사용 금지 원칙
 
@@ -77,6 +82,35 @@ API로 가져온 `users`는 Zustand가 아니라 TanStack Query에서 관리한�
 ```ts
 const { data: users } = useUsersQuery();
 ```
+
+다만 인증 사용자 정보 중 전역 UI 분기에 필요한 파생 상태는 예외다.
+
+```ts
+type AuthState = {
+  isAuthenticated: boolean;
+  role: UserRole | null;
+};
+```
+
+로그인 여부, 현재 사용자 권한, Feature Flag, 전역 layout에서 반복적으로 사용하는 최소 사용자 정보는 Zustand 사용을 허용한다. 대부분의 화면에서 참조되고 UI 분기 조건으로 사용되는 값이어야 하며, 서버 데이터 전체를 저장하는 용도로 확장하지 않는다.
+
+동일한 서버 데이터를 TanStack Query와 Zustand에 동시에 저장하고 동기화하는 코드는 금지한다.
+
+```ts
+const useAuthStore = create(() => ({
+  user: null,
+}));
+```
+
+```tsx
+const { data: user } = useMeQuery();
+
+useEffect(() => {
+  setUser(user);
+}, [user]);
+```
+
+인증 상태가 서버 응답에서 파생된다면 필요한 최소 값만 명시적인 인증 흐름에서 갱신하고, Query 결과 전체를 effect로 복제하지 않는다.
 
 ### API 호출 결과를 `useState`에 직접 저장하지 않는다
 
@@ -121,13 +155,18 @@ src/
 ├─ entities/
 │  └─ user/
 │     ├─ api/
-│     │  ├─ user.api.ts
-│     │  └─ user.query.ts
+│     │  └─ user.api.ts
 │     ├─ model/
 │     │  └─ user.type.ts
 │     └─ ui/
 │
 ├─ features/
+│  ├─ view-users/
+│  │  └─ api/
+│  │     └─ use-users-query.ts
+│  ├─ create-user/
+│  │  └─ api/
+│  │     └─ use-create-user-mutation.ts
 │  └─ user-login/
 │     ├─ api/
 │     ├─ model/
@@ -171,7 +210,7 @@ Next.js App Router 영역이다.
 
 ### `entities`
 
-도메인 단위의 핵심 데이터와 조회 규칙을 관리한다.
+도메인 단위의 핵심 데이터를 표현한다.
 
 예시:
 
@@ -186,16 +225,17 @@ Next.js App Router 영역이다.
 ```text
 entities/user/
 ├─ api/
-│  ├─ user.api.ts
-│  └─ user.query.ts
+│  └─ user.api.ts
 ├─ model/
 │  └─ user.type.ts
 └─ ui/
 ```
 
+Entity에는 타입, API 함수, 도메인 모델, 사용자 행동을 포함하지 않는 순수 UI를 둔다. 생성, 수정, 삭제, 로그인 같은 비즈니스 액션이나 화면 use case에 종속된 Query Hook을 계속 추가하지 않는다.
+
 ### `features`
 
-사용자 행동 단위의 기능을 관리한다.
+사용자 행동이나 화면 use case 단위의 기능을 관리한다.
 
 예시:
 
@@ -207,7 +247,25 @@ entities/user/
 - 댓글 작성
 - 장바구니 담기
 
-기능 전용 mutation과 공유 UI 상태를 둔다. Zustand store는 대부분 feature의 `model` 안에 둔다.
+Query Hook, Mutation Hook, Zustand store, 사용자 액션처럼 특정 use case를 수행하는 코드를 둔다. Zustand store는 대부분 feature의 `model` 안에 둔다.
+
+```text
+features/
+├─ create-user/
+├─ update-user/
+├─ delete-user/
+└─ login/
+```
+
+판단 기준은 단순하다.
+
+```text
+데이터 정의
+-> Entity
+
+사용자 행동 또는 화면 use case
+-> Feature
+```
 
 ### `widgets`
 
@@ -229,7 +287,7 @@ entities/user/
 
 ### API 함수와 Query Hook을 분리한다
 
-API 함수는 네트워크 요청과 응답 타입을 책임지고, Query Hook은 query key와 캐시 동작을 책임진다.
+API 함수는 Entity에서 네트워크 요청과 응답 타입을 책임진다. Query Hook은 해당 조회 use case의 Feature에서 query key와 캐시 정책만 담당한다.
 
 ```ts
 // entities/user/api/user.api.ts
@@ -247,10 +305,13 @@ export const getUser = async (userId: string): Promise<User> => {
 ```
 
 ```ts
-// entities/user/api/user.query.ts
+// features/view-users/api/use-users-query.ts
 
 import { useQuery } from "@tanstack/react-query";
-import { getUser, getUsers } from "./user.api";
+import {
+  getUser,
+  getUsers,
+} from "@/entities/user/api/user.api";
 
 export const userQueryKeys = {
   all: ["users"] as const,
@@ -274,6 +335,57 @@ export const useUserQuery = (userId: string) => {
 ```
 
 Query Hook에서 직접 URL을 조립하거나 네트워크 세부 구현을 반복하지 않는다.
+
+### Query Hook은 캐시 정책만 담당한다
+
+Query Hook의 책임은 다음으로 제한한다.
+
+- `queryKey`
+- `queryFn`
+- `staleTime`
+- `enabled`
+- `retry`
+- `select`를 사용한 가벼운 데이터 변환
+
+필터링, 정렬, 도메인 계산, 모델 변환처럼 의미 있는 비즈니스 로직은 Query Hook 내부에 작성하지 않는다.
+
+잘못된 예시:
+
+```ts
+export const useBooksQuery = () => {
+  return useQuery({
+    queryFn: async () => {
+      const books = await getBooks();
+
+      return books
+        .filter((book) => book.rating > 4)
+        .sort((a, b) => b.rating - a.rating)
+        .map(convertBook);
+    },
+  });
+};
+```
+
+권장 예시:
+
+```ts
+export const useBooksQuery = () => {
+  return useQuery({
+    queryKey: bookQueryKeys.all,
+    queryFn: getBooks,
+  });
+};
+```
+
+```ts
+export const selectPopularBooks = (books: Book[]): Book[] => {
+  return books
+    .filter((book) => book.rating > 4)
+    .sort((a, b) => b.rating - a.rating);
+};
+```
+
+비즈니스 로직은 별도 순수 함수로 분리해 독립적으로 테스트하고 필요한 계층에서 조합한다.
 
 ## 6. Query Key 규칙
 
@@ -308,18 +420,18 @@ export const bookQueryKeys = {
 };
 ```
 
-동일한 데이터를 조회하는 모든 코드가 같은 query key factory를 사용해야 한다.
+동일한 데이터를 조회하는 모든 코드가 같은 query key factory를 사용해야 한다. Hydration이나 다른 Feature의 Mutation에서도 key가 필요하다면 조회 Feature의 별도 파일로 분리해 재사용하고, key만 사용하기 위해 Client Hook 모듈 전체를 import하지 않는다.
 
 ## 7. Mutation 작성 규칙
 
 등록, 수정, 삭제는 `useMutation`을 사용한다. API 함수와 Mutation Hook도 분리한다.
 
 ```ts
-// features/create-post/api/create-post.mutation.ts
+// features/create-post/api/use-create-post-mutation.ts
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { postQueryKeys } from "@/entities/post/api/post.query";
-import { createPost } from "./create-post.api";
+import { createPost } from "@/entities/post/api/post.api";
+import { postQueryKeys } from "@/features/view-posts/api/post-query-keys";
 
 export const useCreatePostMutation = () => {
   const queryClient = useQueryClient();
@@ -335,7 +447,7 @@ export const useCreatePostMutation = () => {
 };
 ```
 
-Mutation 성공 후에는 영향받은 query를 invalidate한다.
+게시글 생성처럼 목록 전체에 영향을 주고 서버가 정렬이나 집계 결과를 계산하는 작업은 영향받은 query를 invalidate한다.
 
 ```text
 POST /posts
@@ -344,7 +456,26 @@ POST /posts
 -> 활성 게시글 목록 재조회
 ```
 
-서버 응답만으로 캐시를 완전하고 안전하게 갱신할 수 있을 때는 `setQueryData`를 사용할 수 있다. 불완전한 응답을 기존 캐시에 임의로 합치지 않는다.
+Mutation 성공 시 무조건 `invalidateQueries`를 사용하지 않는다. 서버 응답만으로 현재 캐시를 완전하고 안전하게 갱신할 수 있다면 `setQueryData`를 우선 검토한다.
+
+좋아요, 북마크, 읽음 처리, 단건 수정처럼 변경 대상과 결과가 명확한 작업이 대표적이다.
+
+```ts
+queryClient.setQueryData(
+  postQueryKeys.detail(postId),
+  updatedPost,
+);
+```
+
+목록 전체가 영향을 받거나 서버 계산 결과를 반영해야 하는 경우, 변경 범위가 불명확한 경우, 관련 query가 많은 경우에는 `invalidateQueries`를 사용한다. 불완전한 응답을 기존 캐시에 임의로 합치지 않는다.
+
+```text
+서버 응답만으로 캐시를 완전하게 갱신할 수 있음
+-> setQueryData
+
+재조회가 더 안전함
+-> invalidateQueries
+```
 
 Mutation 입력값은 클라이언트와 서버 양쪽 경계에서 검증한다. 인증과 인가는 반드시 서버에서 다시 확인한다.
 
@@ -412,7 +543,7 @@ Store는 도메인별 또는 feature별로 작게 유지한다. 하나의 전역
 ```tsx
 "use client";
 
-import { useBookSearchQuery } from "@/entities/book/api/book.query";
+import { useBookSearchQuery } from "@/features/search-books/api/use-book-search-query";
 import { useSearchFilterStore } from "../model/search-filter.store";
 
 export function BookSearchResult() {
@@ -496,9 +627,47 @@ export default function RootLayout({
 ### Server Component
 
 - `page.tsx`와 `layout.tsx`는 기본적으로 Server Component다.
+- 초기 렌더링에만 필요한 데이터는 Server Component에서 우선 조회한다.
 - Server Component에서 Zustand hook을 사용하지 않는다.
 - 서버 전용 secret, DB client, privileged API 호출은 Client Component로 노출하지 않는다.
 - Client Component에 전달하는 props는 직렬화 가능하고 민감 정보가 제거된 데이터여야 한다.
+
+초기 데이터 조회를 위해 페이지 전체를 무조건 Client Component로 만들지 않는다.
+
+잘못된 예시:
+
+```tsx
+"use client";
+
+export default function BookPage() {
+  const { data } = useBooksQuery();
+
+  return <BookList books={data} />;
+}
+```
+
+권장 예시:
+
+```tsx
+// app/books/page.tsx
+
+import { getBooks } from "@/entities/book/api/book.api";
+
+export default async function BookPage() {
+  const books = await getBooks();
+
+  return <BookList books={books} />;
+}
+```
+
+다음 요구가 있다면 Client Component와 TanStack Query 사용을 우선 검토한다.
+
+- 사용자 인터랙션 이후 데이터 변경
+- 페이지네이션
+- 무한 스크롤
+- 실시간 데이터 갱신
+- 백그라운드 재조회
+- 클라이언트 캐싱
 
 ### Client Component
 
@@ -507,24 +676,81 @@ export default function RootLayout({
 - Client Component에서 server-only 모듈을 import하지 않는다.
 - 브라우저가 백엔드에 직접 접근하면 안 되는 프로젝트에서는 Route Handler/BFF를 통해 API를 호출한다.
 
+### Server Component와 Query Hydration
+
+Server Component에서 조회한 데이터를 Client Component가 동일한 Query Hook으로 이어서 사용할 때는 hydration을 적용한다.
+
+```tsx
+// app/books/page.tsx
+
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from "@tanstack/react-query";
+import { getBooks } from "@/entities/book/api/book.api";
+import { bookQueryKeys } from "@/features/view-books/api/book-query-keys";
+
+export default async function BookPage() {
+  const queryClient = new QueryClient();
+
+  await queryClient.prefetchQuery({
+    queryKey: bookQueryKeys.all,
+    queryFn: getBooks,
+  });
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ClientPage />
+    </HydrationBoundary>
+  );
+}
+```
+
+Client Component의 Query Hook은 prefetch에 사용한 것과 동일한 query key를 사용한다.
+
+```tsx
+"use client";
+
+export function ClientPage() {
+  const { data } = useBooksQuery();
+
+  return <BookList books={data} />;
+}
+```
+
+초기 데이터가 props로만 필요하면 직접 전달하고, 클라이언트 캐시와 후속 조회가 필요할 때 hydration을 사용한다.
+
+```text
+Server Component 조회
+-> Client Component에서 동일 데이터 즉시 재조회
+```
+
+위와 같은 중복 요청 구조는 만들지 않는다.
+
 ## 12. AI Agent 구현 규칙
 
 AI Agent는 코드를 생성하거나 수정할 때 다음 규칙을 반드시 따른다.
 
-1. Client Component의 API 조회 데이터는 TanStack Query로 관리한다.
-2. 여러 컴포넌트가 공유하는 모달, 탭, 필터, 사이드바 등의 UI 상태는 Zustand로 관리한다.
-3. 단일 컴포넌트 내부의 임시 상태는 `useState`로 관리한다.
-4. 공유하거나 복원해야 하는 검색·필터 조건은 URL `searchParams`를 우선한다.
-5. API 함수와 Query Hook을 분리한다.
-6. Query key는 별도 객체와 배열로 관리한다.
-7. Mutation 성공 후 영향받은 query를 invalidate하거나 완전한 서버 응답으로 안전하게 갱신한다.
-8. Zustand store는 필요한 값과 action만 selector로 구독한다.
-9. Server Component에서는 Zustand를 사용하지 않는다.
-10. TanStack Query 또는 Zustand hook은 Client Component 경계 안에서 사용한다.
-11. `useEffect + useState`로 API 데이터를 직접 가져오지 않는다.
-12. 서버 데이터의 원본은 서버이며, 클라이언트 캐시는 복사본으로 본다.
-13. 서버 데이터를 Zustand와 TanStack Query에 중복 저장하지 않는다.
-14. 인증, 인가, 입력값 검증은 서버에서 다시 수행한다.
+1. 초기 렌더링에 필요한 데이터는 Server Component 조회를 우선 검토한다.
+2. 초기 데이터 조회만을 위해 페이지 전체를 Client Component로 만들지 않는다.
+3. Client Component에서 상호작용, 재조회, 캐싱이 필요한 서버 데이터는 TanStack Query로 관리한다.
+4. Server Component에서 prefetch한 query를 Client Component가 이어서 사용하면 동일한 query key로 hydration한다.
+5. 여러 컴포넌트가 공유하는 모달, 탭, 필터, 사이드바 등의 UI 상태는 Zustand로 관리한다.
+6. 인증 사용자 정보는 전역 UI 분기에 필요한 최소 파생 상태만 Zustand 사용을 허용한다.
+7. 단일 컴포넌트 내부의 임시 상태는 `useState`로 관리한다.
+8. 공유하거나 복원해야 하는 검색·필터 조건은 URL `searchParams`를 우선한다.
+9. API 함수는 Entity에, Query Hook과 Mutation Hook은 해당 use case의 Feature에 둔다.
+10. Query Hook은 캐시 정책만 담당하고 비즈니스 로직은 별도 함수로 분리한다.
+11. Query key는 별도 객체와 배열로 관리한다.
+12. Mutation 성공 후 서버 응답만으로 캐시를 완전히 갱신할 수 있으면 `setQueryData`를 우선 검토하고, 재조회가 더 안전하면 invalidate한다.
+13. Zustand store는 필요한 값과 action만 selector로 구독한다.
+14. Server Component에서는 Zustand를 사용하지 않는다.
+15. TanStack Query 또는 Zustand hook은 Client Component 경계 안에서 사용한다.
+16. `useEffect + useState`로 API 데이터를 직접 가져오지 않는다.
+17. 서버 데이터의 원본은 서버이며, 클라이언트 캐시는 복사본으로 본다.
+18. 서버 데이터를 Zustand와 TanStack Query에 중복 저장하거나 effect로 동기화하지 않는다.
+19. 인증, 인가, 입력값 검증은 서버에서 다시 수행한다.
 
 ## 13. AI Agent가 피해야 할 코드
 
@@ -584,10 +810,15 @@ export default function Page() {
 
 ```text
 이 데이터의 원본이 API 또는 서버에 있는가?
--> TanStack Query
+-> 초기 렌더링에만 필요하면 Server Component에서 조회
+-> Client Component의 후속 조회·갱신·캐시가 필요하면 TanStack Query
+-> 서버 조회 결과를 클라이언트 query가 이어서 쓰면 hydration
 
 이 상태가 URL로 공유되거나 새로고침 후 복원되어야 하는가?
 -> searchParams
+
+인증·권한·Feature Flag처럼 전역 UI 분기에 반복 사용하는 최소 파생 상태인가?
+-> 예외적으로 Zustand
 
 이 상태가 여러 Client Component의 UI 동작에 필요한가?
 -> Zustand
@@ -604,11 +835,14 @@ export default function Page() {
 ## 15. 최종 요약
 
 ```text
+Server Component
+= 초기 렌더링용 서버 데이터 조회 계층
+
 TanStack Query
-= 서버 상태 캐시 계층
+= Client Component의 서버 상태 캐시 계층
 
 Zustand
-= 공유 클라이언트 UI 상태 계층
+= 공유 클라이언트 UI 상태와 최소 인증 파생 상태 계층
 
 useState
 = 컴포넌트 내부 임시 상태
@@ -617,4 +851,4 @@ URL searchParams
 = 공유·복원 가능한 필터와 검색 조건
 ```
 
-AI Agent는 데이터의 출처, 공유 범위, 생명주기, URL 복원 필요성을 먼저 판단한 뒤 상태 관리 방식을 선택해야 한다.
+AI Agent는 데이터의 출처, 렌더링 시점, 공유 범위, 생명주기, URL 복원 필요성을 먼저 판단한 뒤 조회 위치와 상태 관리 방식을 선택해야 한다.
