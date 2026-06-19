@@ -75,7 +75,7 @@ web/src/app/wine/ai/page.tsx
 | 상태 | 출처/생명주기 | 관리 방식 |
 |---|---|---|
 | 와인 검색 결과 | 서버 원본, 검색어별 캐시 필요 | TanStack Query |
-| 메뉴판 분석 결과 | 서버 mutation 응답 | TanStack Query mutation |
+| 메뉴판 분석 결과 | POST 요청 후 SSE로 수신하는 서버 데이터 | TanStack Query mutation + detail cache |
 | 와인 상세 표시 데이터 | 서버 원본 | TanStack Query detail cache |
 | 선택된 와인 ID와 순서 | 사용자가 만드는 다단계 임시 선택 | Zustand |
 | 검색 input 값 | 현재 화면 내부의 임시 입력 | `useState` |
@@ -96,8 +96,9 @@ web/src/app/wine/ai/page.tsx
 
 검색 결과와 분석 결과를 `useState` 또는 Zustand에 저장하지 않는다.
 
-검색은 `useQuery`, 이미지 분석은 `useMutation`으로 처리한다. 로딩과 오류
-상태도 Query/Mutation 결과를 그대로 사용한다.
+검색은 `useQuery`로 처리한다. 이미지 분석은 `useMutation`으로 POST 요청의
+생명주기를 관리하고, 와인 리스트 결과는 SSE 스트림에서 수신한다. 로딩과
+오류 상태는 Query/Mutation 및 SSE 연결 상태에서 파생한다.
 
 ### 2. Zustand에는 선택 ID와 순서만 둔다
 
@@ -120,9 +121,9 @@ type WineListSelectionState = {
 
 ### 3. 선택 카드 데이터는 detail cache에서 읽는다
 
-검색 결과에서 와인을 선택하거나 분석이 성공하면 응답에 포함된 완전한
-와인 객체를 동일한 detail query key에 `setQueryData`한다. 그 후 Zustand의
-선택 ID만 변경한다.
+검색 결과에서 와인을 선택하거나 분석 SSE가 정상 완료되면 payload에 포함된
+완전한 와인 객체를 동일한 detail query key에 `setQueryData`한다. 그 후
+Zustand의 선택 ID만 변경한다.
 
 ```txt
 검색 결과 선택
@@ -130,8 +131,8 @@ type WineListSelectionState = {
 -> selectedWineIds에 ID 추가
 -> SelectedWineSection은 detail query로 카드 데이터 구독
 
-메뉴판 분석 성공
--> 응답 와인별 detail cache 갱신
+메뉴판 분석 SSE 완료
+-> 완료 payload의 와인별 detail cache 갱신
 -> selectedWineIds를 분석 결과 ID 순서로 교체
 ```
 
@@ -172,6 +173,7 @@ web/src/app/
 │  └─ wine/
 │     ├─ api/
 │     │  ├─ wine.api.ts
+│     │  ├─ wine-list-sse.parser.ts
 │     │  ├─ wine-menu-image.server.ts
 │     │  ├─ wine.mapper.ts
 │     │  └─ wine.server.ts
@@ -258,7 +260,8 @@ queries: {
 와인 데이터 정의와 네트워크 요청을 담당한다.
 
 - `wine.type.ts`: `Wine`, `WineSearchItem`, API DTO 타입
-- `wine.api.ts`: 검색, 상세, 분석 endpoint 호출 함수
+- `wine.api.ts`: 검색, 상세, 분석 POST/SSE endpoint 호출 함수
+- `wine-list-sse.parser.ts`: SSE frame을 이벤트와 payload로 파싱
 - `wine.mapper.ts`: API DTO를 앱의 와인 모델로 변환하는 순수 함수
 - `wine.server.ts`: Route Handler가 사용하는 mock 데이터와 server-only 조회
 
@@ -377,24 +380,87 @@ WineSearchSection input
 
 ## 분석 데이터 흐름
 
+### 확정된 요구사항
+
+- `useWineListSelectController.handleAnalyze`는 비동기 함수다.
+- 메뉴판 분석 요청의 HTTP method는 `POST`다.
+- 요청 이후 와인 리스트 결과는 SSE(Server-Sent Events)를 통해 수신한다.
+- SSE로 받은 와인 객체는 Zustand에 저장하지 않고 TanStack Query detail
+  cache에 반영한다.
+- 분석 요청 시작부터 SSE 완료 또는 실패까지를 하나의 분석 작업
+  생명주기로 취급한다.
+
+### 예정 흐름
+
 ```txt
 PhotoUploadBox
 -> local File ref + preview state
 -> 분석 버튼
--> useAnalyzeWineListMutation
--> POST /api/wine-lists/analyze
--> 성공 응답 Wine[]
+-> async handleAnalyze()
+-> useAnalyzeWineListMutation.mutateAsync(File)
+-> POST 분석 요청
+-> SSE 연결 또는 POST response stream 수신
+-> SSE event별 payload 검증 및 DTO mapping
+-> 완료 event에서 Wine[] 확정
 -> wine detail cache seed
 -> Zustand selectedWineIds 교체
 -> 사진 영역 닫기
 ```
 
-분석 진행 상태는 `mutation.isPending`, 오류는 `mutation.error`를 사용한다.
-별도 `isAnalyzing` state를 만들지 않는다.
+`handleAnalyze`는 `await mutateAsync(file)` 형태로 분석 작업 완료를 기다린다.
+Mutation 함수는 POST 요청만 성공했다고 완료되는 것이 아니라, SSE에서 최종
+와인 리스트를 수신하고 정상 종료 조건을 확인했을 때 resolve한다.
 
-분석 결과가 목록 전체에 영향을 주더라도 현재 P1에는 서버가 소유하는
-선택 목록 query가 없다. 따라서 관련 목록을 invalidate하지 않고, 완전한
-응답을 받은 각 와인의 detail cache를 `setQueryData`한다.
+분석 진행 상태는 기본적으로 `mutation.isPending`, 오류는
+`mutation.error`에서 파생한다. SSE 연결 상태나 진행률을 여러 컴포넌트가
+공유해야 하는 요구가 생기면 Zustand에 연결 상태만 추가할 수 있다. 와인
+리스트 payload 자체는 Zustand에 저장하지 않는다.
+
+분석 결과가 목록 전체에 영향을 주더라도 현재 P1에는 서버가 소유하는 선택
+목록 query가 없다. 따라서 관련 목록을 invalidate하지 않고, SSE 완료
+payload의 각 와인을 동일한 detail query key로 `setQueryData`한다.
+
+사용자가 화면을 이탈하거나 새 분석을 시작하면 이전 POST/SSE 작업을
+`AbortController`로 취소한다. 취소는 일반 분석 실패와 구분해 불필요한 오류
+메시지를 표시하지 않는다.
+
+### SSE 구현 방식
+
+구체적인 API 스펙이 정해지지 않았으므로 다음 두 방식 중 하나로 확정한다.
+
+```txt
+방식 A
+POST /analyze
+-> response Content-Type: text/event-stream
+-> fetch response.body ReadableStream을 직접 파싱
+
+방식 B
+POST /analyze
+-> jobId 또는 streamUrl 응답
+-> 별도 SSE endpoint 연결
+-> 완료 event에서 결과 수신
+```
+
+브라우저 기본 `EventSource`는 POST 요청 body를 보낼 수 없으므로 방식 A라면
+`fetch + ReadableStream` 기반 SSE parser를 사용한다. 방식 B라면 POST와 SSE
+연결을 분리하되, 두 단계 전체를 하나의 Mutation 작업으로 캡슐화한다.
+
+### API 스펙 확정 필요 항목
+
+현재 다음 항목은 미정이며 구현 전에 백엔드 계약을 확정해야 한다.
+
+- 실제 endpoint 경로
+- 요청 `Content-Type`과 이미지 전송 형식
+- 인증·인가 및 cookie/header 전달 방식
+- POST 응답이 직접 SSE stream인지, `jobId`/`streamUrl`을 반환하는지
+- SSE event 이름 (`progress`, `wine`, `completed`, `error` 등)
+- event payload DTO와 와인 리스트가 단건/누적/최종 배열 중 어떤 형태인지
+- 정상 완료를 판별하는 event 또는 sentinel
+- 서버 오류 payload와 HTTP/SSE 오류 매핑
+- heartbeat 형식과 connection timeout
+- 재연결 및 `Last-Event-ID` 지원 여부
+- 사용자 취소와 서버 작업 취소 endpoint 필요 여부
+- 중복 event 처리와 event 순서 보장 방식
 
 ## 선택 데이터 흐름
 
@@ -408,7 +474,7 @@ PhotoUploadBox
 
 ### 분석 결과로 교체
 
-1. 응답 와인별 detail cache를 채운다.
+1. SSE 정상 완료 event의 응답 와인별 detail cache를 채운다.
 2. 응답 순서대로 ID 배열을 만든다.
 3. Zustand의 선택 ID를 한 번에 교체한다.
 
@@ -488,18 +554,22 @@ no-op click handler를 두지 않는다.
 ```txt
 GET  /api/wines/search?q={query}
 GET  /api/wines/{wineId}
-POST /api/wine-lists/analyze
+POST /api/wine-lists/analyze  # 경로는 API 계약 확정 후 변경 가능
 ```
 
 Route Handler의 책임:
 
 - request parameter/form-data 검증
 - server-only Entity 함수 호출
-- DTO JSON 응답과 HTTP status 반환
+- 검색/상세 요청은 DTO JSON 응답과 HTTP status 반환
+- 분석 요청은 백엔드 POST/SSE 연결을 중계하거나 stream URL을 안전하게 노출
+- SSE event payload 검증 및 내부 오류의 safe error 변환
+- 연결 취소 시 backend stream 또는 작업 취소 전파
 
 Route Handler가 Feature UI, Zustand store, Query Hook을 import하지 않도록
 한다. 인증·인가와 입력 검증은 실제 API 전환 후에도 서버에서 다시
-수행한다.
+수행한다. 백엔드 origin, token, 내부 stream URL은 브라우저에 직접 노출하지
+않는다.
 
 ## 기존 파일 마이그레이션
 
@@ -529,7 +599,7 @@ Route Handler가 Feature UI, Zustand store, Query Hook을 import하지 않도록
 - `p1_1`: 빈 선택, 업로드 영역 열림
 - `p1_2`: detail cache와 선택 ID를 함께 준비
 - 검색 loading/error/empty/success 상태
-- 분석 pending/error/success 상태
+- 분석 pending/streaming/error/success/cancelled 상태
 
 표현 컴포넌트 Story는 Query/Zustand를 직접 사용하지 않고 args만으로
 렌더링한다.
@@ -542,25 +612,31 @@ Route Handler가 Feature UI, Zustand store, Query Hook을 import하지 않도록
 4. 검색/상세/analyze Route Handler를 Entity server 함수에 연결
 5. query key factory 작성
 6. 검색 Query Hook과 선택 상세 Queries Hook 작성
-7. 분석 Mutation Hook 작성
-8. detail cache seed helper 작성
-9. 선택 ID 전용 Zustand store 작성
-10. 검색 입력 전용 `useDebouncedValue` hook 작성
-11. controller hook에서 로컬 UI 상태, Query/Mutation, store action 조합
-12. `WineListSelectPage`를 새 controller에 연결
-13. UI props와 Story의 타입 import를 Entity 기준으로 변경
-14. 기존 `business`, `presentation`, `client` 디렉터리 제거
-15. Storybook Query Provider와 상태별 Story 보완
-16. lint, type check, Storybook test/build, Next production build 실행
+7. 분석 POST/SSE API 계약 확정
+8. SSE frame parser와 payload validation 작성
+9. POST 요청부터 SSE 완료까지 캡슐화한 분석 Mutation Hook 작성
+10. detail cache seed helper 작성
+11. 선택 ID 전용 Zustand store 작성
+12. 검색 입력 전용 `useDebouncedValue` hook 작성
+13. controller의 `handleAnalyze`를 async/abort 가능한 흐름으로 조합
+14. `WineListSelectPage`를 새 controller에 연결
+15. UI props와 Story의 타입 import를 Entity 기준으로 변경
+16. 기존 `business`, `presentation`, `client` 디렉터리 제거
+17. Storybook Query Provider와 SSE 상태별 Story 보완
+18. lint, type check, Storybook test/build, Next production build 실행
 
 ## 완료 기준
 
 - `page.tsx`와 `layout.tsx`가 Server Component로 유지된다.
 - 초기 데이터가 없는 P1에서는 불필요한 hydration을 사용하지 않는다.
 - 검색 결과를 `useState`, `useReducer`, Zustand에 저장하지 않는다.
-- 분석 결과를 `useState` 또는 Zustand에 저장하지 않는다.
+- SSE로 수신한 분석 결과를 `useState` 또는 Zustand에 저장하지 않는다.
 - 선택 Zustand store에는 와인 객체가 아니라 ID와 순서만 존재한다.
-- 검색 로딩/오류는 Query 상태, 분석 로딩/오류는 Mutation 상태를 사용한다.
+- 검색 로딩/오류는 Query 상태를 사용한다.
+- 분석 Mutation은 POST 응답 시점이 아니라 SSE 완료 event 수신 후 성공한다.
+- SSE 완료 payload는 동일한 wine detail query key에 저장한다.
+- 화면 이탈 또는 새 분석 시작 시 기존 POST/SSE 작업을 취소한다.
+- 취소와 서버 오류를 구분해 UI 상태를 처리한다.
 - `useEffect + fetch` 검색 코드가 제거된다.
 - Query key가 배열 factory 한 곳에서 관리된다.
 - API 함수는 Entity, Query/Mutation Hook은 Feature에 존재한다.
@@ -583,7 +659,7 @@ npm run build-storybook
 
 ## 범위 밖
 
-- 실제 외부 와인 API 연동
+- 백엔드의 실제 이미지 분석 엔진과 SSE event 생성 구현
 - 선택 목록의 서버 저장
 - 새로고침 후 선택 목록 복원
 - 검색어 URL 공유
