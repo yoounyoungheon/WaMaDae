@@ -82,17 +82,6 @@ export function analyzeWineList(menuImage: File): WineDetailDto[] {
   return mockAnalyzedWines;
 }
 
-export function getWineDetail(wineId: string): WineDetailDto | null {
-  const fromSearch = mockSearchWines.find(
-    (wine) => wine.append_wine.id === wineId
-  )?.append_wine;
-  if (fromSearch) {
-    return fromSearch;
-  }
-
-  return mockAnalyzedWines.find((wine) => wine.id === wineId) ?? null;
-}
-
 function getSearchableWineText(wine: WineSearchItemDto) {
   return [wine.name, wine.region_and_type, wine.append_wine.title]
     .join(" ")

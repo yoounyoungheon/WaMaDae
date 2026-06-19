@@ -25,7 +25,7 @@ flowchart TB
   subgraph STATE["상태 관리"]
     Local["React local state<br/>검색어·preview·펼침 상태"]
     Store[("Zustand<br/>선택된 와인 ID")]
-    Query[("TanStack Query<br/>검색·상세 서버 데이터")]
+    Query[("TanStack Query<br/>검색·분석·known wines cache")]
   end
 
   Page -->|"props·event handler 전달"| Photo
@@ -78,9 +78,10 @@ flowchart LR
 
 핵심 원칙(P1 계획 기준):
 
-- **서버 데이터는 TanStack Query에만 둔다.** 검색·상세·분석 응답을
+- **서버 데이터는 TanStack Query에만 둔다.** 검색·분석 응답을
   `useState`/Zustand에 복제하지 않는다.
-- **Zustand에는 선택 ID와 순서만 둔다.** 와인 카드 데이터는 detail cache에서 읽는다.
+- **Zustand에는 선택 ID와 순서만 둔다.** 와인 카드 데이터는 검색·분석 응답으로
+  채운 known wines cache에서 읽는다.
 - **API 함수는 엔티티, Query/Mutation Hook은 Feature**에 둔다.
 - UI 컴포넌트는 도메인 props만 받고 QueryClient·API URL을 모른다.
 
@@ -136,9 +137,9 @@ src/app/
 │  ├─ api/
 │  │  ├─ wine-query-keys.ts             # query key factory
 │  │  ├─ use-wine-search-query.ts       # 검색 useQuery
-│  │  ├─ use-selected-wines-queries.ts  # 선택 상세 useQueries
+│  │  ├─ use-known-wines-query.ts       # 알려진 와인 cache 구독
 │  │  └─ use-analyze-wine-list-mutation.ts
-│  ├─ lib/seed-wine-detail-cache.ts     # detail cache seed helper
+│  ├─ lib/cache-known-wines.ts          # 알려진 와인 cache 갱신
 │  ├─ model/
 │  │  ├─ use-wine-list-select-controller.ts   # 조합 hook (비즈니스 로직)
 │  │  ├─ use-debounced-value.ts
@@ -147,7 +148,6 @@ src/app/
 │  └─ ui/                               # 표현 컴포넌트(아래 3장)
 └─ api/
    ├─ wines/search/route.ts
-   ├─ wines/[wineId]/route.ts
    └─ wine-lists/analyze/route.ts
 ```
 
@@ -196,7 +196,7 @@ controller가 반환한 값을 하위 UI props로 연결하고 조건부 렌더�
 | 상태 | 관리 방식 | 위치 |
 |---|---|---|
 | 와인 검색 결과 | TanStack Query (`useQuery`) | `useWineSearchQuery` |
-| 와인 상세(카드) 데이터 | TanStack Query (`useQueries`, detail cache) | `useSelectedWinesQueries` |
+| 선택 카드용 와인 데이터 | TanStack Query (`known-wines` cache) | `useKnownWinesQuery` |
 | 메뉴판 분석 결과 | TanStack Query (`useMutation`) | `useAnalyzeWineListMutation` |
 | 선택된 와인 ID와 순서 | Zustand (Provider 스코프) | `wine-list-selection.store` |
 | 검색 input 값 | `useState` | controller |
@@ -207,7 +207,7 @@ controller가 반환한 값을 하위 UI props로 연결하고 조건부 렌더�
 | 클라이언트 이미지 검증 메시지 | `useState` | controller (`imageErrorMessage`) |
 | 검색/분석 로딩·오류 | Query/Mutation 파생 | `isFetching` / `isPending` / `error` |
 
-> 서버 데이터(검색·상세·분석 결과)는 어디에도 `useState`/Zustand로 복제하지 않는다.
+> 서버 데이터(검색·분석 결과)는 어디에도 `useState`/Zustand로 복제하지 않는다.
 > 선택 store에는 **ID와 순서만** 존재한다.
 
 ## 6. 비즈니스 로직: `useWineListSelectController`
@@ -218,7 +218,7 @@ Query/Mutation 결과, store action을 화면이 쓰기 좋은 props로 묶어 �
 ```txt
 보유(local)        : query, isPhotoSectionOpen, menuImagePreview,
                      imageErrorMessage, menuImageFileRef, previewUrlRef
-구독(server/store) : useWineSearchQuery, useSelectedWinesQueries,
+구독(server/store) : useWineSearchQuery, useKnownWinesQuery,
                      useAnalyzeWineListMutation, 선택 store selector
 파생(derived)      : searchResults, selectedWines, isSearching, isAnalyzing,
                      searchErrorMessage, analysisErrorMessage
@@ -231,7 +231,7 @@ controller가 하지 않는 일:
 - API 응답 배열을 `useState`에 저장하지 않는다.
 - 와인 객체를 Zustand에 저장하지 않는다.
 - endpoint URL을 직접 구성하지 않는다.
-- 검색/상세 query key를 임의 문자열로 만들지 않는다.
+- 검색/known wines query key를 임의 문자열로 만들지 않는다.
 - DTO를 UI 모델로 직접 변환하지 않는다.
 
 ## 7. Query key와 캐시 구조
@@ -239,22 +239,23 @@ controller가 하지 않는 일:
 ```txt
 ["wines"]
 ├─ ["wines", "search", { query }]
-└─ ["wines", "detail", wineId]
+└─ ["wines", "known"]
 ```
 
 | key | 데이터 | 정책 |
 |---|---|---|
 | `wineQueryKeys.search(query)` | `WineSearchItem[]` | `staleTime: 60초`, 빈 검색어 비활성 |
-| `wineQueryKeys.detail(id)` | `Wine` | `staleTime: Infinity` |
+| `wineQueryKeys.known()` | `Partial<Record<WineId, Wine>>` | 네트워크 요청 없음, `staleTime/gcTime: Infinity` |
 
 검색 결과와 분석 결과에는 카드 렌더링에 필요한 완전한 `Wine` 데이터가
 포함된다. 사용자가 결과를 선택하거나 분석이 성공하면
-`seedWineDetailCache`가 동일한 detail key에 데이터를 넣는다. 이후
-`useSelectedWinesQueries`는 선택 ID 순서대로 detail cache를 구독한다.
+`cacheKnownWines`가 `wineQueryKeys.known()`에 ID별 데이터를 합친다. 이후
+controller가 Zustand의 선택 ID 순서대로 known wines cache에서 카드 데이터를
+선택한다.
 
-cache miss가 발생한 경우에만 `GET /api/wines/:wineId`로 상세 데이터를
-가져온다. 선택을 제거해도 cache를 즉시 삭제하지 않아 같은 화면에서 다시
-선택할 때 재사용할 수 있다.
+현재 화면에는 선택 ID 복원 기능이 없으므로 별도의 상세 조회 API나 per-wine
+detail cache를 두지 않는다. 선택을 제거해도 known wines cache는 유지해 같은
+화면에서 다시 선택할 때 재사용한다.
 
 ## 8. 데이터 흐름
 
@@ -297,21 +298,22 @@ sequenceDiagram
 sequenceDiagram
   participant IT as WineSearchResultItem
   participant C as controller
-  participant Seed as seedWineDetailCache
+  participant Cache as cacheKnownWines
   participant St as 선택 store
-  participant DQ as useSelectedWinesQueries
+  participant KQ as useKnownWinesQuery
   participant Sec as SelectedWineSection
 
   IT->>C: onSelect(wine: WineSearchItem)
-  C->>Seed: setQueryData(detail(id), wine)
+  C->>Cache: known cache에 wine 저장
   C->>St: addWineId(id)  (중복 무시)
-  St-->>DQ: selectedWineIds 변경
-  DQ->>DQ: detail cache hit → 재요청 없음(staleTime: Infinity)
-  DQ-->>Sec: wines (카드 데이터)
+  Cache-->>KQ: known wines 갱신
+  St-->>C: selectedWineIds 변경
+  KQ-->>C: known wines
+  C-->>Sec: ID 순서로 선택한 wines
 ```
 
-`WineSearchItem`은 `Wine`의 모든 필드를 포함하므로, 선택 즉시 detail cache를
-seed할 수 있어 추가 네트워크 요청이 발생하지 않는다.
+`WineSearchItem`은 `Wine`의 모든 필드를 포함하므로 선택 즉시 known wines
+cache에 저장할 수 있고 추가 네트워크 요청이 발생하지 않는다.
 
 ### 8.3 메뉴판 분석
 
@@ -322,7 +324,7 @@ sequenceDiagram
   participant V as wine-menu-image(검증)
   participant M as useAnalyzeWineListMutation
   participant R as POST /api/wine-lists/analyze
-  participant Seed as seedWineDetailCache
+  participant Cache as cacheKnownWines
   participant St as 선택 store
 
   Box->>C: onFileChange(file)
@@ -339,7 +341,7 @@ sequenceDiagram
   R->>R: content-type/length·크기·타입·매직바이트 검증
   R-->>M: { wines: WineDetailDto[] }
   M-->>C: onSuccess(wines)
-  C->>Seed: 각 wine detail cache seed
+  C->>Cache: 응답 wines를 known cache에 저장
   C->>St: replaceWineIds(분석 순서 ID)
   C->>C: 사진 영역 닫기
 ```
@@ -352,7 +354,7 @@ sequenceDiagram
 
 ```txt
 SelectedWineCard onRemove(id) -> handleRemoveWine -> store.removeWineId(id)
-- detail cache는 즉시 삭제하지 않고 Query의 gcTime 정책에 맡긴다(재선택 대비).
+- known wines cache는 유지한다(같은 화면에서 재선택 대비).
 ```
 
 ## 9. API 처리 경계
@@ -364,7 +366,6 @@ SelectedWineCard onRemove(id) -> handleRemoveWine -> store.removeWineId(id)
 | 함수 | HTTP 요청 | 반환 모델 |
 |---|---|---|
 | `fetchWineSearch(query, signal)` | `GET /api/wines/search?q=` | `WineSearchItem[]` |
-| `fetchWineDetail(id, signal)` | `GET /api/wines/:id` | `Wine` |
 | `analyzeWineList(file)` | `POST /api/wine-lists/analyze` | `Wine[]` |
 
 응답 JSON은 snake_case DTO이며 `wine.mapper.ts`가 camelCase 앱 모델로
@@ -376,7 +377,6 @@ SelectedWineCard onRemove(id) -> handleRemoveWine -> store.removeWineId(id)
 | 메서드/경로 | 검증과 처리 | 성공 응답 |
 |---|---|---|
 | `GET /api/wines/search?q=` | 공백 제거, 빈 검색어, 최대 100자 검증 | `{ wines: WineSearchItemDto[] }` |
-| `GET /api/wines/:wineId` | ID 기반 상세 조회, 없으면 404 | `{ wine: WineDetailDto }` |
 | `POST /api/wine-lists/analyze` | multipart, 크기, MIME, 실제 파일 시그니처 검증 | `{ wines: WineDetailDto[] }` |
 
 분석 endpoint의 주요 실패 status:
@@ -418,7 +418,7 @@ app/layout.tsx (Server)
 ## 12. 수정 시 확인할 지점
 
 - 검색 응답 shape 변경: DTO 타입 → mapper → Story fixture를 함께 수정한다.
-- query key 변경: 검색 Hook, 상세 Hook, cache seed helper를 함께 수정한다.
+- query key 변경: 검색 Hook, known wines Hook, cache helper를 함께 수정한다.
 - 선택 데이터 추가: 서버 데이터인지 UI draft인지 먼저 판별한다.
 - 이미지 제한 변경: 클라이언트 검증과 Route Handler 검증을 함께 수정한다.
 - P2 이동 구현: 비활성 `다음` 버튼, 선택 draft 유지 범위, 제출 API를 함께 설계한다.
@@ -431,4 +431,5 @@ app/layout.tsx (Server)
 - 비즈니스 조합: `web/src/app/feature/wine-list-select/model/use-wine-list-select-controller.ts`
 - 브라우저 API: `web/src/app/entity/wine/api/wine.api.ts`
 - BFF Route Handler: `web/src/app/api/wines/*`, `web/src/app/api/wine-lists/analyze/route.ts`
+- API 명세: `api/wine-list-select.md`
 - 마이그레이션 배경과 의사결정: `plans/P1_PLAN.md`

@@ -4,13 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type {
   MenuImagePreview,
+  Wine,
   WineSearchItem,
 } from "@/app/entity/wine/model/wine.type";
 import { getWineMenuImageValidationMessage } from "@/app/entity/wine/model/wine-menu-image";
 import { useAnalyzeWineListMutation } from "../api/use-analyze-wine-list-mutation";
-import { useSelectedWinesQueries } from "../api/use-selected-wines-queries";
+import { useKnownWinesQuery } from "../api/use-known-wines-query";
 import { useWineSearchQuery } from "../api/use-wine-search-query";
-import { seedWineDetailCache } from "../lib/seed-wine-detail-cache";
+import { cacheKnownWines } from "../lib/cache-known-wines";
 import { useDebouncedValue } from "./use-debounced-value";
 import { useWineListSelectionStore } from "./wine-list-selection-provider";
 
@@ -49,8 +50,11 @@ export function useWineListSelectController() {
   );
   const removeWineId = useWineListSelectionStore((state) => state.removeWineId);
 
-  // 선택 와인 카드 데이터 (detail cache 구독)
-  const selectedWines = useSelectedWinesQueries(selectedWineIds);
+  // 검색/분석으로 이미 받은 와인 데이터 cache
+  const { data: knownWines } = useKnownWinesQuery();
+  const selectedWines = selectedWineIds
+    .map((wineId) => knownWines[wineId])
+    .filter((wine): wine is Wine => Boolean(wine));
 
   // 분석 서버 상태
   const {
@@ -100,8 +104,8 @@ export function useWineListSelectController() {
 
   const handleSelectWine = useCallback(
     (wine: WineSearchItem) => {
-      // WineSearchItem은 Wine의 모든 필드를 포함하므로 detail cache를 바로 seed한다.
-      seedWineDetailCache(queryClient, wine);
+      // WineSearchItem은 카드 렌더링에 필요한 Wine 필드를 모두 포함한다.
+      cacheKnownWines(queryClient, [wine]);
       addWineId(wine.id);
     },
     [queryClient, addWineId]
@@ -113,7 +117,7 @@ export function useWineListSelectController() {
 
     analyzeWineList(file, {
       onSuccess: (wines) => {
-        wines.forEach((wine) => seedWineDetailCache(queryClient, wine));
+        cacheKnownWines(queryClient, wines);
         replaceWineIds(wines.map((wine) => wine.id));
         setIsPhotoSectionOpen(false);
       },
@@ -140,7 +144,7 @@ export function useWineListSelectController() {
     searchErrorMessage: getRequestErrorMessage(searchQuery.error),
     // 선택
     selectedWineIds,
-    selectedWines: selectedWines.wines,
+    selectedWines,
     // 분석
     isAnalyzing,
     analysisErrorMessage:

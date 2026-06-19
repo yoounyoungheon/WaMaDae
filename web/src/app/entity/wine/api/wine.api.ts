@@ -10,10 +10,6 @@ type SearchWinesResponse = {
   wines: WineSearchItemDto[];
 };
 
-type WineDetailResponse = {
-  wine: WineDetailDto;
-};
-
 type AnalyzeWineListResponse = {
   wines: WineDetailDto[];
 };
@@ -39,24 +35,6 @@ export async function fetchWineSearch(
 
   const data = (await response.json()) as SearchWinesResponse;
   return data.wines.map(mapWineSearchItemDto);
-}
-
-export async function fetchWineDetail(
-  wineId: string,
-  signal?: AbortSignal
-): Promise<Wine> {
-  const response = await fetch(`/api/wines/${encodeURIComponent(wineId)}`, {
-    signal,
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      await getErrorMessage(response, "와인 정보를 불러오지 못했습니다.")
-    );
-  }
-
-  const data = (await response.json()) as WineDetailResponse;
-  return mapWineDetailDto(data.wine);
 }
 
 export async function analyzeWineList(menuImage: File): Promise<Wine[]> {
