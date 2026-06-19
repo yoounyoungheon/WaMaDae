@@ -8,9 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "storybook": "storybook dev -p 6006",
-    "storybook:index": "storybook index -o ./docs/storybook/index.json -c ./.storybook",
-    "build-storybook": "storybook build",
-    "build-components-docs": "node ./scripts/generate-components-meta.mjs storybook-static storybook-static/components.meta.json"
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -35,8 +33,6 @@
     "zustand": "^5.0.7"
   },
   "devDependencies": {
-    "@babel/parser": "^7.29.0",
-    "@babel/traverse": "^7.29.0",
     "@chromatic-com/storybook": "^5.0.0",
     "@storybook/addon-a11y": "^10.2.1",
     "@storybook/addon-docs": "^10.2.1",
@@ -51,7 +47,6 @@
     "eslint": "^8",
     "eslint-config-next": "^15.5.19",
     "eslint-plugin-storybook": "^10.2.1",
-    "fast-glob": "^3.3.3",
     "playwright": "^1.58.0",
     "postcss": "^8",
     "storybook": "^10.2.1",

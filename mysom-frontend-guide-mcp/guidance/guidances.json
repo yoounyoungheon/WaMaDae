@@ -147,17 +147,14 @@
       "triggers": {
         "paths": [
           "web/src/app/shared/ui/**/*.stories.tsx",
-          "web/src/app/feature/*/ui/**/*.stories.tsx",
-          "web/docs/storybook/index.json",
-          "web/docs/storybook/components.meta.json"
+          "web/src/app/feature/*/ui/**/*.stories.tsx"
         ],
         "keywords": [
           "story",
           "storybook",
           "argtypes",
           "meta",
-          "autodocs",
-          "components.meta.json"
+          "autodocs"
         ]
       },
       "sources": ["guidance/story-guide.md"],
