@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "mysom-frontend-guidance-mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/yoon-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp/dist/index.js"
+      ]
+    }
+  }
+}
