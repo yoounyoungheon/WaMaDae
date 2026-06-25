@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 import Button from "@/app/shared/ui/atom/button";
 import { cn } from "@/app/utils/style/helper";
 import { useTableKeywordSelectController } from "../model/use-table-keyword-select-controller";
@@ -57,17 +58,36 @@ export default function TableKeywordSelectPage({
       </main>
 
       <div className="shrink-0 border-t border-main-light-gray-600 bg-white px-6 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4">
-        <Button
-          htmlType="button"
-          variant="solid"
-          type="primary"
-          radius="lg"
-          disabled={!isCompleteEnabled}
-          className="h-12 w-full gap-1 text-[15px] font-bold"
-        >
-          완료
-          <ChevronRight className="h-4 w-4" strokeWidth={2.4} aria-hidden />
-        </Button>
+        {isCompleteEnabled ? (
+          <Button
+            asChild
+            variant="solid"
+            type="primary"
+            radius="lg"
+            className="h-12 w-full gap-1 text-[15px] font-bold"
+          >
+            <Link href="/wine/preferences">
+              완료
+              <ChevronRight
+                className="h-4 w-4"
+                strokeWidth={2.4}
+                aria-hidden
+              />
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            htmlType="button"
+            variant="solid"
+            type="primary"
+            radius="lg"
+            disabled
+            className="h-12 w-full gap-1 text-[15px] font-bold"
+          >
+            완료
+            <ChevronRight className="h-4 w-4" strokeWidth={2.4} aria-hidden />
+          </Button>
+        )}
       </div>
     </div>
   );

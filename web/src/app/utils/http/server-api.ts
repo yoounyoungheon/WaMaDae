@@ -1,4 +1,6 @@
-import { API_PATH } from "@/app/utils/http/api-query";
+import "server-only";
+
+import { API_PATH, USE_MOCK_API } from "@/app/utils/http/api-query";
 
 interface ApiErrorResponse {
   status?: number;
@@ -10,7 +12,11 @@ const buildRequestUrl = (path: string) => {
     throw new Error("API base URL이 설정되지 않았습니다.");
   }
 
-  return new URL(path, API_PATH).toString();
+  const requestPath = USE_MOCK_API
+    ? "/api/mock/"
+    : `/api/${path.replace(/^\/+/, "")}`;
+
+  return new URL(requestPath, API_PATH).toString();
 };
 
 export const requestServerApi = (path: string, init?: RequestInit) => {

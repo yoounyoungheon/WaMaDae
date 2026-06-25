@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { WineListSelectionProvider } from "@/app/feature/wine-list-select/model/wine-list-selection-provider";
 import { TableKeywordSelectionProvider } from "@/app/feature/table-keyword-select/model/table-keyword-selection-provider";
+import { WinePreferenceSelectionProvider } from "@/app/feature/wine-preference-select/model/wine-preference-selection-provider";
 
 /**
  * 와인 추천 다단계 플로우(`/wine/*`) 세그먼트 layout.
@@ -16,7 +17,9 @@ export default function WineFlowLayout({ children }: { children: ReactNode }) {
   return (
     <WineListSelectionProvider>
       <TableKeywordSelectionProvider>
-        {children}
+        <WinePreferenceSelectionProvider>
+          {children}
+        </WinePreferenceSelectionProvider>
       </TableKeywordSelectionProvider>
     </WineListSelectionProvider>
   );

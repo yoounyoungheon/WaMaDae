@@ -1,4 +1,4 @@
-import { type ChangeEvent, useId } from "react";
+import type { ChangeEvent } from "react";
 import Image from "next/image";
 import { Image as ImageIcon } from "lucide-react";
 import { cn } from "@/app/utils/style/helper";
@@ -6,6 +6,7 @@ import { WINE_MENU_IMAGE_ACCEPT } from "@/app/entity/wine/model/wine-menu-image"
 import type { PhotoUploadBoxProps } from "./wine-list-select.props";
 
 const DEFAULT_ACCEPT = WINE_MENU_IMAGE_ACCEPT;
+const WINE_MENU_IMAGE_INPUT_ID = "wine-menu-image-input";
 
 export default function PhotoUploadBox({
   image,
@@ -14,7 +15,6 @@ export default function PhotoUploadBox({
   onFileChange,
   className,
 }: PhotoUploadBoxProps) {
-  const inputId = useId();
   const hasPreview = Boolean(image?.previewUrl);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -25,7 +25,7 @@ export default function PhotoUploadBox({
   return (
     <div className={cn("w-full", className)}>
       <input
-        id={inputId}
+        id={WINE_MENU_IMAGE_INPUT_ID}
         type="file"
         accept={accept}
         disabled={disabled}
@@ -33,7 +33,7 @@ export default function PhotoUploadBox({
         onChange={handleChange}
       />
       <label
-        htmlFor={disabled ? undefined : inputId}
+        htmlFor={disabled ? undefined : WINE_MENU_IMAGE_INPUT_ID}
         aria-disabled={disabled}
         aria-label={
           image

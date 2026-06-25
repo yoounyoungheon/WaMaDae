@@ -31,6 +31,7 @@ export default function WineSearchSection({
           value={query}
           placeholder="와인 이름 검색"
           aria-label="와인 검색어"
+          suppressHydrationWarning
           withIcon={Search}
           status={errorMessage ? "error" : "default"}
           onValueChange={onQueryChange}

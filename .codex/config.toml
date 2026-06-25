@@ -5,3 +5,9 @@ cwd = "/Users/yoon-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp"
 startup_timeout_sec = 10
 tool_timeout_sec = 60
 enabled = true
+
+[mcp_servers.mysom-frontend-guidance-mcp.tools.resolve_guides]
+approval_mode = "approve"
+
+[mcp_servers.mysom-frontend-guidance-mcp.tools.read_guide]
+approval_mode = "approve"
