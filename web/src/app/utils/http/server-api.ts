@@ -12,9 +12,12 @@ const buildRequestUrl = (path: string) => {
     throw new Error("API base URL이 설정되지 않았습니다.");
   }
 
+  const normalizedPath = path.replace(/^\/+/, "");
   const requestPath = USE_MOCK_API
-    ? "/api/mock/"
-    : `/api/${path.replace(/^\/+/, "")}`;
+    ? normalizedPath === "wine-preference-options"
+      ? "/api/mock/"
+      : `/api/mock/${normalizedPath}`
+    : `/api/${normalizedPath}`;
 
   return new URL(requestPath, API_PATH).toString();
 };
