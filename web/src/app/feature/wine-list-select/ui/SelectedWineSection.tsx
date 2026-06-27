@@ -15,10 +15,16 @@ export default function SelectedWineSection({
       <h2 className="text-[17px] font-extrabold uppercase leading-none text-text-01">
         {title}
       </h2>
-      <div className="mt-6 grid gap-4">
-        {wines.map((wine) => (
-          <SelectedWineCard key={wine.id} wine={wine} onRemove={onRemoveWine} />
-        ))}
+      <div className="mt-6 max-h-[272px] overflow-y-auto pr-1">
+        <div className="grid gap-4">
+          {wines.map((wine) => (
+            <SelectedWineCard
+              key={wine.id}
+              wine={wine}
+              onRemove={onRemoveWine}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

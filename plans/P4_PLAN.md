@@ -4,7 +4,7 @@
 
 - 디자인: `designs/p4_1.png`, `designs/p4_2.png`
 - 선행 화면: `/wine/preferences`
-- 추천 결과 Mock API: `GET /api/mock/wine-recommendations`
+- 추천 결과 API: `GET /api/wine-recommendations`
 - 추천 결과 실제 API 문서: 없음
 - 채팅 전송 API 문서: 없음
 - 적용 가이드:
@@ -107,13 +107,13 @@ RecommendationResultPage
 ### Mock API
 
 ```http
-GET /api/mock/wine-recommendations
+GET /api/wine-recommendations
 ```
 
 현재 mock 서버 기준 전체 URL:
 
 ```text
-http://localhost:3030/api/mock/wine-recommendations
+http://localhost:8080/api/wine-recommendations
 ```
 
 ### 응답 DTO
@@ -313,7 +313,7 @@ web/src/app/feature/wine-recommendation-result/
 wine/recommendations/page.tsx
 → getWineRecommendations()
 → requestServerApi("/wine-recommendations")
-→ useMockApi=true이면 server-api가 /api/mock/wine-recommendations로 변환
+→ server-api가 http://localhost:8080/api/wine-recommendations로 변환
 → DTO zod 검증
 → mapWineRecommendationsDto()
 → <WineRecommendationResultPage result={result} />
@@ -321,26 +321,7 @@ wine/recommendations/page.tsx
 ```
 
 `wine-recommendation.server.ts`는 `/wine-recommendations` 도메인 경로만 알고,
-`/api/mock` 또는 `/api` prefix 결정은 `utils/http/server-api.ts`에서 담당한다.
-
-현재 `server-api.ts`가 mock 모드에서 모든 요청을 `/api/mock/` 하나로 보내는 구조라면,
-P4 endpoint를 지원하기 위해 mock 모드에서도 path를 보존하도록 조정해야 한다.
-
-예상 규칙:
-
-```text
-useMockApi=true
-requestServerApi("/wine-preference-options")
-→ http://localhost:3030/api/mock/
-
-useMockApi=true
-requestServerApi("/wine-recommendations")
-→ http://localhost:3030/api/mock/wine-recommendations
-
-useMockApi=false
-requestServerApi("/wine-recommendations")
-→ http://localhost:8080/api/wine-recommendations
-```
+`/api` prefix와 `http://localhost:8080` base URL 조합은 `utils/http/server-api.ts`에서 담당한다.
 
 ## 9. 공통 UI 재사용
 
@@ -428,8 +409,8 @@ className으로 조합하고, 공통 Dialog 자체에 도메인 스타일을 넣
 
 ## 12. 구현 순서
 
-1. `mock-api/server.js`의 P4 mock endpoint 계약 확인
-2. `server-api.ts` mock path 변환 규칙 보완
+1. 추천 결과 API 계약 확인
+2. `server-api.ts`의 8080 backend URL 조합 확인
 3. `wine-recommendation` entity 타입, mapper, server 조회 함수 작성
 4. `/wine/recommendations/page.tsx` route 추가
 5. `WineRecommendationResultPage` Server Component 작성

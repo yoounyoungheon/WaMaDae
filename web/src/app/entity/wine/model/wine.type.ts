@@ -42,3 +42,14 @@ export type WineSearchItemDto = {
   price_label: string;
   append_wine: WineDetailDto;
 };
+
+export type DetectedWineDto = {
+  name: string;
+  originalName: string | null;
+  country: string | null;
+};
+
+export type WineMenuImageOcrResponseDto = {
+  items: DetectedWineDto[];
+  count: number;
+};

@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { hasValidWineMenuImageSignature } from "@/app/entity/wine/api/wine-menu-image.server";
-import { analyzeWineList } from "@/app/entity/wine/api/wine.server";
 import {
   getWineMenuImageValidationMessage,
   MAX_WINE_MENU_IMAGE_SIZE,
 } from "@/app/entity/wine/model/wine-menu-image";
+import type {
+  DetectedWineDto,
+  WineDetailDto,
+  WineMenuImageOcrResponseDto,
+} from "@/app/entity/wine/model/wine.type";
+import { buildMysomApiUrl } from "@/app/utils/http/server-api";
+
+const OCR_WINE_MENU_PATH = "/v1/ocr/menu/wine";
 
 export async function POST(request: Request) {
   const contentType = request.headers.get("content-type") ?? "";
@@ -58,5 +65,58 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ wines: analyzeWineList(menuImage) });
+  const response = await fetch(
+    buildMysomApiUrl(OCR_WINE_MENU_PATH),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": menuImage.type,
+        Accept: "application/json",
+      },
+      body: await menuImage.arrayBuffer(),
+      cache: "no-store",
+      signal: AbortSignal.timeout(30_000),
+    }
+  );
+
+  if (!response.ok) {
+    return NextResponse.json(
+      { message: await getSafeErrorMessage(response) },
+      { status: response.status }
+    );
+  }
+
+  const data = (await response.json()) as WineMenuImageOcrResponseDto;
+
+  return NextResponse.json({
+    wines: data.items.map(mapDetectedWineToWineDetailDto),
+  });
+}
+
+function mapDetectedWineToWineDetailDto(
+  wine: DetectedWineDto,
+  index: number
+): WineDetailDto {
+  const description = [wine.originalName, wine.country]
+    .filter(Boolean)
+    .join(" · ");
+
+  return {
+    id: `ocr-wine-${index + 1}`,
+    display_name: wine.name,
+    image_url: "/ExampleImage.png",
+    rating: 0,
+    title: wine.name,
+    recommendation_text: description || "OCR로 감지된 와인입니다.",
+    price_label: "가격 정보 없음",
+  };
+}
+
+async function getSafeErrorMessage(response: Response) {
+  try {
+    const data = (await response.json()) as { message?: string | null };
+    return data.message || "와인 메뉴 이미지 분석에 실패했습니다.";
+  } catch {
+    return "와인 메뉴 이미지 분석에 실패했습니다.";
+  }
 }

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { searchWines } from "@/app/entity/wine/api/wine.server";
 
 const MAX_SEARCH_QUERY_LENGTH = 100;
 
@@ -18,5 +17,5 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json({ wines: searchWines(query) });
+  return NextResponse.json({ wines: [] });
 }

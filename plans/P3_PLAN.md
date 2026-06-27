@@ -414,13 +414,11 @@ GET /api/wine-preference-options
 
 Server Component는 server-only API adapter를 통해 위 계약의 응답을 조회한다.
 `wine-preference.server.ts`는 `/wine-preference-options` 도메인 경로만 알고,
-`/api` 또는 `/api/mock/` prefix 결정은 `utils/http/server-api.ts`에서 담당한다.
+`/api` prefix와 `http://localhost:8080` base URL 조합은 `utils/http/server-api.ts`에서 담당한다.
 실제 backend path는 `WINE_PREFERENCE_OPTIONS_PATH`로 교체할 수 있지만, 이 값도
 HTTP 계층 prefix가 없는 도메인 경로로 관리한다.
 
-개발 환경에서는 `useMockApi=true`이면 선택 옵션 요청을
-`http://localhost:3030/api/mock/`으로 보내고, `true`가 아니면
-`http://localhost:8080/api/wine-preference-options`로 보낸다.
+선택 옵션 요청의 최종 URL은 `http://localhost:8080/api/wine-preference-options`이다.
 
 추천 실행 API는 아직 명세가 없다. 따라서 다음 항목은 구현 전에 백엔드 계약이
 필요하다.

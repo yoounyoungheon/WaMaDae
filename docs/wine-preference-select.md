@@ -68,13 +68,10 @@ wine/preferences/page.tsx
 - `label`은 화면 표시, `value`는 선택 식별과 추천 요청 입력에 사용한다.
 - 선택 옵션의 `iconPath`가 있으면 label 앞에 장식 아이콘을 표시한다.
 - wine preference entity API 모듈은 `/wine-preference-options` 도메인 경로만 알고,
-  mock/real API prefix 결정은 `utils/http/server-api.ts`가 담당한다.
+  `/api` prefix와 `http://localhost:8080` base URL 조합은 `utils/http/server-api.ts`가 담당한다.
 - 서버 경로는 `WINE_PREFERENCE_OPTIONS_PATH`로 교체할 수 있지만, 이 값도 `/api` prefix
   없는 도메인 경로로 관리한다.
-- 개발 환경에서 `useMockApi=true`이면 `server-api.ts`가 최종 요청 URL을
-  `http://localhost:3030/api/mock/`으로 변환한다.
-- 개발 환경에서 `useMockApi`가 `true`가 아니면 최종 요청 URL은
-  `http://localhost:8080/api/wine-preference-options`이다.
+- 최종 요청 URL은 `http://localhost:8080/api/wine-preference-options`이다.
 
 ## 3. 선택 상태
 

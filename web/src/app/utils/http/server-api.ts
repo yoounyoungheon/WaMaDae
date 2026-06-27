@@ -1,6 +1,6 @@
 import "server-only";
 
-import { API_PATH, USE_MOCK_API } from "@/app/utils/http/api-query";
+import { MYSOM_API_BASE_URL } from "@/app/utils/http/api-query";
 
 interface ApiErrorResponse {
   status?: number;
@@ -8,19 +8,11 @@ interface ApiErrorResponse {
 }
 
 const buildRequestUrl = (path: string) => {
-  if (!API_PATH) {
-    throw new Error("API base URL이 설정되지 않았습니다.");
-  }
-
-  const normalizedPath = path.replace(/^\/+/, "");
-  const requestPath = USE_MOCK_API
-    ? normalizedPath === "wine-preference-options"
-      ? "/api/mock/"
-      : `/api/mock/${normalizedPath}`
-    : `/api/${normalizedPath}`;
-
-  return new URL(requestPath, API_PATH).toString();
+  return buildMysomApiUrl(`/api/${path.replace(/^\/+/, "")}`).toString();
 };
+
+export const buildMysomApiUrl = (path: string) =>
+  new URL(path, MYSOM_API_BASE_URL);
 
 export const requestServerApi = (path: string, init?: RequestInit) => {
   return fetch(buildRequestUrl(path), {

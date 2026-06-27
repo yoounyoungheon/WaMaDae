@@ -60,11 +60,8 @@ wine/recommendations/page.tsx
 ```
 
 - `wine-recommendation.server.ts`는 `/wine-recommendations` 도메인 경로만 알고,
-  mock/real API prefix 결정은 `utils/http/server-api.ts`가 담당한다.
-- 개발 환경에서 `useMockApi=true`이면 최종 요청 URL은
-  `http://localhost:3030/api/mock/wine-recommendations`이다.
-- 개발 환경에서 `useMockApi`가 `true`가 아니면 최종 요청 URL은
-  `http://localhost:8080/api/wine-recommendations`이다.
+  `/api` prefix와 `http://localhost:8080` base URL 조합은 `utils/http/server-api.ts`가 담당한다.
+- 최종 요청 URL은 `http://localhost:8080/api/wine-recommendations`이다.
 
 ## 3. 클라이언트 상태
 

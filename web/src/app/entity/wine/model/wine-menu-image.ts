@@ -3,9 +3,6 @@ export const MAX_WINE_MENU_IMAGE_SIZE = 10 * 1024 * 1024;
 export const WINE_MENU_IMAGE_TYPES = [
   "image/jpeg",
   "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif",
 ] as const;
 
 export const WINE_MENU_IMAGE_ACCEPT = WINE_MENU_IMAGE_TYPES.join(",");
@@ -23,7 +20,7 @@ export function getWineMenuImageValidationMessage(
   }
 
   if (!wineMenuImageTypes.includes(file.type)) {
-    return "JPG, PNG, WEBP, HEIC 이미지만 첨부할 수 있습니다.";
+    return "JPG, PNG 이미지만 첨부할 수 있습니다.";
   }
 
   return null;
