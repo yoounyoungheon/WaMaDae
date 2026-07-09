@@ -12,6 +12,9 @@ import type {
 import { buildMysomApiUrl } from "@/app/utils/http/server-api";
 
 const OCR_WINE_MENU_PATH = "/v1/ocr/menu/wine";
+const BACKEND_OCR_TIMEOUT_MS = 295_000;
+
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
   const contentType = request.headers.get("content-type") ?? "";
@@ -75,7 +78,7 @@ export async function POST(request: Request) {
       },
       body: await menuImage.arrayBuffer(),
       cache: "no-store",
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(BACKEND_OCR_TIMEOUT_MS),
     }
   );
 

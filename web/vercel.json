@@ -3,10 +3,10 @@
   "framework": "nextjs",
   "functions": {
     "src/app/api/**/*": {
-      "maxDuration": 60
+      "maxDuration": 300
     },
     "src/app/main/**/*": {
-      "maxDuration": 60
+      "maxDuration": 300
     }
   }
 }
