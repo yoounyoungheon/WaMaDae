@@ -20,7 +20,6 @@ wine/keywords/page.tsx            [Server Component]
       ├─ SelectionSummary         선택 개수 표시
       ├─ TableKeywordGrid         3열 grid
       │  └─ TableKeywordCard      label root + 숨겨진 checkbox
-      └─ 완료 Button              shared/ui/atom/button 재사용
 ```
 
 - `page.tsx`는 Server Component로 유지하고, 서버에서 키워드 목록을 prefetch한 뒤
@@ -37,12 +36,11 @@ wine/keywords/page.tsx            [Server Component]
 | 테이블 키워드 목록 | 서버 | TanStack Query | `useTableKeywordsQuery` |
 | 선택된 키워드 ID | 다단계 사용자 draft | Zustand | `table-keyword-selection.store.ts` |
 | 선택 개수 | 선택 ID에서 계산 | 파생 값 | controller |
-| 완료 버튼 활성 여부 | 선택 개수에서 계산 | 파생 값 | controller |
 | loading/error | Query에서 파생 | `isPending`, `isError` | controller |
 
 - 서버 키워드 목록을 `useState`나 Zustand에 복제하지 않는다.
 - Zustand에는 키워드 객체가 아닌 ID만 저장한다(`selectedKeywordIds: string[]`).
-- 선택 개수와 버튼 활성 여부는 별도 상태로 저장하지 않고 controller에서 파생한다.
+- 선택 개수는 별도 상태로 저장하지 않고 controller에서 파생한다.
 - 선택 store는 전역 `Providers`가 아니라 `app/wine/layout.tsx` 세그먼트 layout에서
   `WineListSelectionProvider` → `TableKeywordSelectionProvider` 순으로 제공한다.
   같은 layout을 공유하는 `/wine/ai` ↔ `/wine/keywords` 이동 간 layout 인스턴스가
@@ -99,7 +97,7 @@ useTableKeywordsQuery
 TableKeywordCard 체크박스 change
 → onToggle(id) → toggleKeyword(id)
 → selectedKeywordIds 갱신
-→ 카드 has-[:checked] 스타일 변경 + 선택 개수/완료 버튼 상태 재계산
+→ 카드 has-[:checked] 스타일 변경 + 선택 개수 재계산
 ```
 
 ## 5. 상태별 화면
@@ -109,17 +107,14 @@ TableKeywordCard 체크박스 change
 - **loading** (`isPending`): 선택 요약·3열 grid 자리에 고정 크기 skeleton 표시.
 - **error** (`isError`): `role="alert"` 박스에 안전한 오류 메시지 + `다시 시도` 버튼.
 - **empty** (성공·키워드 0개): 선택 가능한 키워드가 없다는 안내 표시.
-- **success**: `SelectionSummary` + `TableKeywordGrid` 렌더. 선택 0개면 완료 버튼
-  비활성, 1개 이상이면 활성.
+- **success**: `SelectionSummary` + `TableKeywordGrid` 렌더.
 
-본문은 `min-h-0 flex-1 overflow-y-auto`로 스크롤하고, 완료 버튼 영역은 `shrink-0`과
-상단 border로 화면 아래에 고정한다. 하단 패딩은 `env(safe-area-inset-bottom)`을 고려한다.
+본문은 `min-h-0 flex-1 overflow-y-auto`로 스크롤한다.
 
 ## 6. `shared/ui` 재사용
 
 - `PageHeader`(`molecule/page-header`): `title`, `routeBackPath="/wine/ai"`.
-- `Button`(`atom/button`): `variant="solid"`, `type="primary"`, `radius="lg"`.
-  완료 버튼은 P1 하단 버튼과 동일한 `h-* w-full` 패턴, 우측 화살표는 children 조합.
+- `Button`(`atom/button`): 오류 상태의 다시 시도 액션에 사용한다.
 
 `TableKeywordCard`는 공용 `Card`를 재사용하거나 개조하지 않는다. 선례인
 `SelectedWineCard`처럼 자체 `label` root와 className으로 컨테이너 스타일을 작성한다.
@@ -140,13 +135,11 @@ root로 만들려면 `Card`와 그 하위 shadcn `Card` 두 레이어를 `asChil
 - 체크 아이콘은 `aria-hidden`, 선택 개수는 `aria-live="polite"`로 알린다.
 - 색상만으로 선택을 전달하지 않고 체크 아이콘을 함께 표시한다.
 
-## 8. 완료 동작과 연결
+## 8. 라우트 연결
 
 - P1 `/wine/ai`의 `다음` 버튼은 선택이 있을 때 `asChild` + `Link`로
   `/wine/keywords`로 이동한다.
-- 완료 시 전달값은 `selectedKeywordIds: string[]`이다.
-- 완료 후 이동할 P3 라우트 또는 제출 API가 아직 정의되지 않아, 완료 버튼에는
-  no-op click handler를 두지 않았다. 목적지 확정 시 handler를 연결한다.
+- 현재 기획에서 `/wine/keywords` 이후 단계는 제거되어 추가 라우트 이동 버튼을 두지 않는다.
 
 ## 9. Storybook
 

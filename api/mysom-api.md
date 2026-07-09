@@ -33,7 +33,6 @@ Authorization: Bearer {token}
 | --- | --- | --- | --- | --- |
 | 로그아웃 | `POST` | `/v1/auth/logout` | 선택 | [mysom-auth.md](./mysom-auth.md) |
 | 메뉴 이미지 업로드 URL 생성 | `POST` | `/v1/upload/presigned-menu-image-url` | 필요 | [mysom-upload.md](./mysom-upload.md) |
-| 레거시 와인 메뉴 OCR | `POST` | `/v1/ocr/menu/wine` | 없음 | [mysom-ocr.md](./mysom-ocr.md) |
 | OCR + DB 와인 후보 추출 | `POST` | `/v1/wine-pairing/wines/menu-ocr` | 없음 | [mysom-ocr.md](./mysom-ocr.md) |
 | 즉시 메뉴 카테고리 추천 | `POST` | `/v1/wine-pairing/menu-category/recommend` | 없음 | [mysom-wine-pairing.md](./mysom-wine-pairing.md) |
 | 와인 페어링 SSE | `POST` | `/v1/wine-pairing/stream/pairing` | 없음 | [mysom-wine-pairing.md](./mysom-wine-pairing.md) |

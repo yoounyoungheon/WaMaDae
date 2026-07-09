@@ -28,7 +28,6 @@ export function useTableKeywordSelectController() {
 
   // 파생 값: 별도 상태로 저장하지 않는다.
   const selectedCount = selectedKeywordIds.length;
-  const isCompleteEnabled = selectedCount > 0;
 
   const errorMessage = isError
     ? error instanceof Error
@@ -41,7 +40,6 @@ export function useTableKeywordSelectController() {
     selectedKeywordIds,
     toggleKeyword,
     selectedCount,
-    isCompleteEnabled,
     isPending,
     isError,
     errorMessage,

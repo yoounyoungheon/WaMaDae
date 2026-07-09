@@ -1,6 +1,6 @@
 # Mysom OCR API
 
-와인 메뉴 이미지에서 와인명을 추출하는 API다. 두 엔드포인트 모두 요청 body는 이미지 바이너리이며 `multipart/form-data`가 아니다.
+와인 메뉴 이미지에서 와인명을 추출하고 내부 DB 와인 후보를 함께 반환하는 API다. 요청 body는 이미지 바이너리이며 `multipart/form-data`가 아니다.
 
 ## 공통 이미지 요청 규칙
 
@@ -14,72 +14,9 @@
 - 이미지 body가 비어 있으면 `400 Bad Request`
 - 이미지 body 합산 크기가 10MiB를 초과하면 `413 Payload Too Large`
 
-## POST /v1/ocr/menu/wine
-
-레거시 OCR route다. OCR로 추출한 와인 항목만 `ListResponse` 형태로 반환한다. DB 매칭 후보는 응답에 포함하지 않는다.
-
-### Request
-
-```http
-POST /v1/ocr/menu/wine
-Content-Type: image/jpeg
-```
-
-Body: 이미지 바이너리
-
-### Response
-
-Status: `200 OK`
-
-```ts
-type DetectedWine = {
-  name: string;
-  originalName: string | null;
-  country: string | null;
-};
-
-type WineMenuImageOcrResponse = {
-  items: DetectedWine[];
-  count: number;
-};
-```
-
-필드 규칙:
-
-| 필드 | 설명 |
-| --- | --- |
-| `items[].name` | 화면 표시용 와인명. 한글명이 있으면 한글명, 없으면 OCR 원문명 |
-| `items[].originalName` | 한글명이 따로 있을 때의 원문명. 없으면 `null` |
-| `items[].country` | OCR/AI 파싱으로 추출한 국가. 없으면 `null` |
-| `count` | `items.length` |
-
-예시:
-
-```json
-{
-  "items": [
-    {
-      "name": "르 아모 쇼비뇽 블랑",
-      "originalName": "Le Hameau Sauvignon Blanc",
-      "country": "프랑스"
-    }
-  ],
-  "count": 1
-}
-```
-
-### Error cases
-
-| Status | 조건 | 응답 |
-| --- | --- | --- |
-| `400 Bad Request` | 이미지 body가 비어 있음 | `ErrorResponse`, message: `이미지 본문이 비어 있습니다.` |
-| `413 Payload Too Large` | 이미지가 10MiB 초과 | `ErrorResponse`, message: `와인 메뉴 이미지는 10MiB 이하만 업로드할 수 있습니다.` |
-| `415 Unsupported Media Type` | `Content-Type`이 `image/png`, `image/jpeg`가 아님 | Spring WebFlux 오류 응답 |
-| `500 Internal Server Error` | Cloud Vision, AI 파싱, 내부 와인 검색 실패 | `ErrorResponse` 또는 Spring 오류 응답 |
-
 ## POST /v1/wine-pairing/wines/menu-ocr
 
-와인 페어링 플로우용 OCR route다. OCR 원본 항목과 내부 DB 매칭 후보를 한 배열에 함께 반환한다.
+OCR 원본 항목과 내부 DB 매칭 후보를 한 배열에 함께 반환한다.
 
 ### Request
 

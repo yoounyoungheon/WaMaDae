@@ -89,12 +89,12 @@
         ]
       }
     },
-    "/v1/ocr/menu/wine": {
+    "/v1/wine-pairing/wines/menu-ocr": {
       "post": {
         "tags": ["OCR API"],
-        "summary": "와인 메뉴 이미지 OCR",
-        "description": "PNG 또는 JPEG 메뉴 이미지를 업로드하면 감지된 와인 목록을 반환합니다.",
-        "operationId": "ocrOnWineMenuImage",
+        "summary": "와인 메뉴 이미지 인식",
+        "description": "PNG 또는 JPEG 메뉴 이미지를 업로드하면 OCR 항목과 DB 매칭 후보를 반환합니다.",
+        "operationId": "extractWines",
         "requestBody": {
           "description": "PNG 또는 JPEG 형식의 와인 메뉴 이미지 파일입니다.",
           "content": {
@@ -119,7 +119,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RES: 와인 메뉴 이미지 OCR 결과"
+                  "$ref": "#/components/schemas/RES: 와인 메뉴 추출"
                 }
               }
             }
@@ -491,43 +491,56 @@
         },
         "required": ["message", "status"]
       },
-      "RES: OCR 감지 와인 항목": {
+      "RES: 와인 메뉴 추출 항목": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "DB 와인 ID이며 OCR 원본 항목은 null입니다.",
+            "example": "wine-123"
+          },
+          "type": {
+            "type": "string",
+            "description": "항목 출처입니다. OCR 또는 DB입니다.",
+            "enum": ["OCR", "DB"],
+            "example": "DB"
+          },
           "name": {
             "type": "string",
-            "description": "와인명. 한글로 표기",
-            "example": "르 아모 쇼비뇽 블랑"
+            "description": "와인 원어 이름입니다.",
+            "example": "Chateau Margaux"
           },
-          "originalName": {
+          "koreanName": {
             "type": "string",
-            "description": "와인명 원문입니다.",
-            "example": "Le Hameau Sauvignon Blanc"
+            "description": "한글 와인 이름입니다.",
+            "example": "샤또 마고"
           },
           "country": {
             "type": "string",
-            "description": "원산지 국가명입니다. 한글 표기입니다.",
-            "example": "프랑스"
+            "description": "OCR로 인식한 생산 국가입니다.",
+            "example": "France"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int32",
+            "description": "OCR로 인식한 가격입니다.",
+            "example": 150000
           }
         },
-        "required": ["name"]
+        "required": ["name", "type"]
       },
-      "RES: 와인 메뉴 이미지 OCR 결과": {
+      "RES: 와인 메뉴 추출": {
         "type": "object",
-        "description": "OCR로 추출된 와인 목록 응답입니다.",
+        "description": "OCR 추출 항목과 내부 DB 매칭 와인 목록입니다.",
         "properties": {
-          "items": {
+          "wines": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RES: OCR 감지 와인 항목"
+              "$ref": "#/components/schemas/RES: 와인 메뉴 추출 항목"
             }
-          },
-          "count": {
-            "type": "integer",
-            "format": "int32"
           }
         },
-        "required": ["count", "items"]
+        "required": ["wines"]
       },
       "REQ: 메뉴 카테고리 추천 와인 항목": {
         "type": "object",

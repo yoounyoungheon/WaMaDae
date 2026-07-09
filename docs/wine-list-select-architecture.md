@@ -189,7 +189,7 @@ controller가 반환한 값을 하위 UI props로 연결하고 조건부 렌더�
 | `handleSelectWine`, `handleRemoveWine` | 선택 추가·삭제 이벤트 |
 
 `selectedWineIds.length > 0`일 때만 `SelectedWineSection`과 `다음` 버튼을
-렌더링한다. `다음` 버튼은 후속 라우트가 구현되지 않아 현재 비활성 상태다.
+렌더링한다. `다음` 버튼은 `/wine/keywords`로 이동한다.
 
 ## 5. 상태 분류
 

@@ -43,13 +43,15 @@ export type WineSearchItemDto = {
   append_wine: WineDetailDto;
 };
 
-export type DetectedWineDto = {
+export type WineMenuOcrExtractItemDto = {
+  id: string | null;
+  type: "OCR" | "DB";
   name: string;
-  originalName: string | null;
+  koreanName: string | null;
   country: string | null;
+  price: number | null;
 };
 
-export type WineMenuImageOcrResponseDto = {
-  items: DetectedWineDto[];
-  count: number;
+export type WineMenuOcrExtractResponseDto = {
+  wines: WineMenuOcrExtractItemDto[];
 };

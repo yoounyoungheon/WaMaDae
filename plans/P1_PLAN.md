@@ -74,41 +74,25 @@ Browser
    Content-Type: multipart/form-data
    menuImage: File
 -> BFF Route Handler
--> POST http://localhost:8080/v1/ocr/menu/wine
+-> POST http://localhost:8080/v1/wine-pairing/wines/menu-ocr
    Content-Type: image/png | image/jpeg
    Body: image binary
--> { items: DetectedWine[], count: number }
+-> { wines: WineMenuOcrExtractItemDto[] }
 -> BFF가 기존 화면 카드 DTO로 fallback 매핑
 -> { wines: WineDetailDto[] }
 ```
 
-실제 OCR 응답에는 `id`, `image_url`, `rating`, `price_label`이 없다. 1차 구현은 기존
-카드 UI와 선택 flow를 유지하기 위해 BFF에서 다음 fallback을 채운다.
+실제 OCR 응답에는 화면 카드용 `image_url`, `rating`, `price_label`이 없다. 1차 구현은
+기존 카드 UI와 선택 flow를 유지하기 위해 BFF에서 다음 fallback을 채운다.
 
-- `id`: `ocr-wine-{index}`
+- `id`: DB 후보는 백엔드 ID, OCR 원본은 `ocr-wine-{index}`
 - `image_url`: `/ExampleImage.png`
 - `rating`: `0`
-- `price_label`: `가격 정보 없음`
-- `recommendation_text`: `originalName · country` 또는 `OCR로 감지된 와인입니다.`
+- `price_label`: OCR 가격이 있으면 `{가격}원`, 없으면 `가격 정보 없음`
+- `recommendation_text`: 원문명, 국가, DB 후보 여부를 조합하거나 `OCR로 감지된 와인입니다.`
 
 허용 이미지 타입은 실제 백엔드와 맞춰 `image/png`, `image/jpeg`만 사용한다. 기존
 `webp`, `heic`, `heif` 허용 계획은 제거한다.
-
-### 메뉴 이미지 업로드 pre-signed URL
-
-실제 백엔드에는 인증이 필요한 업로드 URL 생성 API가 있다.
-
-```txt
-Browser
--> POST /api/upload/presigned-menu-image-url
-   Authorization: Bearer {token}
--> BFF Route Handler
--> POST /v1/upload/presigned-menu-image-url
-```
-
-현재 P1 화면의 OCR 분석은 사용자가 선택한 파일을 바로 BFF에 전송하므로 pre-signed URL
-업로드 flow를 사용하지 않는다. 단, 이후 실제 이미지 저장 요구가 생기면 위 BFF route를
-사용한다.
 
 ## 현재 구현의 문제
 
@@ -278,8 +262,6 @@ web/src/app/
 │        └─ wine-list-select.props.ts
 │
 ├─ api/
-│  ├─ upload/
-│  │  └─ presigned-menu-image-url/route.ts
 │  ├─ wines/
 │  │  └─ search/route.ts
 │  └─ wine-lists/
@@ -443,7 +425,7 @@ WineSearchSection input
 
 - `useWineListSelectController.handleAnalyze`는 메뉴 이미지 `File`을 BFF에 전송한다.
 - 브라우저 요청은 `POST /api/wine-lists/analyze`와 `multipart/form-data`를 사용한다.
-- BFF는 파일을 검증한 뒤 실제 백엔드 `POST /v1/ocr/menu/wine`에 이미지 바이너리를
+- BFF는 파일을 검증한 뒤 실제 백엔드 `POST /v1/wine-pairing/wines/menu-ocr`에 이미지 바이너리를
   전달한다.
 - 실제 백엔드 OCR 응답은 SSE가 아니라 JSON이다.
 - BFF는 OCR `DetectedWine[]`을 기존 화면 카드 DTO로 fallback 매핑한다.
@@ -462,7 +444,7 @@ PhotoUploadBox
 -> useAnalyzeWineListMutation.mutateAsync(File)
 -> POST /api/wine-lists/analyze
 -> BFF에서 이미지 검증
--> POST /v1/ocr/menu/wine
+-> POST /v1/wine-pairing/wines/menu-ocr
 -> OCR JSON 응답 수신
 -> BFF fallback DTO mapping
 -> Wine[] 확정
@@ -576,8 +558,7 @@ no-op click handler를 두지 않는다.
 
 ```txt
 GET  /api/wines/search?q={query}       # 실제 검색 API 없음. BFF가 빈 배열 반환
-POST /api/wine-lists/analyze           # BFF -> /v1/ocr/menu/wine
-POST /api/upload/presigned-menu-image-url  # BFF -> /v1/upload/presigned-menu-image-url
+POST /api/wine-lists/analyze           # BFF -> /v1/wine-pairing/wines/menu-ocr
 ```
 
 Route Handler의 책임:
@@ -586,7 +567,6 @@ Route Handler의 책임:
 - 검색 요청은 실제 검색 API가 생기기 전까지 빈 배열 JSON 응답 반환
 - 분석 요청은 파일을 검증한 뒤 실제 OCR API로 이미지 바이너리 전달
 - OCR 응답 DTO 검증과 fallback 카드 DTO 변환
-- pre-signed URL 요청은 Authorization과 요청 body를 검증한 뒤 실제 업로드 API 호출
 - 내부 오류의 safe error 변환
 
 Route Handler가 Feature UI, Zustand store, Query Hook을 import하지 않도록
@@ -634,7 +614,7 @@ Route Handler가 Feature UI, Zustand store, Query Hook을 import하지 않도록
 4. 검색/analyze Route Handler를 BFF 계약에 맞게 작성
 5. query key factory 작성
 6. 검색 Query Hook과 known wines cache Hook 작성
-7. 분석 BFF에서 `/v1/ocr/menu/wine` 바이너리 요청 연결
+7. 분석 BFF에서 `/v1/wine-pairing/wines/menu-ocr` 바이너리 요청 연결
 8. OCR 응답 DTO와 fallback 카드 DTO mapping 작성
 9. POST 요청부터 OCR JSON 응답 완료까지 캡슐화한 분석 Mutation Hook 작성
 10. known wines cache helper 작성

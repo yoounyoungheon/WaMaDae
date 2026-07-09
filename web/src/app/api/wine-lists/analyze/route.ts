@@ -5,13 +5,13 @@ import {
   MAX_WINE_MENU_IMAGE_SIZE,
 } from "@/app/entity/wine/model/wine-menu-image";
 import type {
-  DetectedWineDto,
   WineDetailDto,
-  WineMenuImageOcrResponseDto,
+  WineMenuOcrExtractItemDto,
+  WineMenuOcrExtractResponseDto,
 } from "@/app/entity/wine/model/wine.type";
 import { buildMysomApiUrl } from "@/app/utils/http/server-api";
 
-const OCR_WINE_MENU_PATH = "/v1/ocr/menu/wine";
+const OCR_WINE_MENU_PATH = "/v1/wine-pairing/wines/menu-ocr";
 const BACKEND_OCR_TIMEOUT_MS = 295_000;
 
 export const maxDuration = 300;
@@ -89,29 +89,38 @@ export async function POST(request: Request) {
     );
   }
 
-  const data = (await response.json()) as WineMenuImageOcrResponseDto;
+  const data = (await response.json()) as WineMenuOcrExtractResponseDto;
 
   return NextResponse.json({
-    wines: data.items.map(mapDetectedWineToWineDetailDto),
+    wines: data.wines.map(mapWineMenuOcrExtractItemToWineDetailDto),
   });
 }
 
-function mapDetectedWineToWineDetailDto(
-  wine: DetectedWineDto,
+function mapWineMenuOcrExtractItemToWineDetailDto(
+  wine: WineMenuOcrExtractItemDto,
   index: number
 ): WineDetailDto {
-  const description = [wine.originalName, wine.country]
+  const displayName = wine.koreanName || wine.name;
+  const priceLabel =
+    typeof wine.price === "number"
+      ? `${wine.price.toLocaleString("ko-KR")}원`
+      : "가격 정보 없음";
+  const description = [
+    wine.name !== displayName ? wine.name : null,
+    wine.country,
+    wine.type === "DB" ? "DB 와인 후보입니다." : null,
+  ]
     .filter(Boolean)
     .join(" · ");
 
   return {
-    id: `ocr-wine-${index + 1}`,
-    display_name: wine.name,
+    id: wine.id ?? `ocr-wine-${index + 1}`,
+    display_name: displayName,
     image_url: "/ExampleImage.png",
     rating: 0,
-    title: wine.name,
+    title: displayName,
     recommendation_text: description || "OCR로 감지된 와인입니다.",
-    price_label: "가격 정보 없음",
+    price_label: priceLabel,
   };
 }
 

@@ -34,7 +34,6 @@
 1. 서버에서 선택 가능한 테이블 키워드 목록을 조회한다.
 2. 사용자가 키워드를 복수 선택하거나 선택 해제한다.
 3. 현재 선택 개수를 표시한다.
-4. 완료 동작에 선택된 키워드 ID 목록을 전달한다.
 
 P1의 `/wine/ai` 페이지에서 `다음` 버튼을 누르면 이 페이지로 이동하도록 연결한다.
 
@@ -50,8 +49,6 @@ Page
 │  ├─ 안내 설명
 │  ├─ 선택 개수 요약
 │  └─ 키워드 3열 Grid
-└─ Bottom Action
-   └─ 완료 Button
 ```
 
 ### 주요 시각 요소
@@ -65,7 +62,7 @@ Page
 - 선택 카드는 보라색 배경과 흰색 텍스트를 사용한다.
 - 선택 카드 오른쪽 위에는 흰색 원형 체크 표시를 배치한다.
 - 키보드 포커스는 보라색 외곽선으로 명확히 표시한다.
-- 본문만 스크롤되고 완료 버튼 영역은 화면 아래에 유지한다.
+- 본문만 스크롤된다.
 
 ### 반응형 기준
 
@@ -83,7 +80,6 @@ Page
 | 선택된 키워드 ID와 순서 | 다단계 사용자 draft | Zustand |
 | 선택 개수 | 선택 ID에서 계산 | 파생 값 |
 | 조회 loading/error | Query에서 파생 | `isPending`, `error` |
-| 완료 버튼 활성 여부 | 선택 개수에서 계산 | 파생 값 |
 
 규칙:
 
@@ -115,7 +111,6 @@ TableKeywordPage [Server]
       ├─ SelectionSummary
       ├─ TableKeywordGrid
       │  └─ TableKeywordCard
-      └─ BottomAction
 ```
 
 ### Server Component
@@ -136,7 +131,6 @@ TableKeywordPage [Server]
 - Query cache 구독
 - 키워드 선택/해제
 - 선택 개수 계산
-- 완료 버튼 상태와 이벤트 처리
 
 표현 전용 하위 컴포넌트는 hook이 필요하지 않으면 Server/Client 지시어를
 추가하지 않고 상위 Client Boundary 아래에서 사용한다.
@@ -272,7 +266,7 @@ TableKeywordCard change
 → toggleKeyword(id)
 → selectedKeywordIds 갱신
 → 선택 카드 스타일 변경
-→ 선택 개수와 완료 버튼 상태 재계산
+→ 선택 개수 재계산
 ```
 
 ## 8. Feature UI 설계
@@ -371,7 +365,7 @@ web/src/app/feature/table-keyword-select/
 따라서 공용 `Card`에 `asChild`를 추가하지 않고, `TableKeywordCard`가 자체
 `label` root와 className으로 컨테이너 스타일·선택 표현을 담당한다.
 
-## 10. 선택 및 완료 정책
+## 10. 선택 정책
 
 초기 정책:
 
@@ -379,22 +373,8 @@ web/src/app/feature/table-keyword-select/
 - 동일 키워드는 중복 선택할 수 없다.
 - 선택된 카드를 다시 누르면 선택 해제한다.
 - 최대 선택 개수는 API와 요구사항에 정의되어 있지 않으므로 제한하지 않는다.
-- 완료 버튼은 1개 이상 선택했을 때 활성화한다.
-
-완료 시 전달값:
-
-```ts
-selectedKeywordIds: string[]
-```
-
-완료 후 이동할 P3 라우트 또는 제출 API는 아직 정의되지 않았다. 구현 전에 다음
-중 하나를 확정한다.
-
-1. 다음 페이지로 `router.push`
-2. 상위 다단계 store에 선택값을 유지한 뒤 이동
-3. 별도 mutation으로 서버에 저장
-
-목적지가 확정되기 전에는 실제 페이지에 no-op click handler를 두지 않는다.
+- 현재 기획에서 `/wine/keywords` 이후 단계는 제거되어 완료 버튼이나 후속 제출 API를
+  연결하지 않는다.
 
 ## 11. Provider 구성
 
@@ -431,10 +411,8 @@ Storybook에서도 Story별 store 인스턴스를 분리해 선택 상태 누수
   - 안전한 오류 메시지와 재시도 버튼 표시
 - empty
   - 선택 가능한 키워드가 없다는 안내 표시
-- success / no selection
-  - 선택 개수 0, 완료 버튼 비활성
-- success / selected
-  - 선택 개수 반영, 선택 카드 체크 표시, 완료 버튼 활성
+- success
+  - 선택 개수 반영, 선택 카드 체크 표시
 
 ## 13. Storybook 계획
 
@@ -472,7 +450,6 @@ Feature/table-keyword-select/<ComponentName>
 - 선택 상태는 native `checked` 또는 `aria-checked`로 노출한다.
 - 체크 아이콘은 장식이면 `aria-hidden` 처리한다.
 - 선택 개수 변경은 필요하면 `aria-live="polite"`로 알린다.
-- 완료 버튼의 비활성 상태는 실제 `disabled` 속성으로 표현한다.
 - SVG 이미지에는 키워드 이름과 중복되지 않는 적절한 alt 정책을 적용한다.
 
 ## 15. 구현 순서
@@ -489,8 +466,7 @@ Feature/table-keyword-select/<ComponentName>
 10. `TableKeywordSelectPage`와 상태별 Story 작성
 11. `/wine/keywords/page.tsx` Server Component와 hydration 구현
 12. P1 `다음` 버튼을 P2 라우트에 연결
-13. 완료 목적지가 확정되면 완료 handler 연결
-14. 구현 후 `docs/table-keyword-select.md` 작성
+13. 구현 후 `docs/table-keyword-select.md` 작성
 
 ## 16. 검증
 
@@ -506,7 +482,7 @@ npm run build-storybook
 - `GET /api/table-keywords` 응답이 API 문서와 일치하는지 확인
 - 서버 렌더 후 브라우저에서 같은 목록을 중복 요청하지 않는지 확인
 - 키보드 선택과 focus-visible 확인
-- 0개/복수 선택 시 카운트와 완료 버튼 상태 확인
+- 0개/복수 선택 시 카운트와 선택 표시 확인
 - 긴 텍스트와 작은 viewport에서 Grid overflow 확인
 - SVG 경로가 모두 정상 응답하는지 확인
 
@@ -519,9 +495,9 @@ Storybook은 현재 요구 Node.js 버전을 충족한 환경에서 실행한다
 - 브라우저 API 호출은 `/api/table-keywords` BFF만 사용한다.
 - 서버 키워드 목록을 Zustand나 `useState`에 복제하지 않는다.
 - Zustand에는 선택된 키워드 ID만 존재한다.
-- 선택 개수와 버튼 활성 상태를 별도 상태로 저장하지 않는다.
+- 선택 개수를 별도 상태로 저장하지 않는다.
 - 기존 `PageHeader`, `Button`을 재사용하고, 공용 `Card`는 개조하지 않는다.
 - 미선택, 선택, focus, loading, error, empty 상태가 제공된다.
 - 키보드와 스크린 리더로 선택 상태를 확인할 수 있다.
-- 디자인의 3열 Grid와 고정 하단 액션 구조가 유지된다.
+- 디자인의 3열 Grid 구조가 유지된다.
 - 구현 결과가 `docs/table-keyword-select.md`에 페이지 단위로 정리된다.
