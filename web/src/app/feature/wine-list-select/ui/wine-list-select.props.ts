@@ -24,6 +24,7 @@ export interface PhotoUploadBoxProps {
   image: MenuImagePreview | null;
   accept?: string;
   disabled?: boolean;
+  isLoading?: boolean;
   onFileChange: (file: File | null) => void;
   className?: string;
 }

@@ -78,18 +78,22 @@ Browser
    Content-Type: image/png | image/jpeg
    Body: image binary
 -> { wines: WineMenuOcrExtractItemDto[] }
--> BFF가 기존 화면 카드 DTO로 fallback 매핑
+-> BFF가 type: "OCR" 항목을 제외
+-> 유효한 id가 있는 type: "DB" 후보만 기존 화면 카드 DTO로 fallback 매핑
 -> { wines: WineDetailDto[] }
 ```
 
 실제 OCR 응답에는 화면 카드용 `image_url`, `rating`, `price_label`이 없다. 1차 구현은
-기존 카드 UI와 선택 flow를 유지하기 위해 BFF에서 다음 fallback을 채운다.
+DB 후보만 기존 카드 UI와 선택 flow에 연결하며 BFF에서 다음 fallback을 채운다.
 
-- `id`: DB 후보는 백엔드 ID, OCR 원본은 `ocr-wine-{index}`
+- `id`: DB 후보의 백엔드 ID
 - `image_url`: `/ExampleImage.png`
 - `rating`: `0`
-- `price_label`: OCR 가격이 있으면 `{가격}원`, 없으면 `가격 정보 없음`
-- `recommendation_text`: 원문명, 국가, DB 후보 여부를 조합하거나 `OCR로 감지된 와인입니다.`
+- `price_label`: 가격이 있으면 `{가격}원`, 없으면 `가격 정보 없음`
+- `recommendation_text`: 원문명, 국가, DB 후보 여부를 조합
+
+분석 mutation이 pending인 동안 업로드한 사진 영역 전체에 primary 색상 로딩 스피너를
+오버레이하고 파일 재선택과 중복 분석 요청을 막는다.
 
 허용 이미지 타입은 실제 백엔드와 맞춰 `image/png`, `image/jpeg`만 사용한다. 기존
 `webp`, `heic`, `heif` 허용 계획은 제거한다.
@@ -428,11 +432,13 @@ WineSearchSection input
 - BFF는 파일을 검증한 뒤 실제 백엔드 `POST /v1/wine-pairing/wines/menu-ocr`에 이미지 바이너리를
   전달한다.
 - 실제 백엔드 OCR 응답은 SSE가 아니라 JSON이다.
-- BFF는 OCR `DetectedWine[]`을 기존 화면 카드 DTO로 fallback 매핑한다.
+- BFF는 OCR 응답에서 `type: "OCR"` 항목을 제거하고, 유효한 ID가 있는 `type: "DB"`
+  후보만 기존 화면 카드 DTO로 fallback 매핑한다.
 - 분석 결과 와인 객체는 Zustand에 저장하지 않고 TanStack Query known wines cache에
   반영한다.
 - 분석 요청 시작부터 JSON 응답 성공 또는 실패까지를 하나의 mutation 생명주기로
   취급한다.
+- mutation이 pending인 동안 사진 미리보기 위에 primary 로딩 스피너 오버레이를 표시한다.
 
 ### 흐름
 
@@ -446,6 +452,7 @@ PhotoUploadBox
 -> BFF에서 이미지 검증
 -> POST /v1/wine-pairing/wines/menu-ocr
 -> OCR JSON 응답 수신
+-> type: "DB" + 유효한 id 후보만 필터링
 -> BFF fallback DTO mapping
 -> Wine[] 확정
 -> known wines cache 갱신
@@ -566,7 +573,8 @@ Route Handler의 책임:
 - request parameter/form-data 검증
 - 검색 요청은 실제 검색 API가 생기기 전까지 빈 배열 JSON 응답 반환
 - 분석 요청은 파일을 검증한 뒤 실제 OCR API로 이미지 바이너리 전달
-- OCR 응답 DTO 검증과 fallback 카드 DTO 변환
+- OCR 응답에서 원본 `type: "OCR"` 항목 제거
+- 유효한 DB 후보의 DTO 검증과 fallback 카드 DTO 변환
 - 내부 오류의 safe error 변환
 
 Route Handler가 Feature UI, Zustand store, Query Hook을 import하지 않도록
@@ -601,7 +609,7 @@ Route Handler가 Feature UI, Zustand store, Query Hook을 import하지 않도록
 - `p1_1`: 빈 선택, 업로드 영역 열림
 - `p1_2`: known wines cache와 선택 ID를 함께 준비
 - 검색 loading/error/empty/success 상태
-- 분석 pending/error/success/cancelled 상태
+- 분석 pending/error/success/cancelled 상태와 사진 위 primary 스피너 오버레이
 
 표현 컴포넌트 Story는 Query/Zustand를 직접 사용하지 않고 args만으로
 렌더링한다.
@@ -615,7 +623,7 @@ Route Handler가 Feature UI, Zustand store, Query Hook을 import하지 않도록
 5. query key factory 작성
 6. 검색 Query Hook과 known wines cache Hook 작성
 7. 분석 BFF에서 `/v1/wine-pairing/wines/menu-ocr` 바이너리 요청 연결
-8. OCR 응답 DTO와 fallback 카드 DTO mapping 작성
+8. OCR 응답에서 DB 후보만 선별하고 fallback 카드 DTO mapping 작성
 9. POST 요청부터 OCR JSON 응답 완료까지 캡슐화한 분석 Mutation Hook 작성
 10. known wines cache helper 작성
 11. 선택 ID 전용 Zustand store 작성
@@ -636,6 +644,8 @@ Route Handler가 Feature UI, Zustand store, Query Hook을 import하지 않도록
 - 선택 Zustand store에는 와인 객체가 아니라 ID와 순서만 존재한다.
 - 검색 로딩/오류는 Query 상태를 사용한다.
 - 분석 Mutation은 BFF가 OCR 응답을 매핑한 JSON 응답을 반환하면 성공한다.
+- `type: "OCR"` 원본 항목은 BFF 응답과 선택 결과에 노출되지 않는다.
+- 분석 pending 동안 사진 영역 위에 primary 로딩 스피너가 표시된다.
 - OCR 완료 payload는 known wines query key에 저장한다.
 - 화면 이탈 또는 새 분석 시작 시 기존 분석 요청을 취소한다.
 - 취소와 서버 오류를 구분해 UI 상태를 처리한다.

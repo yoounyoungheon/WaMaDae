@@ -1,9 +1,11 @@
 # Mysom API 명세서
 
-이 문서는 `mysom-api` Spring WebFlux 애플리케이션의 현재 공개 HTTP 계약을 프론트엔드 관점에서 정리한 인덱스다.
+이 문서는 `WaMaDae`에서 참조하는 `mysom-api` Spring WebFlux 애플리케이션의 활성 HTTP 계약을 프론트엔드 관점에서 정리한 인덱스다.
 
-기준 코드: `/Users/yoon-yeongheon/dev/mysom-api`  
-기준일: 2026-07-09
+기준 코드: `/Users/yoon-yeongheon/dev/mysom-api`의 `750a229`
+기준일: 2026-07-11
+
+`mysom-api`에는 호환용 `POST /v1/ocr/menu/wine`도 남아 있지만, `WaMaDae`는 DB 후보까지 반환하는 `/v1/wine-pairing/wines/menu-ocr`만 사용하므로 이 인덱스에서는 제외한다.
 
 ## 공통
 
@@ -81,16 +83,26 @@ type StreamResponse<T> = {
   fieldName: string;
   type: "json" | "text";
   data: T;
-  index: number;
+  status: "start" | "painting" | "next";
+  isStreaming: boolean;
 };
 ```
+
+| 필드 | 설명 |
+| --- | --- |
+| `fieldName` | 현재 payload가 갱신하는 필드 |
+| `type` | `data`가 JSON 객체인지 텍스트인지 구분 |
+| `status` | `start`는 추천 항목 시작, `painting`은 필드 갱신, `next`는 현재 추천 항목 완성 |
+| `isStreaming` | `true`는 중간 필드/chunk, `false`는 현재 추천 항목의 완성 payload |
+
+`isStreaming: false`는 전체 HTTP 스트림 종료가 아니라 현재 추천 항목의 완성을 뜻할 수 있다. 전체 종료는 `ReadableStream`의 `done`으로 판단한다.
 
 예시 SSE frame:
 
 ```txt
-data:{"fieldName":"chat","type":"text","data":"첫째","index":0}
+data:{"fieldName":"chat","type":"text","data":"첫째 ","status":"painting","isStreaming":true}
 
-data:{"fieldName":"chat","type":"text","data":"둘째","index":1}
+data:{"fieldName":"chat","type":"text","data":"둘째","status":"painting","isStreaming":true}
 ```
 
 ## 공통 오류 처리
@@ -111,6 +123,9 @@ Spring WebFlux 또는 Spring Security가 직접 만드는 오류는 위 JSON 형
 - 이미지 OCR API는 body를 raw 바이너리로 보낸다. `multipart/form-data`가 아니다.
 - OCR 이미지 body는 서버에서 최대 10MiB까지 읽는다.
 - SSE API는 `EventSource`로 POST를 보낼 수 없으므로 `fetch` + `ReadableStream` 파싱이 필요하다.
+- 페어링 요청의 `wines[].id`에는 숫자형 DB 와인 ID만 보낼 수 있다. 이름만 있는 OCR 항목은 직접 요청할 수 없다.
+- 페어링 SSE에는 `index`가 없다. `fieldName`, `status`, `isStreaming`과 완성된 `pairing` payload를 기준으로 조립한다.
 - `/v1/wine-pairing/stream/pairing`으로 대화를 시작한 `X-Chat-Id`만 `/v1/wine-pairing/stream/chat`에서 사용할 수 있다.
+- 후속 채팅에는 별도의 완료 frame이 없으므로 응답 stream 종료를 완료 신호로 사용한다.
 - 비동기 추천 API는 생성 응답 body가 없고 `Location` 헤더만 반환한다.
 - `/v1/upload/presigned-menu-image-url`의 서비스 구현은 현재 `TODO("Not implemented yet")` 상태라 실제 호출 시 500 계열 오류가 날 수 있다.

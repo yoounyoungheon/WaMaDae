@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { type ComponentProps, useEffect, useState } from "react";
+import { expect, within } from "storybook/test";
 import WineMenuPhotoSection from "./WineMenuPhotoSection";
 
 const meta: Meta<typeof WineMenuPhotoSection> = {
@@ -109,9 +110,20 @@ export const Collapsed: Story = {
 export const Analyzing: Story = {
   args: {
     image: {
-      fileName: "wine-menu-photo.jpg",
+      fileName: "wine-menu-preview.jpg",
+      previewUrl: "/ExampleImage.png",
     },
     isAnalyzing: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(
+      canvas.getByRole("status", { name: "와인 메뉴판 분석 중" })
+    ).toBeVisible();
+    await expect(
+      canvas.getByRole("button", { name: "분석 중" })
+    ).toHaveAttribute("aria-busy", "true");
   },
 };
 

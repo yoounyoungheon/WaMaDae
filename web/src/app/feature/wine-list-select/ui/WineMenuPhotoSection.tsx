@@ -44,6 +44,7 @@ export default function WineMenuPhotoSection({
             image={image}
             accept={WINE_MENU_IMAGE_ACCEPT}
             disabled={isAnalyzing}
+            isLoading={isAnalyzing}
             className="mt-3"
             onFileChange={onImageChange}
           />

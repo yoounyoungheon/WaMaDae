@@ -339,6 +339,7 @@ sequenceDiagram
   C->>M: mutate(file)
   M->>R: multipart 업로드
   R->>R: content-type/length·크기·타입·매직바이트 검증
+  R->>R: OCR 원본 제외, 유효한 DB 후보만 카드 DTO로 변환
   R-->>M: { wines: WineDetailDto[] }
   M-->>C: onSuccess(wines)
   C->>Cache: 응답 wines를 known cache에 저장
@@ -347,6 +348,10 @@ sequenceDiagram
 ```
 
 - 진행 상태는 `mutation.isPending`, 오류는 `mutation.error`를 그대로 사용한다.
+- `mutation.isPending`은 `PhotoUploadBox.isLoading`으로 전달되며, 사진 미리보기 위에
+  primary 색상 `LoadingSpinner`를 오버레이한다. 별도 로딩 `useState`는 두지 않는다.
+- BFF는 `type: "OCR"` 항목을 제거하고 유효한 ID가 있는 `type: "DB"` 후보만
+  분석 결과와 자동 선택 목록에 노출한다.
 - **검증은 2단계**다. 클라이언트(크기·MIME)에서 1차로 걸러 즉시 피드백을 주고,
   서버에서 content-type/length·크기·MIME·**파일 시그니처(매직바이트)**까지 재검증한다.
 
@@ -377,7 +382,7 @@ SelectedWineCard onRemove(id) -> handleRemoveWine -> store.removeWineId(id)
 | 메서드/경로 | 검증과 처리 | 성공 응답 |
 |---|---|---|
 | `GET /api/wines/search?q=` | 공백 제거, 빈 검색어, 최대 100자 검증 | `{ wines: WineSearchItemDto[] }` |
-| `POST /api/wine-lists/analyze` | multipart, 크기, MIME, 실제 파일 시그니처 검증 | `{ wines: WineDetailDto[] }` |
+| `POST /api/wine-lists/analyze` | multipart, 크기, MIME, 실제 파일 시그니처 검증 후 DB 후보만 매핑 | `{ wines: WineDetailDto[] }` |
 
 분석 endpoint의 주요 실패 status:
 

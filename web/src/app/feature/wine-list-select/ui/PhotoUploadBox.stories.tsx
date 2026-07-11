@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { expect, within } from "storybook/test";
 import PhotoUploadBox from "./PhotoUploadBox";
 
 const meta: Meta<typeof PhotoUploadBox> = {
@@ -21,6 +22,10 @@ const meta: Meta<typeof PhotoUploadBox> = {
       control: "boolean",
       description: "파일 선택 가능 여부입니다.",
     },
+    isLoading: {
+      control: "boolean",
+      description: "사진 영역 위에 분석 진행 상태를 표시합니다.",
+    },
     onFileChange: {
       action: "fileChanged",
       description: "사용자가 파일을 선택했을 때 호출됩니다.",
@@ -32,8 +37,9 @@ const meta: Meta<typeof PhotoUploadBox> = {
   },
   args: {
     image: null,
-    accept: "image/jpeg,image/png,image/webp,image/heic,image/heif",
+    accept: "image/jpeg,image/png",
     disabled: false,
+    isLoading: false,
   },
   render: (args) => (
     <div className="w-[304px] bg-background-03">
@@ -62,6 +68,34 @@ export const WithPreview: Story = {
       fileName: "wine-menu-preview.jpg",
       previewUrl: "/ExampleImage.png",
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.queryByRole("status")).not.toBeInTheDocument();
+  },
+};
+
+export const Loading: Story = {
+  args: {
+    image: {
+      fileName: "wine-menu-preview.jpg",
+      previewUrl: "/ExampleImage.png",
+    },
+    isLoading: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const status = canvas.getByRole("status", {
+      name: "와인 메뉴판 분석 중",
+    });
+    const input = canvasElement.querySelector<HTMLInputElement>(
+      'input[type="file"]'
+    );
+
+    await expect(status).toBeVisible();
+    await expect(status).toHaveClass("text-primary-main");
+    await expect(input).toBeDisabled();
   },
 };
 

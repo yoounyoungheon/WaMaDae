@@ -1,6 +1,7 @@
 import type { ChangeEvent } from "react";
 import Image from "next/image";
 import { Image as ImageIcon } from "lucide-react";
+import LoadingSpinner from "@/app/shared/ui/atom/loading-spinner";
 import { cn } from "@/app/utils/style/helper";
 import { WINE_MENU_IMAGE_ACCEPT } from "@/app/entity/wine/model/wine-menu-image";
 import type { PhotoUploadBoxProps } from "./wine-list-select.props";
@@ -12,10 +13,12 @@ export default function PhotoUploadBox({
   image,
   accept = DEFAULT_ACCEPT,
   disabled = false,
+  isLoading = false,
   onFileChange,
   className,
 }: PhotoUploadBoxProps) {
   const hasPreview = Boolean(image?.previewUrl);
+  const isInteractionDisabled = disabled || isLoading;
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     onFileChange(event.target.files?.[0] ?? null);
@@ -23,18 +26,21 @@ export default function PhotoUploadBox({
   };
 
   return (
-    <div className={cn("w-full", className)}>
+    <div
+      aria-busy={isLoading}
+      className={cn("relative w-full", className)}
+    >
       <input
         id={WINE_MENU_IMAGE_INPUT_ID}
         type="file"
         accept={accept}
-        disabled={disabled}
+        disabled={isInteractionDisabled}
         className="sr-only"
         onChange={handleChange}
       />
       <label
-        htmlFor={disabled ? undefined : WINE_MENU_IMAGE_INPUT_ID}
-        aria-disabled={disabled}
+        htmlFor={isInteractionDisabled ? undefined : WINE_MENU_IMAGE_INPUT_ID}
+        aria-disabled={isInteractionDisabled}
         aria-label={
           image
             ? `${image.fileName} 이미지 다시 선택`
@@ -42,7 +48,9 @@ export default function PhotoUploadBox({
         }
         className={cn(
           "relative flex min-h-[186px] w-full flex-col items-center justify-center overflow-hidden rounded-[14px] border border-dashed border-main-gray-200 bg-white px-6 py-8 text-text-03 transition-colors",
-          disabled
+          isLoading
+            ? "cursor-wait"
+            : disabled
             ? "cursor-not-allowed bg-main-light-gray-200 text-text-04 opacity-70"
             : "cursor-pointer hover:border-primary-main hover:text-primary-main"
         )}
@@ -70,6 +78,15 @@ export default function PhotoUploadBox({
           </>
         )}
       </label>
+
+      {isLoading ? (
+        <div className="absolute inset-0 z-10 flex cursor-wait items-center justify-center rounded-[14px] bg-white/70 backdrop-blur-[1px]">
+          <LoadingSpinner
+            label="와인 메뉴판 분석 중"
+            className="h-9 w-9"
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

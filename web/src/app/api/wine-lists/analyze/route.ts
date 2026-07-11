@@ -14,6 +14,11 @@ import { buildMysomApiUrl } from "@/app/utils/http/server-api";
 const OCR_WINE_MENU_PATH = "/v1/wine-pairing/wines/menu-ocr";
 const BACKEND_OCR_TIMEOUT_MS = 295_000;
 
+type DbWineMenuOcrExtractItemDto = WineMenuOcrExtractItemDto & {
+  type: "DB";
+  id: string;
+};
+
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
@@ -92,13 +97,20 @@ export async function POST(request: Request) {
   const data = (await response.json()) as WineMenuOcrExtractResponseDto;
 
   return NextResponse.json({
-    wines: data.wines.map(mapWineMenuOcrExtractItemToWineDetailDto),
+    wines: data.wines
+      .filter(isDbWineMenuOcrExtractItem)
+      .map(mapWineMenuOcrExtractItemToWineDetailDto),
   });
 }
 
+function isDbWineMenuOcrExtractItem(
+  wine: WineMenuOcrExtractItemDto
+): wine is DbWineMenuOcrExtractItemDto {
+  return wine.type === "DB" && Boolean(wine.id?.trim());
+}
+
 function mapWineMenuOcrExtractItemToWineDetailDto(
-  wine: WineMenuOcrExtractItemDto,
-  index: number
+  wine: DbWineMenuOcrExtractItemDto
 ): WineDetailDto {
   const displayName = wine.koreanName || wine.name;
   const priceLabel =
@@ -108,18 +120,18 @@ function mapWineMenuOcrExtractItemToWineDetailDto(
   const description = [
     wine.name !== displayName ? wine.name : null,
     wine.country,
-    wine.type === "DB" ? "DB 와인 후보입니다." : null,
+    "DB 와인 후보입니다.",
   ]
     .filter(Boolean)
     .join(" · ");
 
   return {
-    id: wine.id ?? `ocr-wine-${index + 1}`,
+    id: wine.id,
     display_name: displayName,
     image_url: "/ExampleImage.png",
     rating: 0,
     title: displayName,
-    recommendation_text: description || "OCR로 감지된 와인입니다.",
+    recommendation_text: description,
     price_label: priceLabel,
   };
 }
