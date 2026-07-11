@@ -1,5 +1,4 @@
-import Image from "next/image";
-import { Star, X } from "lucide-react";
+import { X } from "lucide-react";
 import { cn } from "@/app/utils/style/helper";
 import type { SelectedWineCardProps } from "./wine-list-select.props";
 
@@ -11,39 +10,19 @@ export default function SelectedWineCard({
   return (
     <article
       className={cn(
-        "relative flex min-h-[120px] w-full gap-3 rounded-xl bg-white p-3 shadow-md",
+        "relative flex w-full min-w-0 flex-col gap-1 rounded-xl bg-white p-3 pr-9 shadow-md",
         className
       )}
     >
-      <div className="relative h-[96px] w-[80px] shrink-0 overflow-hidden rounded-lg bg-main-light-gray-500">
-        <Image
-          src={wine.imageUrl}
-          alt={wine.name}
-          fill
-          unoptimized
-          sizes="80px"
-          className="object-cover"
-        />
-      </div>
-
-      <div className="min-w-0 flex-1 py-1 pr-1">
-        <div className="flex items-center gap-1">
-          <StarRating rating={wine.rating} />
-          <span className="ml-1 text-[11px] font-bold leading-none text-text-01">
-            {wine.rating.toFixed(1)}
-          </span>
-        </div>
-
-        <h3 className="mt-2 line-clamp-2 text-[12px] font-bold leading-[17px] text-text-01">
-          {wine.title}
-        </h3>
-        <p className="mt-2 truncate text-[10px] font-medium leading-none text-text-02">
-          {wine.recommendationText}
-        </p>
-        <p className="mt-3 text-[13px] font-extrabold leading-none text-primary-main">
-          {wine.priceLabel}
-        </p>
-      </div>
+      <h3 className="truncate text-[13px] font-bold leading-tight text-text-01">
+        {wine.title}
+      </h3>
+      <p className="truncate text-[11px] font-medium leading-tight text-text-02">
+        {wine.recommendationText}
+      </p>
+      <p className="mt-1 text-[13px] font-extrabold leading-none text-primary-main">
+        {wine.priceLabel}
+      </p>
 
       {onRemove ? (
         <button
@@ -56,28 +35,5 @@ export default function SelectedWineCard({
         </button>
       ) : null}
     </article>
-  );
-}
-
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <span className="flex items-center gap-[1px]" aria-label={`별점 ${rating}`}>
-      {Array.from({ length: 5 }).map((_, index) => {
-        const isFilled = index < Math.round(rating);
-
-        return (
-          <Star
-            key={index}
-            className={cn(
-              "h-[10px] w-[10px]",
-              isFilled
-                ? "fill-[#F7B500] text-[#F7B500]"
-                : "text-main-gray-300"
-            )}
-            strokeWidth={2.1}
-          />
-        );
-      })}
-    </span>
   );
 }

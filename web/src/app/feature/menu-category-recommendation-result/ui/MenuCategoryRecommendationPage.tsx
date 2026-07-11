@@ -39,8 +39,10 @@ export default function MenuCategoryRecommendationPage({
   };
 
   return (
-    <main className={cn("flex min-h-0 flex-1 flex-col", className)}>
-      <div className="min-h-0 flex-1 overflow-y-auto">
+    <main
+      className={cn("flex min-h-0 flex-1 flex-col overflow-hidden", className)}
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
         <div className="flex min-h-full flex-col gap-9 px-[23px] py-7">
           {selectedCount > 0 ? (
             <p className="rounded-xl border border-[#e8c6ff] bg-[#fcf6ff] px-3.5 py-3 text-[13px] font-bold leading-none text-primary-main">

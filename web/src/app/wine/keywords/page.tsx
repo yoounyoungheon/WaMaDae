@@ -14,7 +14,7 @@ export const metadata: Metadata = {
  */
 export default function WineKeywordsPage() {
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-background-03 text-text-01">
+    <div className="flex h-[calc(100dvh_-_env(safe-area-inset-top)_-_env(safe-area-inset-bottom))] max-h-[calc(100dvh_-_env(safe-area-inset-top)_-_env(safe-area-inset-bottom))] flex-col overflow-hidden bg-background-03 text-text-01">
       <PageHeader title="추천 메뉴" routeBackPath="/wine/ai" />
       <MenuCategoryRecommendationPage />
     </div>
