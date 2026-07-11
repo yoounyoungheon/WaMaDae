@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import Button from "@/app/shared/ui/atom/button";
 import { cn } from "@/app/utils/style/helper";
+import NextRecommendationButton from "./NextRecommendationButton";
 import SelectedWineSection from "./SelectedWineSection";
 import WineMenuPhotoSection from "./WineMenuPhotoSection";
 import WineSearchSection from "./WineSearchSection";
@@ -67,16 +66,10 @@ export default function WineListSelectPage({
               />
             </div>
             <div className="px-6 pt-5">
-              <Button
-                asChild
-                variant="solid"
-                type="primary"
-                size="default"
-                radius="lg"
-                className="h-11 w-full rounded-lg px-4 py-3 text-[14px] font-bold"
-              >
-                <Link href="/wine/keywords">다음</Link>
-              </Button>
+              <NextRecommendationButton
+                wines={selectedWines}
+                hasMissingWineData={selectedWines.length < selectedWineIds.length}
+              />
             </div>
           </>
         ) : null}

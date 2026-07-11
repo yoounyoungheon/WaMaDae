@@ -9,6 +9,17 @@ export interface WineListSelectPageProps {
   className?: string;
 }
 
+export interface NextRecommendationButtonProps {
+  /** 추천 기준이 되는 선택 와인 목록. */
+  wines: Wine[];
+  /**
+   * 선택 ID는 있으나 카드 데이터가 일부 누락된 상태.
+   * `true`면 정확한 요청을 만들 수 없으므로 이동을 막는다.
+   */
+  hasMissingWineData?: boolean;
+  className?: string;
+}
+
 export interface WineMenuPhotoSectionProps {
   isOpen: boolean;
   image: MenuImagePreview | null;
