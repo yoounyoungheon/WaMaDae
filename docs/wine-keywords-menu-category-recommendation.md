@@ -9,7 +9,7 @@ API 계약은 `api/mysom-wine-pairing.md`의
 `POST /v1/wine-pairing/menu-category/recommend`를 참고한다.
 
 > 이전 설계는 `?id=` 기반의 비동기 작업 조회(polling)였으나, 동기 추천 API로 전환하며
-> URL의 추천 작업 ID 개념이 사라졌다. 결과 화면은 이전 단계(`/wine/ai`의 `다음` 버튼)에서
+> URL의 추천 작업 ID 개념이 사라졌다. 결과 화면은 이전 단계(`/wine/list`의 `다음` 버튼)에서
 > **sessionStorage에 스냅샷한 선택 payload**를 읽어 추천을 즉시 조회한다. WebView 리로드나
 > 뒤로가기 후에도 스냅샷이 남아 결과가 복원된다. 스냅샷 없이(예: 새 세션에서 `/wine/keywords`에
 > 바로 진입) 열면 "선택된 와인이 없어요" 상태를 보여준다.
@@ -18,7 +18,7 @@ API 계약은 `api/mysom-wine-pairing.md`의
 
 ```text
 wine/keywords/page.tsx                     [Server Component]
-├─ PageHeader                              [Server]  title + routeBackPath="/wine/ai"
+├─ PageHeader                              [Server]  title + routeBackPath="/wine/list"
 └─ MenuCategoryRecommendationPage          [Client]  "use client"
    ├─ AI 추천 메뉴 카테고리 섹션
    │  ├─ "마이쏨 AI가 추천하는 메뉴 카테고리에요."
@@ -57,7 +57,7 @@ known wines 캐시에 직접 의존하지 않고, sessionStorage 스냅샷만 �
 ## 3. 데이터 흐름
 
 ```text
-/wine/ai 다음 클릭
+/wine/list 다음 클릭
 -> buildMenuCategoryRecommendationRequest(selectedWines)
 -> saveMenuCategoryRecommendationRequest(request)  [sessionStorage 스냅샷]
 -> router.push("/wine/keywords")
@@ -133,7 +133,7 @@ DEFAULT_MENU_CATEGORIES
 - 제목 문구는 `마이쏨 AI가 추천하는 메뉴 카테고리에요.`로 고정한다.
 - 추천 요청 상태에 따라 아래 상태를 렌더링한다.
 
-- **선택 없음**(`request.wines.length === 0`): `선택된 와인이 없어요.` + `/wine/ai` 이동 버튼
+- **선택 없음**(`request.wines.length === 0`): `선택된 와인이 없어요.` + `/wine/list` 이동 버튼
 - **로딩**: `LoadingSpinner` + `추천 메뉴를 불러오고 있어요.` (`role="status"`)
 - **오류**: safe message + `다시 시도` 버튼 (`role="alert"`)
 - **빈 결과**: `추천된 메뉴 카테고리가 없어요.`

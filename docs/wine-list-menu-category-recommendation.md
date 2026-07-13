@@ -1,6 +1,6 @@
-# `/wine/ai` 메뉴 카테고리 추천 진입 흐름
+# `/wine/list` 메뉴 카테고리 추천 진입 흐름
 
-`/wine/ai`(와인 리스트 선택) 화면에서 선택 와인으로 추천 결과 화면(`/wine/keywords`)에
+`/wine/list`(와인 리스트 선택) 화면에서 선택 와인으로 추천 결과 화면(`/wine/keywords`)에
 진입하는 흐름을 정리한 문서다. 기준 컴포넌트는
 `feature/wine-list-select/ui/NextRecommendationButton.tsx`이다.
 
@@ -15,7 +15,7 @@ API 계약은 `api/mysom-wine-pairing.md`의
 ## 1. 한눈에 보기
 
 ```text
-wine/ai/page.tsx                     [Server Component]
+wine/list/page.tsx                     [Server Component]
 ├─ PageHeader                        [Server]  title + routeBackPath="/"
 └─ WineListSelectPage                [Client]  "use client"
    ├─ WineMenuPhotoSection
@@ -36,7 +36,7 @@ wine/ai/page.tsx                     [Server Component]
 | 선택 와인 카드 데이터 | 검색/OCR 응답 서버 데이터 | TanStack Query cache | `known wines` |
 
 선택 draft(Zustand)와 known wines 캐시(TanStack Query)는 `/wine/layout.tsx`의
-`WineListSelectionProvider`와 전역 QueryClient 덕분에 `/wine/ai ↔ /wine/keywords`
+`WineListSelectionProvider`와 전역 QueryClient 덕분에 `/wine/list ↔ /wine/keywords`
 이동 간 유지된다. 결과 화면은 이 두 소스에서 선택 와인을 파생한다.
 
 ## 3. 버튼 동작

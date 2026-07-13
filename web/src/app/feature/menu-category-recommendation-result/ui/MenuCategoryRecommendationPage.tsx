@@ -20,7 +20,7 @@ import type { MenuCategoryRecommendationPageProps } from "./menu-category-recomm
 /**
  * 추천 메뉴 결과 화면.
  *
- * 이전 단계(`/wine/ai`)의 `다음` 버튼이 sessionStorage에 스냅샷한 선택 payload를 읽어
+ * 이전 단계(`/wine/list`)의 `다음` 버튼이 sessionStorage에 스냅샷한 선택 payload를 읽어
  * 추천을 동기 조회한다. 이 덕분에 WebView 리로드/뒤로가기 후에도 결과가 복원된다.
  */
 export default function MenuCategoryRecommendationPage({
@@ -102,7 +102,7 @@ export default function MenuCategoryRecommendationPage({
                       radius="lg"
                       className="h-11 rounded-lg px-6 py-3 text-[14px] font-bold"
                     >
-                      <Link href="/wine/ai">와인 선택하러 가기</Link>
+                      <Link href="/wine/list">와인 선택하러 가기</Link>
                     </Button>
                   }
                 />

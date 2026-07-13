@@ -14,7 +14,7 @@
 
 ```text
 wine/keywords/page.tsx            [Server Component]
-├─ PageHeader                     [Server]  title + routeBackPath="/wine/ai"
+├─ PageHeader                     [Server]  title + routeBackPath="/wine/list"
 └─ HydrationBoundary              prefetch 캐시 전달
    └─ TableKeywordSelectPage      [Client]  "use client"
       ├─ SelectionSummary         선택 개수 표시
@@ -43,7 +43,7 @@ wine/keywords/page.tsx            [Server Component]
 - 선택 개수는 별도 상태로 저장하지 않고 controller에서 파생한다.
 - 선택 store는 전역 `Providers`가 아니라 `app/wine/layout.tsx` 세그먼트 layout에서
   `WineListSelectionProvider` → `TableKeywordSelectionProvider` 순으로 제공한다.
-  같은 layout을 공유하는 `/wine/ai` ↔ `/wine/keywords` 이동 간 layout 인스턴스가
+  같은 layout을 공유하는 `/wine/list` ↔ `/wine/keywords` 이동 간 layout 인스턴스가
   유지되어 단계 간 선택값이 보존되고, 플로우를 벗어나면 draft가 초기화된다.
   전역 Providers에는 `QueryClientProvider`만 남겨 페이지 증가에도 비대해지지 않게 한다.
 
@@ -113,7 +113,7 @@ TableKeywordCard 체크박스 change
 
 ## 6. `shared/ui` 재사용
 
-- `PageHeader`(`molecule/page-header`): `title`, `routeBackPath="/wine/ai"`.
+- `PageHeader`(`molecule/page-header`): `title`, `routeBackPath="/wine/list"`.
 - `Button`(`atom/button`): 오류 상태의 다시 시도 액션에 사용한다.
 
 `TableKeywordCard`는 공용 `Card`를 재사용하거나 개조하지 않는다. 선례인
@@ -137,7 +137,7 @@ root로 만들려면 `Card`와 그 하위 shadcn `Card` 두 레이어를 `asChil
 
 ## 8. 라우트 연결
 
-- P1 `/wine/ai`의 `다음` 버튼은 선택이 있을 때 `asChild` + `Link`로
+- P1 `/wine/list`의 `다음` 버튼은 선택이 있을 때 `asChild` + `Link`로
   `/wine/keywords`로 이동한다.
 - 현재 기획에서 `/wine/keywords` 이후 단계는 제거되어 추가 라우트 이동 버튼을 두지 않는다.
 

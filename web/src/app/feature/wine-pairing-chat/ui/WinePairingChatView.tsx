@@ -61,7 +61,7 @@ export default function WinePairingChatView({
                   radius="lg"
                   className="h-11 rounded-lg px-6 py-3 text-[14px] font-bold"
                 >
-                  <Link href="/wine/ai">와인 선택하러 가기</Link>
+                  <Link href="/wine/list">와인 선택하러 가기</Link>
                 </Button>
               }
             />

@@ -1,6 +1,6 @@
 # WineListSelectPage 구조 및 데이터 흐름
 
-`/wine/ai` 화면(와인 리스트 선택)의 **UI → 비즈니스 로직 → API** 처리 흐름과
+`/wine/list` 화면(와인 리스트 선택)의 **UI → 비즈니스 로직 → API** 처리 흐름과
 레이어 구조를 정리한 문서다. 기준 컴포넌트는
 `feature/wine-list-select/ui/WineListSelectPage.tsx`이다.
 
@@ -105,7 +105,7 @@ server-only wine functions
 
 | 레이어 | 주요 책임 | 알면 안 되는 것 |
 |---|---|---|
-| `wine/ai/page.tsx` | 페이지 진입점과 헤더/Feature UI 조합 | 검색·분석 이벤트 세부 구현 |
+| `wine/list/page.tsx` | 페이지 진입점과 헤더/Feature UI 조합 | 검색·분석 이벤트 세부 구현 |
 | `feature/.../ui` | 렌더링과 사용자 이벤트 전달 | API URL, QueryClient 조작 |
 | `feature/.../model` | UI 상태, Query 결과, store action 조합 | Route Handler 내부 구현 |
 | `feature/.../api` | query key와 Query/Mutation 캐시 정책 | JSX와 화면 레이아웃 |
@@ -119,7 +119,7 @@ Zustand store를 import하거나, UI가 `fetch("/api/...")`를 직접 호출하�
 
 ```txt
 src/app/
-├─ wine/ai/page.tsx                     # Server Component (진입점)
+├─ wine/list/page.tsx                     # Server Component (진입점)
 ├─ providers.tsx                        # QueryClient + 선택 store Provider
 ├─ shared/
 │  ├─ api/query-client.ts               # 공통 QueryClient 기본값
