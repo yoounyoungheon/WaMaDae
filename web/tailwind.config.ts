@@ -111,6 +111,11 @@ const config: Config = {
         foreground: "var(--foreground)",
       },
 
+      boxShadow: {
+        /* Tailwind v4의 shadow-xs와 동일한 극소 그림자 */
+        xs: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      },
+
       keyframes: {
         "bottom-sheet-in": {
           "0%": { transform: "translateY(100%)" },

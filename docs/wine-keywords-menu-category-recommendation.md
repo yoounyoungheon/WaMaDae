@@ -149,6 +149,10 @@ DEFAULT_MENU_CATEGORIES
 - 모든 기본 메뉴 카테고리 카드는 checkbox 기반으로 선택/해제할 수 있다.
 - 각 카드는 중앙 아이콘/라벨, 흰 배경, 회색 보더, 약한 shadow를 사용하며 선택 시 보라 gradient와 체크 배지를 표시한다.
 - 화면 하단에는 `designs/legacy/p3.png` 기준의 `와인 추천받기` CTA를 고정 영역으로 표시한다.
+- `와인 추천받기` 클릭 시 `buildWinePairingRequest(storedRequest.wines, selectedCategories)`로
+  페어링 요청을 만들어 sessionStorage에 스냅샷(`saveWinePairingRequest`)하고 `/wine/chat`으로
+  이동한다. 정수 id 와인이 없거나 선택 카테고리가 없으면 버튼을 비활성화한다.
+  이후 흐름은 `docs/wine-chat-pairing.md`를 참고한다.
 
 ### 선택 요약
 

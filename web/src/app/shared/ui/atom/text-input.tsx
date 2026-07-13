@@ -26,6 +26,7 @@ function TextInput({
   placeholder,
   onValueChange,
   onChange,
+  className,
   ref,
   ...props
 }: TextInputProps) {
@@ -73,7 +74,8 @@ function TextInput({
                 "pr-3",
                 disabled
                   ? "text-gray-6 placeholder:text-gray-6"
-                  : "placeholder:text-gray-6"
+                  : "placeholder:text-gray-6",
+                className
               )}
               placeholder={placeholder}
               disabled={disabled}

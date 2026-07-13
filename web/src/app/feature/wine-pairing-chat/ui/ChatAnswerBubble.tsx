@@ -1,0 +1,53 @@
+import { cn } from "@/app/utils/style/helper";
+import type { ChatAnswerBubbleProps } from "./wine-pairing-chat.props";
+
+/**
+ * 후속 채팅 한 턴(질문 + 스트리밍 답변)의 말풍선.
+ * 질문은 우측 정렬, 답변은 좌측 정렬 말풍선으로 표시하고
+ * 스트리밍 중에는 타이핑 인디케이터를 보여준다.
+ */
+export default function ChatAnswerBubble({
+  turn,
+  className,
+}: ChatAnswerBubbleProps) {
+  const isStreaming = turn.status === "streaming";
+
+  return (
+    <div className={cn("flex flex-col gap-2", className)}>
+      <p className="max-w-[80%] self-end break-words rounded-2xl rounded-br-md bg-primary-main px-4 py-2.5 text-[14px] leading-relaxed text-white">
+        {turn.question}
+      </p>
+
+      <div
+        role={turn.status === "error" ? "alert" : undefined}
+        aria-busy={isStreaming}
+        className="max-w-[85%] self-start whitespace-pre-wrap break-words rounded-2xl rounded-bl-md bg-white px-4 py-2.5 text-[14px] leading-relaxed text-text-01 shadow-sm"
+      >
+        {turn.answer}
+        {isStreaming ? (
+          <span aria-hidden className="ml-0.5 inline-flex gap-0.5 align-baseline">
+            <TypingDot className="[animation-delay:0ms]" />
+            <TypingDot className="[animation-delay:150ms]" />
+            <TypingDot className="[animation-delay:300ms]" />
+          </span>
+        ) : null}
+        {turn.status === "error" ? (
+          <p className="mt-1.5 text-[12px] text-error-main">
+            {turn.errorMessage ?? "채팅 응답을 불러오지 못했습니다."}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function TypingDot({ className }: { className?: string }) {
+  return (
+    <span
+      className={cn(
+        "h-1 w-1 animate-bounce rounded-full bg-main-gray-300 motion-reduce:animate-none",
+        className
+      )}
+    />
+  );
+}

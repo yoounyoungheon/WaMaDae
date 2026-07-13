@@ -1,0 +1,71 @@
+import "server-only";
+
+import { buildMysomApiUrl } from "@/app/utils/http/server-api";
+import type {
+  WinePairingChatRequest,
+  WinePairingRequest,
+} from "../model/wine-pairing.type";
+
+const PAIRING_STREAM_PATH = "/v1/wine-pairing/stream/pairing";
+const CHAT_STREAM_PATH = "/v1/wine-pairing/stream/chat";
+const CHAT_ID_HEADER = "X-Chat-Id";
+
+/**
+ * 서버 전용 백엔드 오류.
+ * Route Handler가 상태 코드만 참고해 safe message로 변환하도록 status를 담는다.
+ */
+export class WinePairingBackendError extends Error {
+  constructor(readonly status: number) {
+    super(`Wine pairing backend responded with ${status}`);
+    this.name = "WinePairingBackendError";
+  }
+}
+
+/**
+ * 서버 전용 페어링 스트림 오픈 helper.
+ * 성공 시 백엔드 `Response`를 그대로 반환해 Route Handler가 body를 파이프한다.
+ * 스트리밍이므로 timeout 대신 클라이언트 연결 해제(signal)로 취소한다.
+ */
+export async function openWinePairingStream(
+  request: WinePairingRequest,
+  chatId: string,
+  signal?: AbortSignal
+): Promise<Response> {
+  return openStream(PAIRING_STREAM_PATH, request, chatId, signal);
+}
+
+/** 서버 전용 후속 채팅 스트림 오픈 helper. */
+export async function openWinePairingChatStream(
+  request: WinePairingChatRequest,
+  chatId: string,
+  signal?: AbortSignal
+): Promise<Response> {
+  return openStream(CHAT_STREAM_PATH, request, chatId, signal);
+}
+
+async function openStream(
+  path: string,
+  body: unknown,
+  chatId: string,
+  signal?: AbortSignal
+): Promise<Response> {
+  const response = await fetch(buildMysomApiUrl(path), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "text/event-stream",
+      [CHAT_ID_HEADER]: chatId,
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+    signal,
+  });
+
+  if (!response.ok || !response.body) {
+    // 오류 body는 노출하지 않고 상태 코드만 전달한다.
+    await response.body?.cancel().catch(() => undefined);
+    throw new WinePairingBackendError(response.status);
+  }
+
+  return response;
+}

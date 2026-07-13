@@ -2,8 +2,11 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import type { MenuCategoryRecommendationRequest } from "@/app/entity/menu-category-recommendation/model/menu-category-recommendation.type";
+import { buildWinePairingRequest } from "@/app/entity/wine-pairing/lib/build-wine-pairing-request";
+import { saveWinePairingRequest } from "@/app/entity/wine-pairing/lib/wine-pairing-request-storage";
 import Button from "@/app/shared/ui/atom/button";
 import LoadingSpinner from "@/app/shared/ui/atom/loading-spinner";
 import { cn } from "@/app/utils/style/helper";
@@ -23,6 +26,7 @@ import type { MenuCategoryRecommendationPageProps } from "./menu-category-recomm
 export default function MenuCategoryRecommendationPage({
   className,
 }: MenuCategoryRecommendationPageProps) {
+  const router = useRouter();
   const { request, isHydrated } =
     useStoredMenuCategoryRecommendationRequest();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -36,6 +40,23 @@ export default function MenuCategoryRecommendationPage({
           )
         : [...currentCategories, category]
     );
+  };
+
+  // 정수 ID 와인과 선택 카테고리가 모두 있어야 페어링을 요청할 수 있다.
+  const pairingRequest = buildWinePairingRequest(
+    request?.wines ?? [],
+    selectedCategories
+  );
+  const canRequestPairing =
+    pairingRequest.wines.length > 0 && pairingRequest.menuCategories.length > 0;
+
+  const handleRequestPairing = () => {
+    if (!canRequestPairing) {
+      return;
+    }
+    // 페어링 payload를 sessionStorage에 스냅샷해 /wine/chat 리로드 시에도 복원되게 한다.
+    saveWinePairingRequest(pairingRequest);
+    router.push("/wine/chat");
   };
 
   return (
@@ -112,7 +133,13 @@ export default function MenuCategoryRecommendationPage({
           variant="solid"
           type="primary"
           radius="lg"
-          className="h-[44px] w-full gap-2 rounded-xl bg-gradient-to-r from-[#d9a3ff] to-[#bd6cf3] text-[15px] font-bold text-white shadow-[0_6px_14px_rgba(166,91,239,0.28)] hover:from-[#cf8cff] hover:to-[#ad55ea]"
+          disabled={!canRequestPairing}
+          onClick={handleRequestPairing}
+          className={cn(
+            "h-[44px] w-full gap-2 rounded-xl text-[15px] font-bold text-white",
+            canRequestPairing &&
+              "bg-gradient-to-r from-[#d9a3ff] to-[#bd6cf3] shadow-[0_6px_14px_rgba(166,91,239,0.28)] hover:from-[#cf8cff] hover:to-[#ad55ea]"
+          )}
         >
           <Sparkles className="h-4 w-4" strokeWidth={2.4} />
           와인 추천받기
