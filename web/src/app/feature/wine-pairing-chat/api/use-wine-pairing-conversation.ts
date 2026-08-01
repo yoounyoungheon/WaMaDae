@@ -102,31 +102,62 @@ export function useWinePairingConversation() {
         return;
       }
 
+      // 질문 버블을 즉시 표시한다. 첫 SSE frame으로 ChatTurn/PairingTurn을 확정한다.
       dispatch({ type: "CHAT_START", question: message });
 
       void (async () => {
+        let turnKind: "chat" | "pairing" | null = null;
+
         try {
           for await (const event of streamWinePairingChat(
             { message },
             chatId,
             signal
           )) {
-            if (signal?.aborted) {
-              return;
-            }
-            if (event.fieldName === "chat" && typeof event.data === "string") {
-              dispatch({ type: "CHAT_APPEND", chunk: event.data });
+            if (signal?.aborted) return;
+
+            if (turnKind === null) {
+              if (event.fieldName === "chat") {
+                turnKind = "chat";
+                dispatch({ type: "CHAT_APPEND", chunk: event.data });
+              } else {
+                turnKind = "pairing";
+                // RECOMMENDATION_START가 빈 ChatTurn을 제거하고 PairingTurn으로 대체한다.
+                dispatch({ type: "RECOMMENDATION_START", question: message });
+                const action = mapPairingEventToAction(event);
+                if (action) dispatch(action);
+              }
+            } else if (turnKind === "chat") {
+              if (event.fieldName === "chat") {
+                dispatch({ type: "CHAT_APPEND", chunk: event.data });
+              }
+            } else {
+              if (event.fieldName !== "chat") {
+                const action = mapPairingEventToAction(event);
+                if (action) dispatch(action);
+              }
             }
           }
-          dispatch({ type: "CHAT_DONE" });
+
+          if (turnKind === "pairing") {
+            dispatch({ type: "PAIRING_DONE" });
+          } else {
+            dispatch({ type: "CHAT_DONE" });
+          }
         } catch (error) {
-          if (signal?.aborted) {
-            return;
+          if (signal?.aborted) return;
+
+          if (turnKind === "pairing") {
+            dispatch({
+              type: "PAIRING_ERROR",
+              message: toErrorMessage(error, CHAT_ERROR_FALLBACK),
+            });
+          } else {
+            dispatch({
+              type: "CHAT_ERROR",
+              message: toErrorMessage(error, CHAT_ERROR_FALLBACK),
+            });
           }
-          dispatch({
-            type: "CHAT_ERROR",
-            message: toErrorMessage(error, CHAT_ERROR_FALLBACK),
-          });
         }
       })();
     },

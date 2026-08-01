@@ -10,6 +10,7 @@ function slide(rank: number, name: string): PairingSlideView {
     comment: "부드러운 레드와인이 필요하다면 이 친구로",
     reason:
       "된장의 감칠맛이 와인의 과실향을 더 또렷하게 만들어줌. 부담 없이 마시기 좋음.",
+    wine: null,
     isCommitted: true,
   };
 }
@@ -68,6 +69,7 @@ export const StreamingPainting: Story = {
         name: "몬테스 알파",
         comment: "",
         reason: "",
+        wine: null,
         isCommitted: false,
       },
     ],

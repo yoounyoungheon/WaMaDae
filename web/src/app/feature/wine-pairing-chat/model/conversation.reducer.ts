@@ -34,9 +34,34 @@ export function conversationReducer(
         errorMessage: undefined,
         turns: [
           ...state.turns,
-          { kind: "pairing", slides: [], status: "streaming" },
+          { kind: "pairing", source: "initial", slides: [], status: "streaming" },
         ],
       };
+
+    case "RECOMMENDATION_START": {
+      // 낙관적으로 추가된 빈 ChatTurn이 있으면 제거하고 PairingTurn으로 대체한다.
+      const last = state.turns[state.turns.length - 1];
+      const baseTurns =
+        last?.kind === "chat" && last.answer === "" && last.status === "streaming"
+          ? state.turns.slice(0, -1)
+          : state.turns;
+
+      return {
+        ...state,
+        chat: "streaming",
+        errorMessage: undefined,
+        turns: [
+          ...baseTurns,
+          {
+            kind: "pairing",
+            source: "recommendation",
+            question: action.question,
+            slides: [],
+            status: "streaming",
+          },
+        ],
+      };
+    }
 
     case "PAIRING_SLIDE_START":
       return updateLastPairingTurn(state, (turn) => ({
@@ -60,6 +85,7 @@ export function conversationReducer(
           name: action.payload.name,
           comment: action.payload.comment,
           reason: action.payload.reason,
+          wine: action.payload.wine,
           isCommitted: true,
         };
 
@@ -77,6 +103,7 @@ export function conversationReducer(
           status: "done",
         })),
         pairing: "done",
+        chat: "idle",
       };
 
     case "PAIRING_ERROR":
@@ -87,6 +114,7 @@ export function conversationReducer(
           errorMessage: action.message,
         })),
         pairing: "error",
+        chat: "idle",
         errorMessage: action.message,
       };
 
@@ -136,6 +164,7 @@ function createSlide(imageUrl: string): PairingSlideView {
     name: "",
     comment: "",
     reason: "",
+    wine: null,
     isCommitted: false,
   };
 }

@@ -45,11 +45,24 @@ export type WineSearchItemDto = {
 
 export type WineMenuOcrExtractItemDto = {
   id: string | null;
-  type: "OCR" | "DB";
+  type: "ocr" | "db";
   name: string;
   koreanName: string | null;
+  area: string | null;
+  category: string | null;
+  dollarPrice: number | string | null;
+  wonPrice: number | string | null;
+  imagePath: string | null;
+  rating: string | null;
   country: string | null;
-  price: number | null;
+  region: string | null;
+  grape: string | null;
+  vintage: number | null;
+  alcohol: number | null;
+  body: number | null;
+  sweetness: number | null;
+  tannin: number | null;
+  acidity: number | null;
 };
 
 export type WineMenuOcrExtractResponseDto = {

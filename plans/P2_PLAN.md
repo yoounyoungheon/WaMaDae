@@ -1,5 +1,9 @@
 # P2 테이블 키워드 선택 페이지 구현 계획
 
+> 현재 `/wine/keywords`는 테이블 키워드 선택 페이지가 아니라 메뉴 카테고리 추천/선택 화면으로 구현되어 있다.
+> 최신 구현 계획은 `plans/wine-keywords-menu-category-recommendation-plan.md`를 기준으로 한다.
+> 이 문서는 과거 P2 디자인/키워드 선택 아이디어 참고용으로만 유지한다.
+
 ## 1. 기준
 
 - 디자인: `designs/p2.png`
@@ -35,7 +39,7 @@
 2. 사용자가 키워드를 복수 선택하거나 선택 해제한다.
 3. 현재 선택 개수를 표시한다.
 
-P1의 `/wine/ai` 페이지에서 `다음` 버튼을 누르면 이 페이지로 이동하도록 연결한다.
+P1의 `/wine/list` 페이지에서 `다음` 버튼을 누르면 이 페이지로 이동하도록 연결한다.
 
 ## 3. 디자인 분석
 
@@ -340,7 +344,7 @@ web/src/app/feature/table-keyword-select/
 
 - `PageHeader`
   - title: `오늘의 테이블 키워드 선택`
-  - `routeBackPath: "/wine/ai"` (prop 이름은 `routeBackPath`이며 `backPath`가
+  - `routeBackPath: "/wine/list"` (prop 이름은 `routeBackPath`이며 `backPath`가
     아니다. 뒤로가기 아이콘과 `aria-label="뒤로가기"`는 컴포넌트에 내장되어 있다)
 - `Button`
   - variant: `solid`
@@ -383,7 +387,7 @@ P2 선택값이 다음 단계에서도 필요하지만, 이 draft는 `/wine/*` �
 쌓으면 `providers.tsx`가 비대해지고 `/` 같은 무관한 라우트까지 감싸게 된다.
 
 대신 `app/wine/layout.tsx` 세그먼트 layout에서 플로우 Provider를 제공한다.
-App Router는 같은 layout을 공유하는 형제 페이지(`/wine/ai` ↔ `/wine/keywords`)
+App Router는 같은 layout을 공유하는 형제 페이지(`/wine/list` ↔ `/wine/keywords`)
 이동 시 layout 인스턴스를 유지하므로 단계 간 선택값이 보존되고, 플로우를 벗어나면
 layout이 언마운트되며 draft가 초기화된다.
 

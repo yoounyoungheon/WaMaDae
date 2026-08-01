@@ -1,4 +1,7 @@
-import type { PairingSlidePayload } from "@/app/entity/wine-pairing/model/wine-pairing.type";
+import type {
+  PairingSlidePayload,
+  PairingStreamWine,
+} from "@/app/entity/wine-pairing/model/wine-pairing.type";
 
 /**
  * 캐러셀 슬라이드의 화면 모델.
@@ -11,11 +14,14 @@ export type PairingSlideView = {
   name: string;
   comment: string;
   reason: string;
+  wine: PairingStreamWine | null;
   isCommitted: boolean;
 };
 
 export type PairingTurn = {
   kind: "pairing";
+  source: "initial" | "recommendation";
+  question?: string;
   slides: PairingSlideView[];
   status: "streaming" | "done" | "error";
   errorMessage?: string;
@@ -40,6 +46,7 @@ export type ConversationState = {
 
 export type ConversationAction =
   | { type: "PAIRING_START" }
+  | { type: "RECOMMENDATION_START"; question: string }
   | { type: "PAIRING_SLIDE_START"; imageUrl: string }
   | {
       type: "PAIRING_SLIDE_FIELD";

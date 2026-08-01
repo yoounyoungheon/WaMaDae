@@ -1,6 +1,6 @@
 import { parseSseStream } from "@/app/shared/lib/sse/parse-sse-stream";
 import type {
-  ChatStreamEvent,
+  PairingChatStreamEvent,
   PairingStreamEvent,
   WinePairingChatRequest,
   WinePairingRequest,
@@ -30,12 +30,15 @@ export async function* streamWinePairing(
   yield* parseSseStream<PairingStreamEvent>(body);
 }
 
-/** 브라우저 전용 후속 채팅 스트림. 답변 텍스트 청크 프레임을 yield한다. */
+/**
+ * 브라우저 전용 후속 채팅 스트림.
+ * 일반 답변(`chat` 프레임) 또는 재추천(`imageUrl`/`pairing` 등 페어링 프레임)을 yield한다.
+ */
 export async function* streamWinePairingChat(
   request: WinePairingChatRequest,
   chatId: string,
   signal?: AbortSignal
-): AsyncGenerator<ChatStreamEvent, void, undefined> {
+): AsyncGenerator<PairingChatStreamEvent, void, undefined> {
   const body = await openBffStream(
     "/api/wine-pairing/stream/chat",
     request,
@@ -44,7 +47,7 @@ export async function* streamWinePairingChat(
     signal
   );
 
-  yield* parseSseStream<ChatStreamEvent>(body);
+  yield* parseSseStream<PairingChatStreamEvent>(body);
 }
 
 async function openBffStream(

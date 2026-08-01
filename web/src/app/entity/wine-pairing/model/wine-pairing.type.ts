@@ -12,6 +12,27 @@ export type WinePairingChatRequest = {
   message: string;
 };
 
+/** 페어링 SSE `pairing` 프레임에 포함되는 DB 와인 상세 정보. */
+export type PairingStreamWine = {
+  id: string;
+  name: string;
+  koreanName: string | null;
+  area: string | null;
+  category: string | null;
+  price: number | null;
+  imagePath: string | null;
+  rating: string | null;
+  country: string | null;
+  region: string | null;
+  grape: string | null;
+  vintage: number | null;
+  alcohol: number | null;
+  body: number | null;
+  sweetness: number | null;
+  tannin: number | null;
+  acidity: number | null;
+};
+
 /**
  * 페어링 스트림의 `pairing`(json) 프레임 payload.
  * 추천 한 건의 최종(권위) 데이터다.
@@ -22,6 +43,7 @@ export type PairingSlidePayload = {
   name: string;
   comment: string;
   reason: string;
+  wine: PairingStreamWine;
 };
 
 /**
@@ -59,3 +81,6 @@ export type ChatStreamEvent = {
   status: "painting";
   isStreaming: true;
 };
+
+/** 후속 채팅 스트림에서 올 수 있는 모든 SSE 프레임. 일반 답변 또는 재추천 페어링 프레임이다. */
+export type PairingChatStreamEvent = ChatStreamEvent | PairingStreamEvent;

@@ -1,431 +1,241 @@
 # `/wine/keywords` 메뉴 카테고리 추천 조회 계획
 
-> ⚠️ 업데이트(변경됨): 이 문서가 기준으로 삼은 비동기 조회
-> `GET /v1/menu-category-recommendations/{id}`(polling)와 `?id=` URL 계약은 레거시가
-> 되었다. 실제 구현은 동기 API `POST /v1/wine-pairing/menu-category/recommend`
-> (`api/mysom-wine-pairing.md`)를 사용한다. 결과 화면은 이전 단계에서 유지된 선택 와인
-> (Zustand draft + known wines 캐시)으로 추천을 즉시 조회하며, URL의 추천 작업 ID는
-> 사용하지 않는다. 아래 polling/`searchParams.id`/prefetch 관련 절은 더 이상 유효하지 않다.
-> 구현 기준은 `docs/wine-keywords-menu-category-recommendation.md`를 참고한다.
->
-> 추가 업데이트: 결과 화면은 두 섹션으로 나눈다. 상단에는
-> `마이쏨 AI가 추천하는 메뉴 카테고리에요.` 문구와 AI 추천 메뉴 카테고리 리스트를
-> 표시한다. 하단에는 기존 메뉴 리스트를 그대로 표시하되, 이 하단 목록은 백엔드/API가 아니라
-> 프론트엔드 상수(`DEFAULT_MENU_CATEGORIES`)로 관리한다.
+## 1. 기준
 
-## 0. 최신 섹션 구성 기준
+- 대상 라우트: `web/src/app/wine/keywords/page.tsx`
+- 진입 라우트: `web/src/app/wine/list/page.tsx`
+- API 명세: `api/mysom-wine-pairing.md`의 `POST /v1/wine-pairing/menu-category/recommend`
+- 제거된 API 참고: `api/mysom-menu-category-recommendations.md`
+- 관련 디자인: `designs/p2.png`, `designs/p3.png`
+- 적용 가이드: `data-flow-layering`, `bff-api-gateway`, `rsc-rendering`, `rcc-rendering`, `storybook-authoring`, `style-implementation`
 
-현재 구현 기준의 `/wine/keywords` 구조는 다음과 같다.
+이 문서는 최신 동기 메뉴 카테고리 추천 API 기준의 `/wine/keywords` 계획이다. 과거 `GET /v1/menu-category-recommendations/{id}` polling, `?id=` URL 계약, 추천 작업 ID prefetch는 더 이상 사용하지 않는다.
+
+## 2. 페이지 역할
+
+`/wine/keywords`는 이전 단계에서 선택한 와인으로 추천 메뉴 카테고리를 조회하고, 사용자가 실제 페어링에 사용할 메뉴 카테고리를 고르는 화면이다.
 
 ```text
 WineKeywordsPage [Server]
 ├─ PageHeader [Server]
 └─ MenuCategoryRecommendationPage [Client]
+   ├─ 선택 개수 요약
    ├─ AI 추천 메뉴 카테고리 섹션
    │  ├─ "마이쏨 AI가 추천하는 메뉴 카테고리에요."
    │  ├─ 추천 query 상태 패널
-   │  └─ MenuCategoryList          # API 추천 결과
-   └─ 기본 메뉴 카테고리 섹션
-      └─ DefaultMenuCategoryGrid   # 프론트엔드 상수 기반 3열 카드
+   │  └─ MenuCategoryList
+   ├─ 기본 메뉴 카테고리 섹션
+   │  └─ DefaultMenuCategoryGrid
+   └─ 하단 "와인 추천받기" 버튼
 ```
 
-- 상단 AI 추천 리스트는 `POST /api/wine-pairing/menu-category/recommend` 결과를
-  TanStack Query로 조회해 렌더링한다.
-- 하단 기본 메뉴 리스트는
-  `feature/menu-category-recommendation-result/model/default-menu-categories.ts`의
-  `DEFAULT_MENU_CATEGORIES`에서 직접 읽는다.
-- 하단 기본 메뉴 리스트는 서버 상태가 아니므로 Query, Zustand, `useState`에 저장하지 않는다.
-- 하단 기본 메뉴 리스트는 AI 추천의 loading/error/empty 상태와 무관하게 같은 화면 아래쪽에 노출한다.
-- 하단 기본 메뉴 리스트는 `designs/p2.png`의 메뉴 카드 UI에 맞춰
-  `DefaultMenuCategoryGrid`/`DefaultMenuCategoryCard`로 3열 정사각 카드 형태를 사용한다.
-- 상단 서버 추천 메뉴 카테고리와 하단 기본 메뉴 카테고리 모두 선택 가능하며, 선택 기준은 카테고리 이름 문자열이다.
-- 선택된 카테고리가 1개 이상이면 본문 최상단에 `{count}개 선택됨` 요약을 표시한다.
+## 3. API 계약
 
-## 1. 기준
+브라우저는 same-origin BFF만 호출한다.
 
-- 대상 라우트: `web/src/app/wine/keywords/page.tsx`
-- 기존 계획: `plans/P2_PLAN.md`
-- 관련 디자인:
-  - 현재 구현 기준: `designs/p2.png`
-  - 메뉴/키워드 선택 계열 참고: `designs/p3.png`
-- API 명세: `api/mysom-menu-category-recommendations.md`
-- 적용 가이드:
-  - `data-flow-layering`
-  - `bff-api-gateway`
-  - `rsc-rendering`
-  - `rcc-rendering`
-  - `storybook-authoring`
-  - `style-implementation`
-
-이 문서는 `/wine/keywords?id={id}` 페이지 한 개만 대상으로 한다. 기존
-`table-keyword-select` 기반의 정적 테이블 키워드 선택 계획은 새 요구사항과 충돌하므로,
-이 라우트에서는 추천 작업 ID 기반의 메뉴 카테고리 리스트 화면으로 대체한다.
-
-## 2. 페이지 범위
-
-라우트:
-
-```text
-/wine/keywords?id={recommendationId}
+```http
+POST /api/wine-pairing/menu-category/recommend
+Content-Type: application/json
 ```
 
-페이지 역할:
+BFF는 최신 `mysom-api` 동기 API를 호출한다.
 
-1. URL `searchParams.id`에서 추천 작업 ID를 읽는다.
-2. `GET /v1/menu-category-recommendations/{id}`를 BFF 경유로 조회한다.
-3. `PENDING`/`RUNNING`이면 polling 상태를 보여준다.
-4. `SUCCEEDED`이면 `result.categories`를 메뉴 카테고리 리스트로 보여준다.
-5. `FAILED`이거나 조회 오류이면 안전한 오류 메시지를 보여준다.
-
-API 응답은 `categories: string[]`만 제공한다. 따라서 이 계획에서 "메뉴 리스트"는
-메뉴 상세 객체가 아니라 추천된 메뉴 카테고리 문자열 목록으로 정의한다. 실제 음식 메뉴
-ID, 이미지, 설명, 정렬 점수가 필요하면 백엔드 API 계약 추가가 필요하다.
-
-## 3. 페이지 구조
-
-```text
-WineKeywordsPage [Server]
-├─ PageHeader [Server]
-└─ HydrationBoundary
-   └─ MenuCategoryRecommendationPage [Client]
-      ├─ RecommendationPendingState
-      ├─ MenuCategoryList
-      │  └─ MenuCategoryItem
-      ├─ RecommendationErrorState
-      └─ RecommendationEmptyState
+```http
+POST /v1/wine-pairing/menu-category/recommend
+Content-Type: application/json
 ```
 
-`page.tsx`는 Server Component로 유지한다. `searchParams.id` 검증과 최초 조회
-prefetch는 서버에서 수행하고, 이후 polling과 retry는 Client Component에서
-TanStack Query로 처리한다.
+요청:
 
-## 4. RSC/RCC 경계
+```ts
+type MenuCategoryRecommendRequest = {
+  wines: Array<{
+    id: string;
+    name: string;
+    koreanName: string;
+  }>;
+};
+```
 
-### Server Component
+백엔드 응답:
 
-`web/src/app/wine/keywords/page.tsx`
+```ts
+type MenuCategoryRecommendResponse = {
+  menuCategories: Array<{ name: string }>;
+};
+```
 
-- `searchParams.id`를 읽는다.
-- ID가 없거나 숫자 문자열이 아니면 BFF 호출 없이 invalid state를 렌더링한다.
-- ID가 유효하면 `QueryClient.prefetchQuery`로 초기 상태를 조회한다.
-- 서버에서 same-origin BFF를 HTTP로 다시 호출하지 않고, Entity의 server-only 조회
-  함수를 사용한다.
-- `HydrationBoundary`로 동일 query key cache를 Client Component에 전달한다.
+BFF 응답:
 
-### Client Component
+```ts
+type RecommendResponse = {
+  categories: string[];
+};
+```
 
-`MenuCategoryRecommendationPage`
-
-- 동일 query key로 `useMenuCategoryRecommendationQuery(id)`를 구독한다.
-- 상태가 `PENDING` 또는 `RUNNING`이면 `refetchInterval`로 polling한다.
-- 상태가 `SUCCEEDED` 또는 `FAILED`이면 polling을 멈춘다.
-- retry 버튼은 query `refetch`만 실행한다.
-- 서버 응답 자체를 `useState`나 Zustand에 복제하지 않는다.
-
-## 5. 상태 분류
+## 4. 상태 관리
 
 | 상태 | 출처 | 관리 방식 |
 | --- | --- | --- |
-| 추천 작업 ID | URL | `searchParams.id` |
-| 추천 작업 상태 | 서버 | TanStack Query |
-| 추천 카테고리 목록 | 서버 응답 `result.categories` | TanStack Query에서 파생 |
-| polling 여부 | 서버 status에서 파생 | Query `refetchInterval` |
-| 오류 메시지 | BFF safe error 또는 response error | Query `error` / response `error` |
+| 선택 와인 ID | `/wine/list` 사용자 draft | `WineListSelectionProvider` Zustand |
+| 선택 와인 카드 데이터 | 검색/OCR 응답 | TanStack Query `known wines` cache |
+| 추천 요청 body | 선택 와인 데이터에서 파생 | `build-menu-category-recommendation-request` |
+| AI 추천 카테고리 | 동기 API 응답 | TanStack Query |
+| 기본 카테고리 | 프론트 상수 | `DEFAULT_MENU_CATEGORIES` |
+| 선택 카테고리 | 현재 화면 draft | `useState<string[]>` |
+| 페어링 요청 스냅샷 | 다음 `/wine/chat` 복원용 | `sessionStorage` |
 
-Zustand는 사용하지 않는다. 기존 `TableKeywordSelectionProvider`는 이 라우트에서 더 이상
-필요하지 않으며, 다른 라우트가 사용하지 않는다면 `/wine/layout.tsx`에서 제거를 검토한다.
+추천 작업 ID, polling status, `searchParams.id`, `Location` 헤더는 상태로 두지 않는다.
 
-## 6. API 계약
+### Source Of Truth
 
-백엔드 명세:
+`/wine/keywords`가 추천 API를 호출할 때 사용하는 source of truth는 `sessionStorage`의 `MenuCategoryRecommendationRequest` 스냅샷이다.
 
-```http
-GET /v1/menu-category-recommendations/{id}
-```
+구체 정책:
 
-```ts
-type MenuCategoryRecommendationStatus =
-  | "PENDING"
-  | "RUNNING"
-  | "SUCCEEDED"
-  | "FAILED";
+- 정상 라우트 이동에서는 `/wine/list`가 `saveMenuCategoryRecommendationRequest(request)`를 먼저 호출한다.
+- `/wine/keywords`는 hydration 이후 `loadMenuCategoryRecommendationRequest()`로 스냅샷을 읽는다.
+- 스냅샷이 없거나 invalid이면 추천 API를 호출하지 않고 빈 상태를 표시한다.
+- Zustand와 `known wines` cache는 `/wine/list` 내부 선택/표시를 위한 상태이며, `/wine/keywords` 리로드 복원에는 의존하지 않는다.
+- URL query는 source of truth가 아니다. `?id=`가 있어도 무시한다.
 
-type MenuCategoryRecommendationView = {
-  id: string;
-  status: MenuCategoryRecommendationStatus;
-  result: {
-    categories: string[];
-  } | null;
-  error: {
-    code: string;
-    message: string;
-  } | null;
-};
-```
-
-상태 처리:
-
-- `PENDING`, `RUNNING`: 리스트 대신 처리 중 UI를 표시하고 polling 유지
-- `SUCCEEDED`: `result.categories` 표시
-- `FAILED`: `error.message` 또는 fallback 오류 표시
-
-## 7. BFF 설계
-
-신규 Route Handler:
+## 5. 데이터 흐름
 
 ```text
-web/src/app/api/menu-category-recommendations/[id]/route.ts
+[/wine/list]
+-> 사용자가 와인 선택
+-> selectedWineIds + known wines cache 유지
+-> 다음 버튼 클릭
+-> router.push("/wine/keywords")
+
+[/wine/keywords]
+-> useStoredMenuCategoryRecommendationRequest()가 sessionStorage 스냅샷에서 선택 와인 요청 복원
+-> useMenuCategoryRecommendationsQuery(request)
+-> fetch POST /api/wine-pairing/menu-category/recommend
+-> BFF validation
+-> POST /v1/wine-pairing/menu-category/recommend
+-> { menuCategories: [{ name }] }
+-> BFF maps to { categories: string[] }
+-> MenuCategoryList 렌더링
+
+[와인 추천받기]
+-> buildWinePairingRequest(selectedWines, selectedCategories)
+-> saveWinePairingRequest({ wines: [{ id: number }], menuCategories })
+-> router.push("/wine/chat")
 ```
 
-브라우저 요청:
+## 6. BFF 책임
 
-```http
-GET /api/menu-category-recommendations/{id}
-```
+`web/src/app/api/wine-pairing/menu-category/recommend/route.ts`
 
-Route Handler 책임:
+- `Content-Type: application/json`만 받는다.
+- `wines` 배열이 1개 이상인지 검증한다.
+- `wines[].id`, `wines[].name`, `wines[].koreanName`은 공백 아닌 문자열이어야 한다.
+- 최대 와인 수와 필드 길이 제한으로 과도한 요청을 방어한다.
+- 백엔드 오류 body와 내부 URL은 브라우저에 그대로 노출하지 않는다.
+- 백엔드 `400`은 사용자 입력 오류 메시지로, 그 외 실패는 `502` safe message로 변환한다.
 
-- path parameter `id`가 숫자 문자열인지 검증한다.
-- 백엔드 `GET /v1/menu-category-recommendations/{id}`를 호출한다.
-- 사용자별/작업별 데이터로 보고 `cache: "no-store"`를 사용한다.
-- 백엔드 응답을 safe DTO로 정규화한다.
-- `400`, `404`, `500` 오류를 내부 정보 없는 safe message로 변환한다.
-- 백엔드 origin과 내부 path를 브라우저에 노출하지 않는다.
+## 7. 파일별 구현 계획
 
-서버 prefetch용 함수:
-
-```text
+```txt
+web/src/app/wine/keywords/page.tsx
+web/src/app/feature/menu-category-recommendation-result/ui/MenuCategoryRecommendationPage.tsx
+web/src/app/feature/menu-category-recommendation-result/api/use-menu-category-recommendations-query.ts
+web/src/app/feature/menu-category-recommendation-result/api/menu-category-recommendation-query-keys.ts
+web/src/app/feature/menu-category-recommendation-result/lib/use-stored-recommendation-request.ts
+web/src/app/entity/menu-category-recommendation/api/menu-category-recommendation.api.ts
 web/src/app/entity/menu-category-recommendation/api/menu-category-recommendation.server.ts
+web/src/app/entity/menu-category-recommendation/api/menu-category-recommendation.mapper.ts
+web/src/app/entity/menu-category-recommendation/model/menu-category-recommendation.type.ts
+web/src/app/api/wine-pairing/menu-category/recommend/route.ts
 ```
 
-Route Handler와 `page.tsx`가 같은 server-only 조회 함수를 재사용한다. Client Component는
-이 파일을 import하지 않는다.
+### `page.tsx`
 
-## 8. Entity 및 Feature 계층
+- Server Component로 유지한다.
+- `searchParams`를 읽지 않는다.
+- `PageHeader`의 `routeBackPath`는 `/wine/list`다.
+- 데이터 prefetch/hydration은 사용하지 않는다. 추천 요청은 클라이언트 hydration 이후 sessionStorage를 읽은 뒤 시작된다.
 
-신규 Entity:
+### `use-stored-recommendation-request.ts`
 
-```text
-web/src/app/entity/menu-category-recommendation/
-├─ model/menu-category-recommendation.type.ts
-└─ api/
-   ├─ menu-category-recommendation.api.ts
-   ├─ menu-category-recommendation.mapper.ts
-   └─ menu-category-recommendation.server.ts
-```
+- Client hook이다.
+- 최초 렌더에서는 `{ request: null, isHydrated: false }`를 반환한다.
+- `useEffect`에서 `loadMenuCategoryRecommendationRequest()`를 호출해 상태를 채운다.
+- 저장소 값이 invalid이면 `request: null`로 둔다.
+- API 요청은 `isHydrated && request?.wines.length > 0`일 때만 가능하다.
 
-타입:
+### `menu-category-recommendation-query-keys.ts`
 
-```ts
-type MenuCategoryRecommendation = {
-  id: string;
-  status: "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED";
-  categories: string[];
-  errorMessage: string | null;
-};
-```
-
-mapper 정책:
-
-- `result`가 `null`이면 `categories`는 빈 배열로 변환한다.
-- `FAILED`이면 `error.message`를 `errorMessage`로 전달한다.
-- 알 수 없는 status나 잘못된 shape는 safe error로 처리한다.
-
-신규 Feature:
-
-```text
-web/src/app/feature/menu-category-recommendation-result/
-├─ api/
-│  ├─ menu-category-recommendation-query-keys.ts
-│  └─ use-menu-category-recommendation-query.ts
-└─ ui/
-   ├─ MenuCategoryRecommendationPage.tsx
-   ├─ MenuCategoryRecommendationPage.stories.tsx
-   ├─ MenuCategoryList.tsx
-   ├─ MenuCategoryList.stories.tsx
-   ├─ MenuCategoryItem.tsx
-   └─ MenuCategoryItem.stories.tsx
-```
-
-Query key:
+Query key는 배열 factory로 유지한다.
 
 ```ts
 export const menuCategoryRecommendationQueryKeys = {
   all: ["menu-category-recommendations"] as const,
-  detail: (id: string) =>
-    [...menuCategoryRecommendationQueryKeys.all, "detail", id] as const,
+  recommend: (wines: MenuCategoryRecommendationRequest["wines"]) =>
+    [...menuCategoryRecommendationQueryKeys.all, "recommend", { wines }] as const,
 };
 ```
 
-Query 정책:
+이 key의 `menu-category-recommendations` 문자열은 클라이언트 캐시 namespace일 뿐, 제거된 백엔드 path를 뜻하지 않는다.
 
-- `enabled: Boolean(id)`
-- `refetchInterval`은 status가 `PENDING` 또는 `RUNNING`일 때만 1500~2000ms 범위로 설정
-- `retry`는 400/404 같은 검증 오류에는 과도하게 반복하지 않도록 제한
-- 서버 prefetch와 Client Query Hook은 동일 key를 사용한다.
+### `use-menu-category-recommendations-query.ts`
 
-## 9. 데이터 흐름
+- `queryFn`은 `fetchMenuCategoryRecommendations(request, signal)`만 호출한다.
+- `enabled`는 `request.wines.length > 0`.
+- `staleTime: Infinity`, `retry: 1`을 유지한다.
+- polling 옵션은 두지 않는다.
+- 카테고리 정렬/필터링 같은 의미 있는 로직을 넣지 않는다.
 
-### 최초 진입
+### Entity API/Server/Mapper
 
-```text
-/wine/keywords?id=123
--> page.tsx [Server]
--> validate id
--> QueryClient.prefetchQuery(menuCategoryRecommendationQueryKeys.detail("123"))
--> menu-category-recommendation.server.ts
--> GET /v1/menu-category-recommendations/123
--> dehydrate
--> HydrationBoundary
--> MenuCategoryRecommendationPage
-```
+- 브라우저 API 함수는 `/api/wine-pairing/menu-category/recommend`만 호출한다.
+- server-only helper는 `buildMysomApiUrl("/v1/wine-pairing/menu-category/recommend")`만 호출한다.
+- mapper는 `{ menuCategories: [{ name }] }`를 `string[]`로 변환한다.
+- 빈 이름은 mapper에서 제거해도 되지만, 백엔드 계약 오류를 숨기지 않도록 필요하면 BFF에서 safe error로 처리한다.
 
-### 브라우저 polling
+### BFF Route Handler
 
-```text
-useMenuCategoryRecommendationQuery("123")
--> entity API fetch("/api/menu-category-recommendations/123")
--> BFF Route Handler
--> GET /v1/menu-category-recommendations/123
--> status 확인
--> PENDING/RUNNING이면 polling 계속
--> SUCCEEDED/FAILED이면 polling 중단
-```
+- `Content-Type`이 JSON이 아니면 `415`.
+- body 파싱 실패는 `400`.
+- `wines`가 배열이 아니거나 비어 있으면 `400`.
+- `wines` 길이가 `MAX_WINES`를 넘으면 `400`.
+- `id/name/koreanName`이 공백 문자열이거나 길이 제한을 넘으면 `400`.
+- 백엔드 `400`은 `{ message: "추천할 와인 정보가 올바르지 않습니다." }`로 변환한다.
+- 그 외 백엔드 실패는 `502`와 `{ message: "추천 메뉴를 불러오지 못했습니다." }`를 반환한다.
 
-### 성공 렌더링
+## 8. UI 정책
 
-```text
-status: "SUCCEEDED"
--> categories = result.categories
--> MenuCategoryList
--> MenuCategoryItem[]
-```
+- 상단 AI 추천 리스트는 loading, error, empty 상태를 가진다.
+- 하단 기본 메뉴 카테고리 리스트는 AI 추천 상태와 무관하게 항상 표시한다.
+- 상단 추천 카테고리와 하단 기본 카테고리는 같은 선택 배열을 공유한다.
+- 같은 이름의 카테고리는 중복 선택하지 않는다.
+- 선택된 카테고리 개수가 1개 이상이면 `{count}개 선택됨` 요약을 표시한다.
+- 선택 카테고리가 없거나 정수로 변환 가능한 와인 ID가 없으면 "와인 추천받기" 버튼을 비활성화한다.
+- `PageHeader.routeBackPath`는 `/wine/list`다.
 
-## 10. UI 설계
+## 9. 구현 순서
 
-헤더:
+1. API 명세 링크와 타입을 `api/mysom-wine-pairing.md` 기준으로 유지한다.
+2. `/api/menu-category-recommendations/[id]` BFF, polling query, `searchParams.id` 처리 코드가 남아 있다면 제거한다.
+3. `menuCategoryRecommendationQueryKeys`는 동기 추천 query key로만 사용한다.
+4. 추천 요청 builder가 `id/name/koreanName`을 모두 보존하는지 확인한다.
+5. `/wine/keywords`에서 추천 API 실패 시 하단 기본 카테고리 선택은 계속 가능하게 둔다.
+6. "와인 추천받기" 버튼이 페어링 요청 스냅샷을 저장하고 `/wine/chat`으로 이동하는지 확인한다.
 
-- `PageHeader`
-- title: `추천 메뉴`
-- `routeBackPath: "/wine/ai"`
+## 10. 테스트/검증
 
-본문:
+- `loadMenuCategoryRecommendationRequest()`가 invalid JSON, 빈 wines, 공백 필드를 `null` 처리한다.
+- 저장된 request가 없으면 추천 BFF 요청이 발생하지 않는다.
+- 저장된 request가 있으면 `/api/wine-pairing/menu-category/recommend`를 1회 호출한다.
+- BFF는 JSON content-type, wines shape, 필드 길이를 검증한다.
+- 추천 API 실패 상태에서도 `DefaultMenuCategoryGrid`가 렌더링된다.
+- 카테고리 선택 후 "와인 추천받기" 클릭 시 `saveWinePairingRequest`가 호출되고 `/wine/chat`으로 이동한다.
 
-- 모바일 기준 단일 column
-- `min-h-0 flex-1 overflow-y-auto`
-- 처리 중, 실패, 빈 결과, 성공 상태의 높이 변화가 과도하지 않게 skeleton 또는 고정 간격 사용
+## 11. 완료 기준
 
-성공 상태:
-
-- 추천된 메뉴 카테고리를 리스트 또는 chip grid로 표시한다.
-- API가 문자열만 제공하므로 각 item의 key는 `${category}-${index}`를 사용한다.
-- 같은 category가 중복될 가능성이 있으면 중복 제거 여부는 기획 확정 전까지 하지 않고
-  API 응답 순서를 그대로 표시한다.
-
-처리 중 상태:
-
-- `status`가 `PENDING` 또는 `RUNNING`이면 `LoadingSpinner`와 상태 문구를 표시한다.
-- 사용자가 기다릴 수 있도록 화면을 유지하고 자동 polling한다.
-
-오류 상태:
-
-- invalid id: `추천 정보를 찾을 수 없습니다.`
-- query error: BFF safe message 또는 `추천 메뉴를 불러오지 못했습니다.`
-- `FAILED`: 백엔드 `error.message` 또는 fallback
-- 재시도 버튼은 유효한 id가 있을 때만 표시한다.
-
-## 11. `shared/ui` 재사용
-
-반드시 재사용:
-
-- `shared/ui/molecule/page-header`
-- `shared/ui/atom/button`
-- `shared/ui/atom/loading-spinner`
-
-검토 대상:
-
-- `shared/ui/molecule/card`
-  - 추천 카테고리 item이 단순 chip/list라면 공용 Card까지 사용하지 않는다.
-  - 상태 패널이 명확한 카드 구조라면 `Card` 합성을 사용할 수 있다.
-
-`feature/`에서 `shared/ui/shadcn`을 직접 import하지 않는다.
-
-## 12. Storybook 계획
-
-Story title:
-
-```text
-Feature/menu-category-recommendation-result/<ComponentName>
-```
-
-필수 Story:
-
-- `MenuCategoryItem`
-  - `Default`
-  - `LongName`
-- `MenuCategoryList`
-  - `Default`
-  - `ManyItems`
-  - `Empty`
-- `MenuCategoryRecommendationPage`
-  - `Pending`
-  - `Running`
-  - `Succeeded`
-  - `SucceededEmpty`
-  - `Failed`
-  - `InvalidId`
-  - `QueryError`
-
-Story에서는 실제 polling을 실행하지 않고 Query cache 또는 props 기반 fixture로 상태를
-재현한다. wrapper는 모바일 화면 폭만 제공하고 컴포넌트의 레이아웃 책임을 대신하지 않는다.
-
-## 13. 접근성
-
-- 처리 중 상태는 `role="status"`와 스크린 리더 label을 제공한다.
-- 오류 상태는 `role="alert"`를 사용한다.
-- 추천 카테고리 목록은 `ul/li` 또는 접근 가능한 button/list semantics를 사용한다.
-- 문자열 category가 길어도 버튼/칩 내부 텍스트가 넘치지 않게 줄바꿈을 허용한다.
-- 색상만으로 상태를 전달하지 않는다.
-
-## 14. 구현 순서
-
-1. 메뉴 카테고리 추천 Entity 타입과 mapper 작성
-2. server-only 조회 함수 작성
-3. `GET /api/menu-category-recommendations/[id]` BFF 작성
-4. 브라우저 Entity API 함수 작성
-5. query key와 query hook 작성
-6. `/wine/keywords/page.tsx`에서 `searchParams.id` 검증과 prefetch/hydration 구현
-7. 결과 페이지 UI 컴포넌트 작성
-8. 기존 `TableKeywordSelectPage` 연결 제거 또는 새 결과 페이지로 교체
-9. `/wine/layout.tsx`에서 불필요한 `TableKeywordSelectionProvider` 제거 검토
-10. Storybook 상태별 Story 작성
-11. 구현 후 `docs/wine-keywords-menu-category-recommendation.md` 작성
-
-## 15. 검증
-
-```bash
-npx tsc --noEmit
-npm run build
-npm run build-storybook
-```
-
-추가 확인:
-
-- `/wine/keywords`처럼 id가 없을 때 BFF 요청이 발생하지 않는지 확인
-- 숫자가 아닌 id에서 안전한 invalid state가 표시되는지 확인
-- 서버 prefetch와 클라이언트 query가 같은 key를 사용하는지 확인
-- `PENDING`/`RUNNING`에서 polling하고 `SUCCEEDED`/`FAILED`에서 멈추는지 확인
-- `SUCCEEDED`의 `categories`가 API 응답 순서대로 표시되는지 확인
-- `FAILED`, `404`, 네트워크 오류에서 내부 정보가 노출되지 않는지 확인
-- 작은 viewport에서 긴 category 문자열이 overflow되지 않는지 확인
-
-## 16. 완료 기준
-
-- `/wine/keywords/page.tsx`는 Server Component로 유지된다.
-- `id`는 URL searchParams로 관리된다.
-- 브라우저는 `/api/menu-category-recommendations/{id}` BFF만 호출한다.
-- 초기 조회는 server-only 함수와 hydration을 사용한다.
-- polling은 TanStack Query에서 status 기반으로 제어된다.
-- 서버 응답은 `useState`나 Zustand에 복제하지 않는다.
-- `SUCCEEDED` 결과의 `categories`가 메뉴 카테고리 리스트로 표시된다.
-- pending, running, failed, invalid id, empty, success 상태가 제공된다.
+- `/wine/keywords?id={id}` 없이 `/wine/keywords` 단독 진입 구조로 동작한다.
+- `GET /v1/menu-category-recommendations/{id}` 호출이 없다.
+- `POST /v1/wine-pairing/menu-category/recommend`만 메뉴 카테고리 추천 API로 사용한다.
+- polling, `PENDING`/`RUNNING`/`SUCCEEDED`/`FAILED` 상태 모델이 코드와 문서에 활성 계약처럼 남아 있지 않다.
+- AI 추천 실패 시에도 기본 카테고리 선택과 `/wine/chat` 이동 흐름이 깨지지 않는다.

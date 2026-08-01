@@ -6,6 +6,26 @@ import {
 import type { PairingSlidePayload } from "@/app/entity/wine-pairing/model/wine-pairing.type";
 import WinePairingChatView from "./WinePairingChatView";
 
+const sampleWine = {
+  id: "1",
+  name: "Chateau La Rose de Vitrac Rouge",
+  koreanName: "샤또 라 로즈 드 비트락 루즈",
+  area: "Bordeaux",
+  category: "Red",
+  price: null,
+  imagePath: "/ExampleImage.png",
+  rating: "4.2",
+  country: "France",
+  region: "Bordeaux",
+  grape: "Merlot",
+  vintage: 2020,
+  alcohol: 13,
+  body: 3,
+  sweetness: 1,
+  tannin: 3,
+  acidity: 3,
+};
+
 const samplePayloads: PairingSlidePayload[] = [
   {
     imageUrl: "/ExampleImage.png",
@@ -14,6 +34,7 @@ const samplePayloads: PairingSlidePayload[] = [
     comment: "부드러운 레드와인이 필요하다면 이 친구로",
     reason:
       "된장의 감칠맛이 와인의 과실향을 더 또렷하게 만들어줌. 부담 없이 마시기 좋음. 가성비 괜찮음.",
+    wine: { ...sampleWine, id: "1" },
   },
   {
     imageUrl: "/ExampleImage.png",
@@ -21,6 +42,15 @@ const samplePayloads: PairingSlidePayload[] = [
     name: "몬테스 알파 카베르네 소비뇽",
     comment: "진한 풍미를 원한다면 추천",
     reason: "스테이크와 진한 소스 요리에 잘 어울리는 묵직한 바디감이 있어요.",
+    wine: {
+      ...sampleWine,
+      id: "2",
+      name: "Montes Alpha Cabernet Sauvignon",
+      koreanName: "몬테스 알파 카베르네 소비뇽",
+      country: "Chile",
+      region: "Colchagua Valley",
+      grape: "Cabernet Sauvignon",
+    },
   },
 ];
 

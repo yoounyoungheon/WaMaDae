@@ -32,7 +32,7 @@ Entity/Feature 역할에 맞게 변경한다.
 
 ## 화면 범위
 
-`p1_1`과 `p1_2`는 별도 라우트가 아니라 `/wine/ai` 페이지의 상태 차이다.
+`p1_1`과 `p1_2`는 별도 라우트가 아니라 `/wine/list` 페이지의 상태 차이다.
 
 - `p1_1`: 메뉴판 이미지 업로드 영역이 열려 있고 선택된 와인이 없는 상태
 - `p1_2`: 분석 또는 검색으로 선택한 와인이 `WINES` 영역에 표시된 상태
@@ -40,7 +40,7 @@ Entity/Feature 역할에 맞게 변경한다.
 페이지 라우트는 하나만 유지한다.
 
 ```txt
-web/src/app/wine/ai/page.tsx
+web/src/app/wine/list/page.tsx
 ```
 
 `page.tsx`는 Server Component로 유지하고 화면의 상호작용만
@@ -78,19 +78,19 @@ Browser
    Content-Type: image/png | image/jpeg
    Body: image binary
 -> { wines: WineMenuOcrExtractItemDto[] }
--> BFF가 type: "OCR" 항목을 제외
--> 유효한 id가 있는 type: "DB" 후보만 기존 화면 카드 DTO로 fallback 매핑
+-> BFF가 type: "db"이고 유효한 id가 있는 DB 후보만 기존 화면 카드 DTO로 매핑
 -> { wines: WineDetailDto[] }
 ```
 
-실제 OCR 응답에는 화면 카드용 `image_url`, `rating`, `price_label`이 없다. 1차 구현은
-DB 후보만 기존 카드 UI와 선택 flow에 연결하며 BFF에서 다음 fallback을 채운다.
+최신 OCR 응답은 DB 후보의 상세 필드를 포함한다. BFF는 기존 카드 UI와 선택 flow에 맞춰
+다음처럼 매핑한다.
 
 - `id`: DB 후보의 백엔드 ID
-- `image_url`: `/ExampleImage.png`
-- `rating`: `0`
-- `price_label`: 가격이 있으면 `{가격}원`, 없으면 `가격 정보 없음`
-- `recommendation_text`: 원문명, 국가, DB 후보 여부를 조합
+- `display_name`/`title`: `koreanName ?? name`
+- `image_url`: `imagePath`가 있으면 사용하고 없으면 `/ExampleImage.png`
+- `rating`: `rating` 문자열을 숫자로 변환할 수 있으면 사용하고, 아니면 `0`
+- `price_label`: `wonPrice`가 있으면 원화 표시, 없으면 `dollarPrice` 표시, 둘 다 없으면 `가격 정보 없음`
+- `recommendation_text`: 원문명, `country`, `region`, `category`, `grape` 등 사용 가능한 상세 필드를 조합
 
 분석 mutation이 pending인 동안 업로드한 사진 영역 전체에 primary 색상 로딩 스피너를
 오버레이하고 파일 재선택과 중복 분석 요청을 막는다.
@@ -278,7 +278,7 @@ web/src/app/
 
 ## 레이어 책임
 
-### `app/wine/ai/page.tsx`
+### `app/wine/list/page.tsx`
 
 - Server Component 유지
 - `WineListSelectHeader`와 `WineListSelectPage` 조합
@@ -432,8 +432,8 @@ WineSearchSection input
 - BFF는 파일을 검증한 뒤 실제 백엔드 `POST /v1/wine-pairing/wines/menu-ocr`에 이미지 바이너리를
   전달한다.
 - 실제 백엔드 OCR 응답은 SSE가 아니라 JSON이다.
-- BFF는 OCR 응답에서 `type: "OCR"` 항목을 제거하고, 유효한 ID가 있는 `type: "DB"`
-  후보만 기존 화면 카드 DTO로 fallback 매핑한다.
+- BFF는 OCR 응답에서 `type: "db"`이고 유효한 ID가 있는 후보만 기존 화면 카드 DTO로 매핑한다.
+  `type: "ocr"` 항목은 DTO 방어 목적으로만 고려하고 화면 선택 결과에는 노출하지 않는다.
 - 분석 결과 와인 객체는 Zustand에 저장하지 않고 TanStack Query known wines cache에
   반영한다.
 - 분석 요청 시작부터 JSON 응답 성공 또는 실패까지를 하나의 mutation 생명주기로
@@ -452,7 +452,7 @@ PhotoUploadBox
 -> BFF에서 이미지 검증
 -> POST /v1/wine-pairing/wines/menu-ocr
 -> OCR JSON 응답 수신
--> type: "DB" + 유효한 id 후보만 필터링
+-> type: "db" + 유효한 id 후보만 필터링
 -> BFF fallback DTO mapping
 -> Wine[] 확정
 -> known wines cache 갱신
@@ -541,7 +541,7 @@ web/src/app/layout.tsx
 ## 컴포넌트 구조
 
 ```txt
-WineAiPage [Server]
+WineListPage [Server]
 ├─ WineListSelectHeader [Server]
 └─ WineListSelectPage [Client Boundary]
    ├─ WineMenuPhotoSection
@@ -573,13 +573,99 @@ Route Handler의 책임:
 - request parameter/form-data 검증
 - 검색 요청은 실제 검색 API가 생기기 전까지 빈 배열 JSON 응답 반환
 - 분석 요청은 파일을 검증한 뒤 실제 OCR API로 이미지 바이너리 전달
-- OCR 응답에서 원본 `type: "OCR"` 항목 제거
+- OCR 응답에서 `type: "db"` 후보만 선별
 - 유효한 DB 후보의 DTO 검증과 fallback 카드 DTO 변환
 - 내부 오류의 safe error 변환
 
 Route Handler가 Feature UI, Zustand store, Query Hook을 import하지 않도록
 한다. 인증·인가와 입력 검증은 실제 API 전환 후에도 서버에서 다시
 수행한다. 백엔드 origin과 token은 브라우저에 직접 노출하지 않는다.
+
+## 최신 OCR API 대응 구현 상세
+
+### 수정 대상 파일
+
+```txt
+web/src/app/entity/wine/model/wine.type.ts
+web/src/app/api/wine-lists/analyze/route.ts
+web/src/app/entity/wine/api/wine.mapper.ts
+web/src/app/entity/wine/api/wine.api.ts
+web/src/app/feature/wine-list-select/api/use-analyze-wine-list-mutation.ts
+web/src/app/feature/wine-list-select/model/use-wine-list-select-controller.ts
+```
+
+### `wine.type.ts`
+
+`WineMenuOcrExtractItemDto`를 최신 백엔드 응답에 맞춘다.
+
+```ts
+export type WineMenuOcrExtractItemDto = {
+  id: string | null;
+  type: "ocr" | "db";
+  name: string;
+  koreanName: string | null;
+  area: string | null;
+  category: string | null;
+  dollarPrice: number | string | null;
+  wonPrice: number | string | null;
+  imagePath: string | null;
+  rating: string | null;
+  country: string | null;
+  region: string | null;
+  grape: string | null;
+  vintage: number | null;
+  alcohol: number | null;
+  body: number | null;
+  sweetness: number | null;
+  tannin: number | null;
+  acidity: number | null;
+};
+```
+
+기존 `"OCR" | "DB"`와 `price` 필드는 제거한다. 저장소 값이나 mock fixture도 이 타입을 따라 갱신한다.
+
+### `api/wine-lists/analyze/route.ts`
+
+BFF는 다음 순서로 처리한다.
+
+1. 브라우저 `multipart/form-data` 요청을 검증한다.
+2. 파일 확장자보다 실제 magic signature와 MIME을 우선 검증한다.
+3. 백엔드에는 `image/png` 또는 `image/jpeg` raw binary body로 전달한다.
+4. 백엔드 응답의 `wines`에서 `type === "db"`이고 `id`가 공백이 아닌 항목만 통과시킨다.
+5. `id`가 `Number.isSafeInteger(Number(id))`를 만족하지 않으면 페어링 API와 호환되지 않으므로 제외한다.
+6. BFF 응답은 기존 화면 DTO `WineDetailDto[]`로 정규화한다.
+
+정규화 규칙:
+
+```ts
+display_name = koreanName || name
+title = display_name
+image_url = imagePath || "/ExampleImage.png"
+rating = Number.parseFloat(rating ?? "") || 0
+price_label =
+  wonPrice != null ? `${formatNumber(wonPrice)}원`
+  : dollarPrice != null ? `$${formatNumber(dollarPrice)}`
+  : "가격 정보 없음"
+recommendation_text = [name !== display_name ? name : null, country, region, category, grape, "DB 와인 후보입니다."].filter(Boolean).join(" · ")
+```
+
+백엔드 오류 body는 그대로 전달하지 않는다. `response.status`는 유지하되 메시지는 BFF safe message로 변환한다.
+
+### Query/Mutation 연결
+
+- `analyzeWineList(menuImage)`는 `/api/wine-lists/analyze`만 호출한다.
+- `useAnalyzeWineListMutation`은 mutation 생명주기만 담당한다.
+- 성공 시 `useWineListSelectController`가 `cacheKnownWines(queryClient, wines)` 후 `replaceWineIds(wines.map((wine) => wine.id))`를 수행한다.
+- 분석 응답 원본 DTO는 Zustand나 `useState`에 저장하지 않는다.
+- 새 파일 선택 시 이전 분석 오류를 reset하고, 진행 중 요청이 있으면 가능한 경우 abort한다.
+
+### 테스트/검증 포인트
+
+- `type: "db"` 응답만 선택 후보로 변환된다.
+- `type: "ocr"` 또는 `id: null` 항목은 BFF 응답에 나오지 않는다.
+- `imagePath`, `rating`, `wonPrice`, `dollarPrice`가 있을 때 카드 DTO에 반영된다.
+- 가격/평점 필드가 null 또는 파싱 불가여도 fallback으로 정상 렌더링된다.
+- 10MiB 초과, 빈 body, 지원하지 않는 MIME은 BFF에서 safe error를 반환한다.
 
 ## 기존 파일 마이그레이션
 
@@ -644,7 +730,7 @@ Route Handler가 Feature UI, Zustand store, Query Hook을 import하지 않도록
 - 선택 Zustand store에는 와인 객체가 아니라 ID와 순서만 존재한다.
 - 검색 로딩/오류는 Query 상태를 사용한다.
 - 분석 Mutation은 BFF가 OCR 응답을 매핑한 JSON 응답을 반환하면 성공한다.
-- `type: "OCR"` 원본 항목은 BFF 응답과 선택 결과에 노출되지 않는다.
+- `type: "ocr"` 항목은 BFF 응답과 선택 결과에 노출되지 않는다.
 - 분석 pending 동안 사진 영역 위에 primary 로딩 스피너가 표시된다.
 - OCR 완료 payload는 known wines query key에 저장한다.
 - 화면 이탈 또는 새 분석 시작 시 기존 분석 요청을 취소한다.

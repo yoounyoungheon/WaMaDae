@@ -15,7 +15,7 @@ const OCR_WINE_MENU_PATH = "/v1/wine-pairing/wines/menu-ocr";
 const BACKEND_OCR_TIMEOUT_MS = 295_000;
 
 type DbWineMenuOcrExtractItemDto = WineMenuOcrExtractItemDto & {
-  type: "DB";
+  type: "db";
   id: string;
 };
 
@@ -106,20 +106,34 @@ export async function POST(request: Request) {
 function isDbWineMenuOcrExtractItem(
   wine: WineMenuOcrExtractItemDto
 ): wine is DbWineMenuOcrExtractItemDto {
-  return wine.type === "DB" && Boolean(wine.id?.trim());
+  return (
+    wine.type === "db" &&
+    Boolean(wine.id?.trim()) &&
+    Number.isSafeInteger(Number(wine.id))
+  );
 }
 
 function mapWineMenuOcrExtractItemToWineDetailDto(
   wine: DbWineMenuOcrExtractItemDto
 ): WineDetailDto {
   const displayName = wine.koreanName || wine.name;
-  const priceLabel =
-    typeof wine.price === "number"
-      ? `${wine.price.toLocaleString("ko-KR")}원`
-      : "가격 정보 없음";
+
+  const priceLabel = (() => {
+    if (wine.wonPrice != null) {
+      return `${Number(wine.wonPrice).toLocaleString("ko-KR")}원`;
+    }
+    if (wine.dollarPrice != null) {
+      return `$${Number(wine.dollarPrice).toLocaleString("en-US")}`;
+    }
+    return "가격 정보 없음";
+  })();
+
   const description = [
     wine.name !== displayName ? wine.name : null,
     wine.country,
+    wine.region,
+    wine.category,
+    wine.grape,
     "DB 와인 후보입니다.",
   ]
     .filter(Boolean)
@@ -128,8 +142,8 @@ function mapWineMenuOcrExtractItemToWineDetailDto(
   return {
     id: wine.id,
     display_name: displayName,
-    image_url: "/ExampleImage.png",
-    rating: 0,
+    image_url: wine.imagePath || "/ExampleImage.png",
+    rating: parseFloat(wine.rating ?? "") || 0,
     title: displayName,
     recommendation_text: description,
     price_label: priceLabel,

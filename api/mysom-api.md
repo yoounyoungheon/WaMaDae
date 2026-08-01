@@ -2,10 +2,10 @@
 
 이 문서는 `WaMaDae`에서 참조하는 `mysom-api` Spring WebFlux 애플리케이션의 활성 HTTP 계약을 프론트엔드 관점에서 정리한 인덱스다.
 
-기준 코드: `/Users/yoon-yeongheon/dev/mysom-api`의 `750a229`
-기준일: 2026-07-11
+기준 코드: `/Users/yoon-yeongheon/dev/mysom-api`의 `51dbe3f`
+기준일: 2026-08-01
 
-`mysom-api`에는 호환용 `POST /v1/ocr/menu/wine`도 남아 있지만, `WaMaDae`는 DB 후보까지 반환하는 `/v1/wine-pairing/wines/menu-ocr`만 사용하므로 이 인덱스에서는 제외한다.
+현재 활성 HTTP 컨트롤러 기준으로 정리한다. 이전에 쓰이던 `/v1/ocr/menu/wine`과 `/v1/menu-category-recommendations` 계열 비동기 추천 API는 최신 코드의 활성 라우트가 아니다.
 
 ## 공통
 
@@ -35,12 +35,10 @@ Authorization: Bearer {token}
 | --- | --- | --- | --- | --- |
 | 로그아웃 | `POST` | `/v1/auth/logout` | 선택 | [mysom-auth.md](./mysom-auth.md) |
 | 메뉴 이미지 업로드 URL 생성 | `POST` | `/v1/upload/presigned-menu-image-url` | 필요 | [mysom-upload.md](./mysom-upload.md) |
-| OCR + DB 와인 후보 추출 | `POST` | `/v1/wine-pairing/wines/menu-ocr` | 없음 | [mysom-ocr.md](./mysom-ocr.md) |
+| OCR 기반 DB 와인 후보 추출 | `POST` | `/v1/wine-pairing/wines/menu-ocr` | 없음 | [mysom-ocr.md](./mysom-ocr.md) |
 | 즉시 메뉴 카테고리 추천 | `POST` | `/v1/wine-pairing/menu-category/recommend` | 없음 | [mysom-wine-pairing.md](./mysom-wine-pairing.md) |
 | 와인 페어링 SSE | `POST` | `/v1/wine-pairing/stream/pairing` | 없음 | [mysom-wine-pairing.md](./mysom-wine-pairing.md) |
 | 와인 페어링 후속 채팅 SSE | `POST` | `/v1/wine-pairing/stream/chat` | 없음 | [mysom-wine-pairing.md](./mysom-wine-pairing.md) |
-| 비동기 메뉴 카테고리 추천 생성 | `POST` | `/v1/menu-category-recommendations` | 없음 | [mysom-menu-category-recommendations.md](./mysom-menu-category-recommendations.md) |
-| 비동기 메뉴 카테고리 추천 조회 | `GET` | `/v1/menu-category-recommendations/{id}` | 없음 | [mysom-menu-category-recommendations.md](./mysom-menu-category-recommendations.md) |
 
 ## 공통 응답 타입
 
@@ -122,10 +120,12 @@ Spring WebFlux 또는 Spring Security가 직접 만드는 오류는 위 JSON 형
 
 - 이미지 OCR API는 body를 raw 바이너리로 보낸다. `multipart/form-data`가 아니다.
 - OCR 이미지 body는 서버에서 최대 10MiB까지 읽는다.
+- 현재 OCR API 응답은 OCR 원본 행을 화면 후보로 내려주지 않고, 내부 DB에서 매칭된 와인 후보를 중심으로 내려준다.
 - SSE API는 `EventSource`로 POST를 보낼 수 없으므로 `fetch` + `ReadableStream` 파싱이 필요하다.
 - 페어링 요청의 `wines[].id`에는 숫자형 DB 와인 ID만 보낼 수 있다. 이름만 있는 OCR 항목은 직접 요청할 수 없다.
 - 페어링 SSE에는 `index`가 없다. `fieldName`, `status`, `isStreaming`과 완성된 `pairing` payload를 기준으로 조립한다.
+- 페어링 SSE의 최종 `pairing.data`에는 카드 표시용 요약 필드와 함께 상세 `wine` 객체가 포함된다.
 - `/v1/wine-pairing/stream/pairing`으로 대화를 시작한 `X-Chat-Id`만 `/v1/wine-pairing/stream/chat`에서 사용할 수 있다.
-- 후속 채팅에는 별도의 완료 frame이 없으므로 응답 stream 종료를 완료 신호로 사용한다.
-- 비동기 추천 API는 생성 응답 body가 없고 `Location` 헤더만 반환한다.
+- 후속 채팅은 일반 답변이면 `chat` text chunk를 반환하고, 재추천 의도로 판단되면 페어링 SSE와 같은 추천 frame을 반환할 수 있다.
+- 일반 후속 채팅에는 별도의 완료 frame이 없으므로 응답 stream 종료를 완료 신호로 사용한다.
 - `/v1/upload/presigned-menu-image-url`의 서비스 구현은 현재 `TODO("Not implemented yet")` 상태라 실제 호출 시 500 계열 오류가 날 수 있다.

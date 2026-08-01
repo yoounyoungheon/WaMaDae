@@ -14,11 +14,14 @@
 wine/chat/page.tsx                 [Server Component]  헤더 없음
 └─ WinePairingChatView             [Client]  "use client"
    ├─ 대화 스크롤 영역
-   │  ├─ "마이쏨이 추천하는 와인이에요!" 타이틀
-   │  ├─ PairingTurnSection
+   │  ├─ PairingTurnSection (source="initial")
+   │  │  ├─ "마이쏨이 추천하는 와인이에요!" 타이틀
    │  │  └─ WineRecommendationCarousel   # 가로 snap + dots
-   │  │     └─ WineRecommendationSlide[]
-   │  └─ ChatAnswerBubble[]              # 질문(우측)+답변(좌측) 말풍선
+   │  │     └─ WineRecommendationSlide[] # 완료 후 "와인 상세" 버튼 → 3D 플립
+   │  ├─ ChatAnswerBubble[]              # 질문(우측)+답변(좌측) 말풍선
+   │  └─ PairingTurnSection (source="recommendation")  # 재추천 시 추가
+   │     ├─ 질문 버블 (우측, primary)
+   │     └─ WineRecommendationCarousel
    └─ 하단 sticky ChatComposer           # 페어링 완료 후 활성화
 ```
 
@@ -102,6 +105,8 @@ wine/chat/page.tsx                 [Server Component]  헤더 없음
   스트리밍으로 새 슬라이드가 생기면 자동으로 해당 슬라이드로 스크롤한다.
 - **슬라이드**: 보라 그라디언트 카드, 좌상단 와인 이미지 원형(이미지 없으면 Wine 아이콘),
   `{rank}순위` pill, 와인명, "와마대 한줄평"(`comment`), "추천 이유"(`reason`).
+- **와인 상세 플립**: `slide.isCommitted && slide.wine !== null`이면 카드 우상단에 "와인 상세" 텍스트 버튼 노출. 클릭 시 CSS 3D flip(0.5s, `rotateY(180deg)`)으로 뒷면 전환. 뒷면은 흰색 카드로 `PairingStreamWine`의 이름·국가·지역·품종·빈티지·도수·평점과 바디/당도/타닌/산도 1–5 bar 인디케이터를 표시. null 필드는 생략. "돌아가기" 버튼으로 앞면 복귀. 플립 상태(`isFlipped`)는 슬라이드 컴포넌트 내부 `useState`로 슬라이드별 독립 관리.
+- **sendChat 낙관적 UI**: 전송 즉시 `CHAT_START`를 dispatch해 질문 버블을 노출한다. 첫 SSE frame으로 응답 종류를 확정한다. 재추천 응답이면 `RECOMMENDATION_START`가 빈 ChatTurn을 제거하고 PairingTurn으로 대체한다.
 - **말풍선**: 질문 우측(primary), 답변 좌측(white). 스트리밍 중 타이핑 dot 3개,
   오류 시 말풍선 안에 오류 문구(`role="alert"`).
 - **입력창**: 페어링 완료 전 placeholder `와인 추천이 끝나면 질문할 수 있어요` + 비활성.
@@ -121,7 +126,7 @@ wine/chat/page.tsx                 [Server Component]  헤더 없음
 
 ## 8. Storybook
 
-- `WineRecommendationSlide`: Default, LongText, NoImage, StreamingPainting
+- `WineRecommendationSlide`: Default, LongText, NoImage, StreamingPainting, WithWineDetail(플립 버튼 노출·클릭으로 뒷면 확인)
 - `WineRecommendationCarousel`: SingleSlide, ThreeSlides, StreamingPainting
 - `ChatAnswerBubble`: Done, Streaming, StreamingEmpty, Error
 - `ChatComposer`: Enabled, Disabled
@@ -131,7 +136,7 @@ wine/chat/page.tsx                 [Server Component]  헤더 없음
 
 ## 9. 구현 시 결정 사항
 
-- 채팅 응답은 텍스트만 오므로(백엔드 확인) 캐러셀은 최초 페어링 1개, 이후는 말풍선 누적.
+- 채팅 스트림은 `chat` frame(말풍선 누적)과 pairing frame(재추천 캐러셀) 두 갈래다. 첫 frame의 `fieldName`으로 응답 종류를 확정한다.
 - `imageUrl`이 빈 문자열인 프레임이 실제로 존재(확인됨) → Wine 아이콘 placeholder로 처리.
 - 알 수 없는 `fieldName` 프레임은 무시(forward-compat), JSON이 아닌 프레임은 파서가 건너뜀.
 - 페어링 스트림 자체가 오류로 끊기면 turn을 error로 표시하고 새 chatId로 재시도할 수 있다.

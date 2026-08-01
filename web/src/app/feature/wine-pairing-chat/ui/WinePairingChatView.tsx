@@ -67,10 +67,6 @@ export default function WinePairingChatView({
             />
           ) : (
             <>
-              <h1 className="text-[18px] font-extrabold leading-snug text-text-01">
-                마이쏨이 추천하는 와인이에요!
-              </h1>
-
               {turns.map((turn, index) =>
                 turn.kind === "pairing" ? (
                   <PairingTurnSection
@@ -112,6 +108,16 @@ function PairingTurnSection({
 }) {
   return (
     <section aria-label="추천 와인" className="flex flex-col gap-4">
+      {turn.source === "initial" ? (
+        <h1 className="text-[16px] font-extrabold leading-snug text-text-01">
+          마이쏨이 추천하는 와인이에요
+        </h1>
+      ) : turn.question ? (
+        <p className="self-end rounded-2xl rounded-br-sm bg-primary-main px-4 py-3 text-[14px] leading-snug text-white">
+          {turn.question}
+        </p>
+      ) : null}
+
       {turn.slides.length > 0 ? (
         // 캐러셀 스크롤 영역은 페이지 패딩(px-[23px])을 상쇄해 화면 전체 폭을 쓴다.
         // 카드 여백은 캐러셀 슬라이드 내부 패딩(px-[23px])이 담당한다.
