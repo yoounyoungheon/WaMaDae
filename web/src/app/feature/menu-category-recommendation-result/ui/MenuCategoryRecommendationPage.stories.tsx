@@ -9,9 +9,9 @@ import type { MenuCategoryRecommendationRequest } from "@/app/entity/menu-catego
 import MenuCategoryRecommendationPage from "./MenuCategoryRecommendationPage";
 
 const sampleRequest: MenuCategoryRecommendationRequest = {
-  wines: [
-    { id: "1", name: "르 아모", koreanName: "르 아모" },
-    { id: "2", name: "클라우디 베이", koreanName: "클라우디 베이" },
+  wineIds: [
+    "11111111-1111-4111-8111-111111111111",
+    "22222222-2222-4222-8222-222222222222",
   ],
 };
 

@@ -43,26 +43,24 @@ export type WineSearchItemDto = {
   append_wine: WineDetailDto;
 };
 
+export type WineDataType = "OCR" | "DB";
+
+export type WineMenuOcrExtractPriceDto = {
+  amount: number | string;
+  currency: "KRW" | "USD" | "EUR";
+  currencySign: string;
+  koreanUnit: string;
+};
+
 export type WineMenuOcrExtractItemDto = {
   id: string | null;
-  type: "ocr" | "db";
-  name: string;
-  koreanName: string | null;
-  area: string | null;
-  category: string | null;
-  dollarPrice: number | string | null;
-  wonPrice: number | string | null;
-  imagePath: string | null;
-  rating: string | null;
+  type: WineDataType;
+  wineName: string;
+  vintage: number | null;
+  alcohol: number | string | null;
+  price: WineMenuOcrExtractPriceDto[] | null;
   country: string | null;
   region: string | null;
-  grape: string | null;
-  vintage: number | null;
-  alcohol: number | null;
-  body: number | null;
-  sweetness: number | null;
-  tannin: number | null;
-  acidity: number | null;
 };
 
 export type WineMenuOcrExtractResponseDto = {

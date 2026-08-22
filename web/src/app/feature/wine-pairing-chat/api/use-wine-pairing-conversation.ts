@@ -13,6 +13,8 @@ import {
 } from "@/app/entity/wine-pairing/api/wine-pairing.api";
 import { loadWinePairingRequest } from "@/app/entity/wine-pairing/lib/wine-pairing-request-storage";
 import type {
+  ChatStreamEvent,
+  PairingChatStreamEvent,
   PairingStreamEvent,
   WinePairingRequest,
 } from "@/app/entity/wine-pairing/model/wine-pairing.type";
@@ -117,10 +119,10 @@ export function useWinePairingConversation() {
             if (signal?.aborted) return;
 
             if (turnKind === null) {
-              if (event.fieldName === "chat") {
+              if (isChatStreamEvent(event)) {
                 turnKind = "chat";
-                dispatch({ type: "CHAT_APPEND", chunk: event.data });
-              } else {
+                dispatch({ type: "CHAT_APPEND", chunk: event.data.body });
+              } else if (isPairingStreamEvent(event)) {
                 turnKind = "pairing";
                 // RECOMMENDATION_START가 빈 ChatTurn을 제거하고 PairingTurn으로 대체한다.
                 dispatch({ type: "RECOMMENDATION_START", question: message });
@@ -128,11 +130,11 @@ export function useWinePairingConversation() {
                 if (action) dispatch(action);
               }
             } else if (turnKind === "chat") {
-              if (event.fieldName === "chat") {
-                dispatch({ type: "CHAT_APPEND", chunk: event.data });
+              if (isChatStreamEvent(event)) {
+                dispatch({ type: "CHAT_APPEND", chunk: event.data.body });
               }
             } else {
-              if (event.fieldName !== "chat") {
+              if (isPairingStreamEvent(event)) {
                 const action = mapPairingEventToAction(event);
                 if (action) dispatch(action);
               }
@@ -216,31 +218,48 @@ async function runPairingStream(
 
 /**
  * SSE 프레임을 reducer 액션으로 변환한다.
- * `fieldName`으로 그릴 부분을 찾고, `text`는 부분 페인팅, `json`은 전체 replace.
+ * `STREAM`은 필드 청크를 이어붙이고, `JSON`은 전체 replace한다.
  * 알 수 없는 프레임은 무시한다(forward-compat).
  */
 function mapPairingEventToAction(
   event: PairingStreamEvent
 ): ConversationAction | null {
-  switch (event.fieldName) {
-    case "imageUrl":
-      return { type: "PAIRING_SLIDE_START", imageUrl: event.data };
-    case "rank":
-    case "name":
-    case "comment":
-    case "reason":
-      return {
-        type: "PAIRING_SLIDE_FIELD",
-        field: event.fieldName,
-        data: event.data,
-      };
-    case "pairing":
-      return { type: "PAIRING_SLIDE_COMMIT", payload: event.data };
-    default:
-      return null;
+  if (event.type === "JSON") {
+    return { type: "PAIRING_SLIDE_COMMIT", payload: event.data };
   }
+
+  return {
+    type: "PAIRING_SLIDE_FIELD",
+    field: event.data.fieldName,
+    data: event.data.body,
+  };
 }
 
 function toErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
+}
+
+function isPairingStreamEvent(
+  event: PairingChatStreamEvent
+): event is PairingStreamEvent {
+  return (
+    event.type === "JSON" ||
+    (event.type === "STREAM" &&
+      typeof event.data === "object" &&
+      event.data !== null &&
+      "fieldName" in event.data)
+  );
+}
+
+function isChatStreamEvent(
+  event: PairingChatStreamEvent
+): event is ChatStreamEvent {
+  return (
+    event.type === "STREAM" &&
+    typeof event.data === "object" &&
+    event.data !== null &&
+    !("fieldName" in event.data) &&
+    "body" in event.data &&
+    typeof event.data.body === "string"
+  );
 }

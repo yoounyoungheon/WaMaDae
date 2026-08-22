@@ -1,3 +1,4 @@
+import { normalizeUuid } from "@/app/shared/lib/validation/uuid";
 import type { WinePairingRequest } from "../model/wine-pairing.type";
 
 /**
@@ -51,34 +52,56 @@ function parseStoredRequest(value: unknown): WinePairingRequest | null {
     return null;
   }
 
-  const { wines, menuCategories } = value as {
-    wines?: unknown;
+  const { wineIds, menuCategories } = value as {
+    wineIds?: unknown;
     menuCategories?: unknown;
   };
 
-  if (!Array.isArray(wines) || wines.length === 0) {
+  if (!Array.isArray(wineIds) || wineIds.length === 0) {
     return null;
   }
   if (!Array.isArray(menuCategories) || menuCategories.length === 0) {
     return null;
   }
 
-  const parsedWines: WinePairingRequest["wines"] = [];
-  for (const wine of wines) {
-    const id = (wine as { id?: unknown })?.id;
-    if (typeof id !== "number" || !Number.isSafeInteger(id)) {
+  const parsedWineIds: string[] = [];
+  for (const wineId of wineIds) {
+    const normalizedWineId = normalizeUuid(wineId);
+    if (!normalizedWineId) {
       return null;
     }
-    parsedWines.push({ id });
+    parsedWineIds.push(normalizedWineId);
   }
 
-  const parsedCategories: string[] = [];
+  const parsedCategories: WinePairingRequest["menuCategories"] = [];
   for (const category of menuCategories) {
-    if (typeof category !== "string" || category.trim().length === 0) {
+    if (typeof category !== "object" || category === null) {
       return null;
     }
-    parsedCategories.push(category);
+
+    const { name } = category as { name?: unknown };
+    if (typeof name !== "string" || name.trim().length === 0) {
+      return null;
+    }
+
+    parsedCategories.push({ name: name.trim() });
   }
 
-  return { wines: parsedWines, menuCategories: parsedCategories };
+  return {
+    wineIds: [...new Set(parsedWineIds)],
+    menuCategories: dedupeCategories(parsedCategories),
+  };
+}
+
+function dedupeCategories(
+  categories: WinePairingRequest["menuCategories"]
+): WinePairingRequest["menuCategories"] {
+  const seen = new Set<string>();
+  return categories.filter((category) => {
+    if (seen.has(category.name)) {
+      return false;
+    }
+    seen.add(category.name);
+    return true;
+  });
 }

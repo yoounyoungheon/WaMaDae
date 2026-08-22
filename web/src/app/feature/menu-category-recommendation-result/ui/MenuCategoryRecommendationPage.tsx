@@ -42,13 +42,14 @@ export default function MenuCategoryRecommendationPage({
     );
   };
 
-  // 정수 ID 와인과 선택 카테고리가 모두 있어야 페어링을 요청할 수 있다.
+  // UUID 와인과 선택 카테고리가 모두 있어야 페어링을 요청할 수 있다.
   const pairingRequest = buildWinePairingRequest(
-    request?.wines ?? [],
+    request?.wineIds ?? [],
     selectedCategories
   );
   const canRequestPairing =
-    pairingRequest.wines.length > 0 && pairingRequest.menuCategories.length > 0;
+    pairingRequest.wineIds.length > 0 &&
+    pairingRequest.menuCategories.length > 0;
 
   const handleRequestPairing = () => {
     if (!canRequestPairing) {
@@ -84,7 +85,7 @@ export default function MenuCategoryRecommendationPage({
                   tone="pending"
                   message="추천 메뉴를 불러오고 있어요."
                 />
-              ) : request && request.wines.length > 0 ? (
+              ) : request && request.wineIds.length > 0 ? (
                 <RecommendationResult
                   request={request}
                   selectedCategories={selectedCategories}

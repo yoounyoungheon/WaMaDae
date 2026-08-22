@@ -3,65 +3,76 @@ import {
   clearWinePairingRequest,
   saveWinePairingRequest,
 } from "@/app/entity/wine-pairing/lib/wine-pairing-request-storage";
-import type { PairingSlidePayload } from "@/app/entity/wine-pairing/model/wine-pairing.type";
+import type {
+  PairingSlidePayload,
+  PairingStreamWine,
+} from "@/app/entity/wine-pairing/model/wine-pairing.type";
 import WinePairingChatView from "./WinePairingChatView";
 
 const sampleWine = {
-  id: "1",
-  name: "Chateau La Rose de Vitrac Rouge",
-  koreanName: "샤또 라 로즈 드 비트락 루즈",
-  area: "Bordeaux",
-  category: "Red",
-  price: null,
-  imagePath: "/ExampleImage.png",
-  rating: "4.2",
-  country: "France",
-  region: "Bordeaux",
-  grape: "Merlot",
+  id: "11111111-1111-4111-8111-111111111111",
+  wineName: "샤또 라 로즈 드 비트락 루즈",
   vintage: 2020,
   alcohol: 13,
-  body: 3,
-  sweetness: 1,
-  tannin: 3,
-  acidity: 3,
-};
+  price: [
+    {
+      amount: 55000,
+      currency: "KRW",
+      currencySign: "₩",
+      koreanUnit: "원",
+    },
+  ],
+  country: "France",
+  region: "Bordeaux",
+} satisfies PairingStreamWine;
 
 const samplePayloads: PairingSlidePayload[] = [
   {
-    imageUrl: "/ExampleImage.png",
+    pairingId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
     rank: 1,
-    name: "샤또 라 로즈 드 비트락 루즈 2020",
+    wine: sampleWine,
     comment: "부드러운 레드와인이 필요하다면 이 친구로",
     reason:
       "된장의 감칠맛이 와인의 과실향을 더 또렷하게 만들어줌. 부담 없이 마시기 좋음. 가성비 괜찮음.",
-    wine: { ...sampleWine, id: "1" },
   },
   {
-    imageUrl: "/ExampleImage.png",
+    pairingId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
     rank: 2,
-    name: "몬테스 알파 카베르네 소비뇽",
-    comment: "진한 풍미를 원한다면 추천",
-    reason: "스테이크와 진한 소스 요리에 잘 어울리는 묵직한 바디감이 있어요.",
     wine: {
       ...sampleWine,
-      id: "2",
-      name: "Montes Alpha Cabernet Sauvignon",
-      koreanName: "몬테스 알파 카베르네 소비뇽",
+      id: "22222222-2222-4222-8222-222222222222",
+      wineName: "몬테스 알파 카베르네 소비뇽",
       country: "Chile",
       region: "Colchagua Valley",
-      grape: "Cabernet Sauvignon",
     },
+    comment: "진한 풍미를 원한다면 추천",
+    reason: "스테이크와 진한 소스 요리에 잘 어울리는 묵직한 바디감이 있어요.",
   },
 ];
 
 function pairingFrames(payloads: PairingSlidePayload[]): unknown[] {
   return payloads.flatMap((payload) => [
-    { fieldName: "imageUrl", type: "text", data: payload.imageUrl, status: "start", isStreaming: true },
-    { fieldName: "rank", type: "text", data: String(payload.rank), status: "painting", isStreaming: true },
-    { fieldName: "name", type: "text", data: payload.name, status: "painting", isStreaming: true },
-    { fieldName: "comment", type: "text", data: payload.comment, status: "painting", isStreaming: true },
-    { fieldName: "reason", type: "text", data: payload.reason, status: "painting", isStreaming: true },
-    { fieldName: "pairing", type: "json", data: payload, status: "next", isStreaming: false },
+    {
+      type: "STREAM",
+      data: { fieldName: "rank", hasNext: false, body: String(payload.rank) },
+    },
+    {
+      type: "STREAM",
+      data: {
+        fieldName: "name",
+        hasNext: false,
+        body: payload.wine.wineName,
+      },
+    },
+    {
+      type: "STREAM",
+      data: { fieldName: "comment", hasNext: false, body: payload.comment },
+    },
+    {
+      type: "STREAM",
+      data: { fieldName: "reason", hasNext: false, body: payload.reason },
+    },
+    { type: "JSON", data: payload },
   ]);
 }
 
@@ -69,11 +80,8 @@ function chatFrames(answer: string): unknown[] {
   return answer
     .split(" ")
     .map((word) => ({
-      fieldName: "chat",
-      type: "text",
-      data: `${word} `,
-      status: "painting",
-      isStreaming: true,
+      type: "STREAM",
+      data: { body: `${word} ` },
     }));
 }
 
@@ -122,8 +130,11 @@ function stubStoryEnv(options: {
     clearWinePairingRequest();
     if (options.seedRequest) {
       saveWinePairingRequest({
-        wines: [{ id: 1 }, { id: 2 }],
-        menuCategories: ["스테이크", "파스타"],
+        wineIds: [
+          "11111111-1111-4111-8111-111111111111",
+          "22222222-2222-4222-8222-222222222222",
+        ],
+        menuCategories: [{ name: "스테이크" }, { name: "파스타" }],
       });
     }
 

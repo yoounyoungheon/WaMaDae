@@ -1,0 +1,10 @@
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isUuidString(value: unknown): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value.trim());
+}
+
+export function normalizeUuid(value: unknown): string | null {
+  return isUuidString(value) ? value.trim() : null;
+}

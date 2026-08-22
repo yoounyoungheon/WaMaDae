@@ -1,21 +1,24 @@
 import { NextResponse } from "next/server";
+import { getWineDataType } from "@/app/entity/wine/api/wine-data-type.server";
 import { hasValidWineMenuImageSignature } from "@/app/entity/wine/api/wine-menu-image.server";
 import {
   getWineMenuImageValidationMessage,
   MAX_WINE_MENU_IMAGE_SIZE,
 } from "@/app/entity/wine/model/wine-menu-image";
 import type {
+  WineDataType,
   WineDetailDto,
   WineMenuOcrExtractItemDto,
+  WineMenuOcrExtractPriceDto,
   WineMenuOcrExtractResponseDto,
 } from "@/app/entity/wine/model/wine.type";
+import { isUuidString } from "@/app/shared/lib/validation/uuid";
 import { buildMysomApiUrl } from "@/app/utils/http/server-api";
 
 const OCR_WINE_MENU_PATH = "/v1/wine-pairing/wines/menu-ocr";
 const BACKEND_OCR_TIMEOUT_MS = 295_000;
 
-type DbWineMenuOcrExtractItemDto = WineMenuOcrExtractItemDto & {
-  type: "db";
+type SelectedWineMenuOcrExtractItemDto = WineMenuOcrExtractItemDto & {
   id: string;
 };
 
@@ -73,6 +76,16 @@ export async function POST(request: Request) {
     );
   }
 
+  let wineDataType: WineDataType;
+  try {
+    wineDataType = getWineDataType();
+  } catch {
+    return NextResponse.json(
+      { message: "와인 데이터 타입 설정이 올바르지 않습니다." },
+      { status: 500 }
+    );
+  }
+
   const response = await fetch(
     buildMysomApiUrl(OCR_WINE_MENU_PATH),
     {
@@ -95,59 +108,91 @@ export async function POST(request: Request) {
   }
 
   const data = (await response.json()) as WineMenuOcrExtractResponseDto;
+  const wines = Array.isArray(data.wines) ? data.wines : [];
 
   return NextResponse.json({
-    wines: data.wines
-      .filter(isDbWineMenuOcrExtractItem)
+    wines: wines
+      .filter((wine): wine is SelectedWineMenuOcrExtractItemDto =>
+        isSelectedWineMenuOcrExtractItem(wine, wineDataType)
+      )
       .map(mapWineMenuOcrExtractItemToWineDetailDto),
   });
 }
 
-function isDbWineMenuOcrExtractItem(
-  wine: WineMenuOcrExtractItemDto
-): wine is DbWineMenuOcrExtractItemDto {
+function isSelectedWineMenuOcrExtractItem(
+  wine: WineMenuOcrExtractItemDto,
+  wineDataType: WineDataType
+): wine is SelectedWineMenuOcrExtractItemDto {
   return (
-    wine.type === "db" &&
-    Boolean(wine.id?.trim()) &&
-    Number.isSafeInteger(Number(wine.id))
+    wine.type === wineDataType &&
+    isUuidString(wine.id) &&
+    typeof wine.wineName === "string" &&
+    wine.wineName.trim().length > 0
   );
 }
 
 function mapWineMenuOcrExtractItemToWineDetailDto(
-  wine: DbWineMenuOcrExtractItemDto
+  wine: SelectedWineMenuOcrExtractItemDto
 ): WineDetailDto {
-  const displayName = wine.koreanName || wine.name;
-
-  const priceLabel = (() => {
-    if (wine.wonPrice != null) {
-      return `${Number(wine.wonPrice).toLocaleString("ko-KR")}원`;
-    }
-    if (wine.dollarPrice != null) {
-      return `$${Number(wine.dollarPrice).toLocaleString("en-US")}`;
-    }
-    return "가격 정보 없음";
-  })();
-
+  const displayName = wine.wineName.trim();
   const description = [
-    wine.name !== displayName ? wine.name : null,
     wine.country,
     wine.region,
-    wine.category,
-    wine.grape,
-    "DB 와인 후보입니다.",
+    wine.vintage != null ? `${wine.vintage} 빈티지` : null,
+    formatAlcohol(wine.alcohol),
+    `${wine.type} 와인 후보입니다.`,
   ]
     .filter(Boolean)
     .join(" · ");
 
   return {
-    id: wine.id,
+    id: wine.id.trim(),
     display_name: displayName,
-    image_url: wine.imagePath || "/ExampleImage.png",
-    rating: parseFloat(wine.rating ?? "") || 0,
+    image_url: "/ExampleImage.png",
+    rating: 0,
     title: displayName,
     recommendation_text: description,
-    price_label: priceLabel,
+    price_label: formatPriceLabel(wine.price),
   };
+}
+
+function formatPriceLabel(
+  prices: WineMenuOcrExtractPriceDto[] | null
+): string {
+  const price = prices?.find((item) => {
+    const amount = String(item.amount).trim();
+    return amount.length > 0;
+  });
+
+  if (!price) {
+    return "가격 정보 없음";
+  }
+
+  const amountLabel =
+    typeof price.amount === "number"
+      ? price.amount.toLocaleString(price.currency === "KRW" ? "ko-KR" : "en-US")
+      : price.amount.trim();
+
+  if (price.currency === "KRW") {
+    return `${amountLabel}${price.koreanUnit || "원"}`;
+  }
+
+  return `${price.currencySign || price.currency}${amountLabel}`;
+}
+
+function formatAlcohol(alcohol: number | string | null): string | null {
+  if (alcohol == null) {
+    return null;
+  }
+
+  const label =
+    typeof alcohol === "number" ? alcohol.toLocaleString("ko-KR") : alcohol.trim();
+
+  if (label.length === 0) {
+    return null;
+  }
+
+  return label.endsWith("%") ? `알코올 ${label}` : `알코올 ${label}%`;
 }
 
 async function getSafeErrorMessage(response: Response) {

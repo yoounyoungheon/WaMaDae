@@ -1,3 +1,4 @@
+import { normalizeUuid } from "@/app/shared/lib/validation/uuid";
 import type { MenuCategoryRecommendationRequest } from "../model/menu-category-recommendation.type";
 
 /**
@@ -5,7 +6,6 @@ import type { MenuCategoryRecommendationRequest } from "../model/menu-category-r
  *
  * WebView는 브라우저 탭보다 리로드가 잦아 인메모리 선택만으로는 결과 화면이 쉽게 비워진다.
  * 와인 선택은 "한 세션 동안만 유효한 draft"이므로 localStorage가 아니라 sessionStorage를 쓴다.
- * (원본 와인 상세를 ID로 다시 조회하는 API가 없어 name/koreanName까지 통째로 보존한다.)
  */
 const STORAGE_KEY = "wamadae:menu-category-recommendation-request";
 
@@ -50,7 +50,7 @@ export function clearMenuCategoryRecommendationRequest(): void {
 
 /**
  * 저장소 값은 신뢰할 수 없으므로 shape을 다시 검증한다.
- * 각 와인의 `id`/`name`/`koreanName`이 공백이 아닌 문자열이 아니면 무효 처리한다.
+ * `wineIds`는 UUID 문자열 배열이어야 하며, 하나라도 잘못된 값이면 무효 처리한다.
  */
 function parseStoredRequest(
   value: unknown
@@ -59,37 +59,19 @@ function parseStoredRequest(
     return null;
   }
 
-  const { wines } = value as { wines?: unknown };
-  if (!Array.isArray(wines) || wines.length === 0) {
+  const { wineIds } = value as { wineIds?: unknown };
+  if (!Array.isArray(wineIds) || wineIds.length === 0) {
     return null;
   }
 
-  const parsed: MenuCategoryRecommendationRequest["wines"] = [];
-  for (const item of wines) {
-    if (typeof item !== "object" || item === null) {
+  const parsed: string[] = [];
+  for (const wineId of wineIds) {
+    const normalizedWineId = normalizeUuid(wineId);
+    if (!normalizedWineId) {
       return null;
     }
-
-    const { id, name, koreanName } = item as {
-      id?: unknown;
-      name?: unknown;
-      koreanName?: unknown;
-    };
-
-    if (
-      !isNonBlankString(id) ||
-      !isNonBlankString(name) ||
-      !isNonBlankString(koreanName)
-    ) {
-      return null;
-    }
-
-    parsed.push({ id, name, koreanName });
+    parsed.push(normalizedWineId);
   }
 
-  return { wines: parsed };
-}
-
-function isNonBlankString(value: unknown): value is string {
-  return typeof value === "string" && value.trim().length > 0;
+  return { wineIds: [...new Set(parsed)] };
 }

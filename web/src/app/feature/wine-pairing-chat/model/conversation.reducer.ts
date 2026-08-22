@@ -17,10 +17,9 @@ export const initialConversationState: ConversationState = {
  * 대화 상태 순수 reducer.
  *
  * SSE 렌더링 규칙(백엔드 협의 기준)의 구현:
- * - `imageUrl`(text/start) → 새 슬라이드 인스턴스 시작
- * - `rank`/`name`/`comment`/`reason`(text/painting) → 해당 필드 점진 페인팅
- * - `pairing`(json/next) → 슬라이드 전체를 최종 payload로 replace(권위값)
- * - `chat`(text) → 마지막 채팅 말풍선에 청크 이어붙임
+ * - `STREAM` rank/name/comment/reason → 해당 필드에 청크 이어붙임
+ * - `JSON` → 슬라이드 전체를 최종 payload로 replace(권위값)
+ * - 채팅 `STREAM` → 마지막 채팅 말풍선에 청크 이어붙임
  */
 export function conversationReducer(
   state: ConversationState,
@@ -63,35 +62,30 @@ export function conversationReducer(
       };
     }
 
-    case "PAIRING_SLIDE_START":
-      return updateLastPairingTurn(state, (turn) => ({
-        ...turn,
-        slides: [...turn.slides, createSlide(action.imageUrl)],
-      }));
-
     case "PAIRING_SLIDE_FIELD":
       return updateLastPairingTurn(state, (turn) =>
-        updateLastSlide(turn, (slide) => ({
-          ...slide,
-          [action.field]: action.data,
-        }))
+        appendLastSlideField(turn, action.field, action.data)
       );
 
     case "PAIRING_SLIDE_COMMIT":
       return updateLastPairingTurn(state, (turn) => {
         const committedSlide: PairingSlideView = {
-          imageUrl: action.payload.imageUrl,
+          imageUrl: "",
           rank: String(action.payload.rank),
-          name: action.payload.name,
+          name: action.payload.wine.wineName,
           comment: action.payload.comment,
           reason: action.payload.reason,
           wine: action.payload.wine,
           isCommitted: true,
         };
 
-        // start 프레임을 놓쳤어도 json은 권위값이므로 슬라이드를 보장한다.
-        if (turn.slides.length === 0) {
+        const lastSlide = turn.slides[turn.slides.length - 1];
+        // JSON은 권위값이므로 STREAM 프레임이 없어도 슬라이드를 보장한다.
+        if (!lastSlide) {
           return { ...turn, slides: [committedSlide] };
+        }
+        if (lastSlide.isCommitted) {
+          return { ...turn, slides: [...turn.slides, committedSlide] };
         }
         return updateLastSlide(turn, () => committedSlide);
       });
@@ -167,6 +161,28 @@ function createSlide(imageUrl: string): PairingSlideView {
     wine: null,
     isCommitted: false,
   };
+}
+
+function appendLastSlideField(
+  turn: PairingTurn,
+  field: "rank" | "name" | "comment" | "reason",
+  chunk: string
+): PairingTurn {
+  const slides = [...turn.slides];
+  const lastSlide = slides[slides.length - 1];
+  const slide = !lastSlide || lastSlide.isCommitted ? createSlide("") : lastSlide;
+  const nextSlide = {
+    ...slide,
+    [field]: slide[field] + chunk,
+  };
+
+  if (!lastSlide || lastSlide.isCommitted) {
+    slides.push(nextSlide);
+  } else {
+    slides[slides.length - 1] = nextSlide;
+  }
+
+  return { ...turn, slides };
 }
 
 /** 마지막 pairing turn을 갱신한다. 없으면 상태를 그대로 반환한다(defensive). */

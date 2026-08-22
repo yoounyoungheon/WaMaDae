@@ -20,9 +20,6 @@ export default function SelectedWineCard({
       <p className="truncate text-[11px] font-medium leading-tight text-text-02">
         {wine.recommendationText}
       </p>
-      <p className="mt-1 text-[13px] font-extrabold leading-none text-primary-main">
-        {wine.priceLabel}
-      </p>
 
       {onRemove ? (
         <button

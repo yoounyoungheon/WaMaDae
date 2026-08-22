@@ -1,11 +1,11 @@
 # Mysom API 명세서
 
-이 문서는 `WaMaDae`에서 참조하는 `mysom-api` Spring WebFlux 애플리케이션의 활성 HTTP 계약을 프론트엔드 관점에서 정리한 인덱스다.
+이 문서는 `WaMaDae`에서 참조하는 `mysom-api` Spring WebFlux 애플리케이션의 현재 활성 HTTP 계약을 프론트엔드 관점에서 정리한다.
 
-기준 코드: `/Users/yoon-yeongheon/dev/mysom-api`의 `51dbe3f`
-기준일: 2026-08-01
+기준 코드: `/Users/yoon-yeongheon/dev/mysom-api`의 `134e6eb`
+기준일: 2026-08-22
 
-현재 활성 HTTP 컨트롤러 기준으로 정리한다. 이전에 쓰이던 `/v1/ocr/menu/wine`과 `/v1/menu-category-recommendations` 계열 비동기 추천 API는 최신 코드의 활성 라우트가 아니다.
+현재 활성 컨트롤러는 `wine-pairing` 계열 3개뿐이다. 이전 문서에 있던 `/v1/auth/logout`, `/v1/upload/presigned-menu-image-url`, `/v1/ocr/menu/wine`, `/v1/menu-category-recommendations` 계열 라우트는 현재 코드의 활성 HTTP 컨트롤러가 아니다.
 
 ## 공통
 
@@ -13,49 +13,69 @@
 - Base path: `/v1`
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
-- 기본 요청/응답: `application/json`
-- 이미지 업로드형 요청: `image/png` 또는 `image/jpeg` 바이너리 body
+- 기본 JSON 요청/응답: `application/json`
+- 이미지 OCR 요청: PNG 또는 JPEG 바이너리 body
 - 스트리밍 응답: `text/event-stream`
 
-브라우저가 `WaMaDae`의 Next.js BFF를 통하는 화면에서는 `/api/*` 문서를 우선 보고, 실제 백엔드 계약 확인이 필요할 때 이 문서와 하위 문서를 보면 된다.
-
-## 인증
-
-```http
-Authorization: Bearer {token}
-```
-
-현재 Spring Security 설정상 인증이 강제되는 공개 API는 `/v1/upload/**`다. 다른 컨트롤러 API는 `permitAll`이다.
-
-로그인/회원가입 컨트롤러는 현재 코드에 없다. `POST /v1/auth/logout`은 컨트롤러가 아니라 Spring Security logout matcher로 처리된다.
+현재 `mysomm-api-app`에는 Spring Security 의존성/설정이 없어서 아래 공개 API에 애플리케이션 레벨 인증이 붙어 있지 않다. 배포 환경에서 게이트웨이 인증을 추가한다면 별도 계약으로 다뤄야 한다.
 
 ## API 목록
 
-| 기능 | Method | Path | 인증 | 상세 문서 |
+| 기능 | Method | Path | 인증 | 비고 |
 | --- | --- | --- | --- | --- |
-| 로그아웃 | `POST` | `/v1/auth/logout` | 선택 | [mysom-auth.md](./mysom-auth.md) |
-| 메뉴 이미지 업로드 URL 생성 | `POST` | `/v1/upload/presigned-menu-image-url` | 필요 | [mysom-upload.md](./mysom-upload.md) |
-| OCR 기반 DB 와인 후보 추출 | `POST` | `/v1/wine-pairing/wines/menu-ocr` | 없음 | [mysom-ocr.md](./mysom-ocr.md) |
-| 즉시 메뉴 카테고리 추천 | `POST` | `/v1/wine-pairing/menu-category/recommend` | 없음 | [mysom-wine-pairing.md](./mysom-wine-pairing.md) |
-| 와인 페어링 SSE | `POST` | `/v1/wine-pairing/stream/pairing` | 없음 | [mysom-wine-pairing.md](./mysom-wine-pairing.md) |
-| 와인 페어링 후속 채팅 SSE | `POST` | `/v1/wine-pairing/stream/chat` | 없음 | [mysom-wine-pairing.md](./mysom-wine-pairing.md) |
+| 와인 메뉴 이미지 OCR | `POST` | `/v1/wine-pairing/wines/menu-ocr` | 없음 | 이미지 바이너리 body |
+| 메뉴 카테고리 추천 | `POST` | `/v1/wine-pairing/menu-category/recommend` | 없음 | `wineIds` UUID 배열 기반 |
+| 와인 페어링 SSE 시작 | `POST` | `/v1/wine-pairing/stream/pairing` | 없음 | `X-Chat-Id` 필수 |
+| 와인 페어링 후속 채팅 SSE | `POST` | `/v1/wine-pairing/stream/chat` | 없음 | `X-Chat-Id` 필수 |
 
-## 공통 응답 타입
+## 주요 변경점
 
-### ErrorResponse
+- OCR 응답과 후속 요청은 기존 숫자형 DB wine ID가 아니라 저장된 wine snapshot UUID를 사용한다.
+- 메뉴 추천과 페어링 요청 body는 `wines`가 아니라 `wineIds`를 받는다.
+- 페어링 요청의 `menuCategories`는 문자열 배열이 아니라 `{ name: string }` 객체 배열이다.
+- SSE envelope는 기존 `fieldName/type/status/isStreaming` 형식이 아니라 `type: "STREAM" | "JSON"` 형식이다.
+- SSE 최종 JSON에는 `imageUrl`, `name`, `summary`가 없고 `pairingId`, `rank`, `wine`, `comment`, `reason`만 있다.
+- 인증, 업로드 URL 발급, 로그아웃 API는 현재 활성 컨트롤러에서 제거되어 호출 대상이 아니다.
+
+## 공통 타입
+
+```ts
+type WineId = string; // UUID
+
+type Price = {
+  amount: number | string;
+  currency: "KRW" | "USD" | "EUR";
+  currencySign: string;
+  koreanUnit: string;
+};
+
+type Wine = {
+  id: WineId | null;
+  wineName: string;
+  vintage: number | null;
+  alcohol: number | string | null;
+  price: Price[] | null;
+  country: string | null;
+  region: string | null;
+};
+
+type MenuCategory = {
+  name: string;
+};
+```
+
+`Price.currencySign`과 `Price.koreanUnit`은 서버 DTO의 계산 필드다. `currency`가 `KRW`면 각각 `₩`, `원`이고, `USD`면 `$`, `달러`, `EUR`면 `€`, `유로`다.
+
+## 오류 응답
+
+명시적으로 처리되는 도메인 오류는 아래 형태를 사용한다.
 
 ```ts
 type ErrorResponse = {
   status: number;
   message: string | null;
 };
-```
 
-### BadRequestErrorResponse
-
-DTO validation 실패 시 주로 사용된다.
-
-```ts
 type BadRequestErrorResponse = {
   status: 400;
   message: string;
@@ -63,69 +83,278 @@ type BadRequestErrorResponse = {
 };
 ```
 
-### ListResponse
+현재 코드에는 validation 오류를 `BadRequestErrorResponse`로 변환하는 전역 핸들러가 없고, 컨트롤러 OpenAPI 문서에서만 해당 스키마를 선언한다. malformed JSON, validation 실패, type mismatch는 Spring WebFlux 기본 오류 body가 내려올 수 있으므로 프론트는 status 중심으로 방어 처리한다.
 
-```ts
-type ListResponse<T> = {
-  items: T[];
-  count: number;
-};
-```
-
-### StreamResponse
-
-SSE의 `data:` payload로 내려오는 JSON이다.
-
-```ts
-type StreamResponse<T> = {
-  fieldName: string;
-  type: "json" | "text";
-  data: T;
-  status: "start" | "painting" | "next";
-  isStreaming: boolean;
-};
-```
-
-| 필드 | 설명 |
-| --- | --- |
-| `fieldName` | 현재 payload가 갱신하는 필드 |
-| `type` | `data`가 JSON 객체인지 텍스트인지 구분 |
-| `status` | `start`는 추천 항목 시작, `painting`은 필드 갱신, `next`는 현재 추천 항목 완성 |
-| `isStreaming` | `true`는 중간 필드/chunk, `false`는 현재 추천 항목의 완성 payload |
-
-`isStreaming: false`는 전체 HTTP 스트림 종료가 아니라 현재 추천 항목의 완성을 뜻할 수 있다. 전체 종료는 `ReadableStream`의 `done`으로 판단한다.
-
-예시 SSE frame:
-
-```txt
-data:{"fieldName":"chat","type":"text","data":"첫째 ","status":"painting","isStreaming":true}
-
-data:{"fieldName":"chat","type":"text","data":"둘째","status":"painting","isStreaming":true}
-```
-
-## 공통 오류 처리
+명시 처리되는 오류:
 
 | Status | 조건 | 응답 |
 | --- | --- | --- |
-| `400 Bad Request` | DTO validation 실패 | `BadRequestErrorResponse` |
-| `400 Bad Request` | `ResponseStatusException(HttpStatus.BAD_REQUEST)` | `ErrorResponse` |
-| `400 Bad Request` | Exposed R2DBC 요청 오류 | `ErrorResponse`, message: `잘못된 요청입니다.` |
-| `403 Forbidden` | 권한 없음 | `ErrorResponse`, message: `접근 권한이 없습니다.` |
-| `500 Internal Server Error` | `IllegalArgumentException` | `ErrorResponse`, message는 예외 메시지 |
-| `500 Internal Server Error` | 일반 `RuntimeException` | `ErrorResponse`, message: `서버 오류가 발생했습니다.` |
+| `400 Bad Request` | OCR 이미지 body가 비어 있음 | `ErrorResponse`, message: `이미지 본문이 비어 있습니다.` |
+| `400 Bad Request` | OCR 이미지 magic bytes가 PNG/JPEG가 아님 | `ErrorResponse`, message: `PNG 또는 JPEG 이미지만 지원합니다.` |
+| `413 Payload Too Large` | OCR 이미지 body가 10MiB 초과 | `ErrorResponse`, message: `와인 메뉴 이미지는 10MiB 이하만 업로드할 수 있습니다.` |
+| `404 Not Found` | 요청한 wine snapshot ID를 찾을 수 없음 | `ErrorResponse`, message: `Wine not found` |
+| `404 Not Found` | 후속 채팅에 사용할 완료된 페어링이 없음 | `ErrorResponse`, message: `Pairing not found` |
 
-Spring WebFlux 또는 Spring Security가 직접 만드는 오류는 위 JSON 형태와 다를 수 있다. 특히 인증 실패, unsupported media type, malformed JSON은 프론트에서 status 중심으로 방어 처리하는 것이 안전하다.
+## POST /v1/wine-pairing/wines/menu-ocr
+
+와인 메뉴 이미지에서 텍스트를 OCR로 추출하고, AI가 해석한 와인 항목을 wine snapshot으로 저장한 뒤 저장된 snapshot ID와 함께 반환한다.
+
+### Request
+
+```http
+POST /v1/wine-pairing/wines/menu-ocr
+Content-Type: image/png
+```
+
+Body는 raw 이미지 바이너리다. `multipart/form-data`가 아니다. 서버는 요청 `Content-Type`보다 실제 파일 magic bytes를 기준으로 PNG/JPEG 여부를 검사한다.
+
+### Response
+
+```ts
+type WineMenuOcrExtractResponse = {
+  wines: Array<Wine & {
+    id: WineId;
+    type: "OCR" | "DB";
+  }>;
+};
+```
+
+현재 `WineMenuOcrService` 흐름은 OCR+AI 해석 결과를 새 snapshot으로 저장하고, 응답 `type`은 `OCR`로 매핑한다. DTO enum에는 `DB`도 남아 있지만 현재 매퍼는 `DB` 항목을 생성하지 않는다.
+
+예시:
+
+```json
+{
+  "wines": [
+    {
+      "id": "e501190d-ad82-460a-9d3d-b78999d49841",
+      "type": "OCR",
+      "wineName": "Cloudy Bay Sauvignon Blanc",
+      "vintage": 2023,
+      "alcohol": 13.5,
+      "price": [
+        {
+          "amount": 55000,
+          "currency": "KRW",
+          "currencySign": "₩",
+          "koreanUnit": "원"
+        }
+      ],
+      "country": "New Zealand",
+      "region": "Marlborough"
+    }
+  ]
+}
+```
+
+OCR 응답의 `id`를 이후 `wineIds`에 그대로 사용한다.
+
+## POST /v1/wine-pairing/menu-category/recommend
+
+선택한 wine snapshot 목록을 기준으로 어울리는 메뉴 카테고리를 추천한다.
+
+### Request
+
+```http
+POST /v1/wine-pairing/menu-category/recommend
+Content-Type: application/json
+```
+
+```ts
+type MenuCategoryRecommendationRequest = {
+  wineIds: WineId[];
+};
+```
+
+Validation:
+
+| 필드 | 제약 |
+| --- | --- |
+| `wineIds` | 빈 배열 불가 |
+| `wineIds[]` | UUID 문자열 |
+
+예시:
+
+```json
+{
+  "wineIds": ["e501190d-ad82-460a-9d3d-b78999d49841"]
+}
+```
+
+### Response
+
+```ts
+type MenuCategoryRecommendationResponse = {
+  menuCategories: MenuCategory[];
+};
+```
+
+예시:
+
+```json
+{
+  "menuCategories": [
+    { "name": "해산물" },
+    { "name": "샐러드" }
+  ]
+}
+```
+
+## POST /v1/wine-pairing/stream/pairing
+
+선택한 wine snapshot과 메뉴 카테고리로 새 페어링을 시작하고, 와인별 필드 청크와 완성 JSON을 SSE로 반환한다.
+
+### Request
+
+```http
+POST /v1/wine-pairing/stream/pairing
+X-Chat-Id: {chatId}
+Content-Type: application/json
+Accept: text/event-stream
+```
+
+```ts
+type WinePairingRequest = {
+  wineIds: WineId[];
+  menuCategories: MenuCategory[];
+};
+```
+
+Validation:
+
+| 필드 | 제약 |
+| --- | --- |
+| `X-Chat-Id` | 필수, 공백 불가. UUID 형식 강제는 없음 |
+| `wineIds` | 빈 배열 불가 |
+| `wineIds[]` | UUID 문자열 |
+| `menuCategories` | 빈 배열 불가 |
+| `menuCategories[].name` | 문자열 |
+
+예시:
+
+```json
+{
+  "wineIds": [
+    "e501190d-ad82-460a-9d3d-b78999d49841",
+    "b9753122-8efa-4191-8df7-a0643a3a4caf"
+  ],
+  "menuCategories": [
+    { "name": "해산물" },
+    { "name": "샐러드" }
+  ]
+}
+```
+
+## POST /v1/wine-pairing/stream/chat
+
+기존 `X-Chat-Id`의 최신 완료 페어링을 문맥으로 후속 메시지를 처리한다. 서버 라우팅 결과에 따라 일반 채팅 청크 또는 재페어링 스트림이 내려올 수 있다.
+
+### Request
+
+```http
+POST /v1/wine-pairing/stream/chat
+X-Chat-Id: {chatId}
+Content-Type: application/json
+Accept: text/event-stream
+```
+
+```ts
+type WinePairingConversationRequest = {
+  message: string;
+};
+```
+
+Validation:
+
+| 필드 | 제약 |
+| --- | --- |
+| `X-Chat-Id` | 필수, 공백 불가 |
+| `message` | 필수, 공백 불가 |
+
+예시:
+
+```json
+{
+  "message": "첫 번째 와인을 더 가벼운 스타일로 다시 추천해줘"
+}
+```
+
+## SSE 응답 타입
+
+`/v1/wine-pairing/stream/pairing`과 `/v1/wine-pairing/stream/chat`은 SSE `data:` payload에 아래 JSON을 담아 보낸다.
+
+```ts
+type StreamResponse = StreamChunkResponse | StreamJsonResponse;
+
+type StreamChunkResponse = {
+  type: "STREAM";
+  data: JsonFieldStreamData | ChatStreamData;
+};
+
+type StreamJsonResponse = {
+  type: "JSON";
+  data: PairingStreamData;
+};
+
+type JsonFieldStreamData = {
+  fieldName: "rank" | "name" | "comment" | "reason";
+  hasNext: boolean;
+  body: string;
+};
+
+type ChatStreamData = {
+  body: string;
+};
+
+type PairingStreamData = {
+  pairingId: string;
+  rank: number;
+  wine: Wine;
+  comment: string;
+  reason: string;
+};
+```
+
+페어링/재페어링 스트림은 추천 와인 한 건마다 다음 순서로 내려온다.
+
+1. `STREAM` `data.fieldName: "rank"` 청크들
+2. `STREAM` `data.fieldName: "name"` 청크들
+3. `STREAM` `data.fieldName: "comment"` 청크들
+4. `STREAM` `data.fieldName: "reason"` 청크들
+5. `JSON` 완성 페어링 payload
+
+`JsonFieldStreamData.hasNext`는 같은 `fieldName`의 다음 청크가 있는지만 뜻한다. 다음 필드나 다음 추천 와인의 존재 여부는 전체 stream 진행으로 판단한다.
+
+페어링 SSE 예시:
+
+```txt
+data:{"type":"STREAM","data":{"fieldName":"rank","hasNext":false,"body":"1"}}
+
+data:{"type":"STREAM","data":{"fieldName":"name","hasNext":false,"body":"Cloudy Bay Sauvignon Blanc"}}
+
+data:{"type":"STREAM","data":{"fieldName":"comment","hasNext":false,"body":"차갑게 드세요"}}
+
+data:{"type":"STREAM","data":{"fieldName":"reason","hasNext":false,"body":"상큼한 조화"}}
+
+data:{"type":"JSON","data":{"pairingId":"e501190d-ad82-460a-9d3d-b78999d49841","rank":1,"wine":{"id":"e501190d-ad82-460a-9d3d-b78999d49841","wineName":"Cloudy Bay Sauvignon Blanc","vintage":2023,"alcohol":13.5,"price":[{"amount":55000,"currency":"KRW","currencySign":"₩","koreanUnit":"원"}],"country":"New Zealand","region":"Marlborough"},"comment":"차갑게 드세요","reason":"상큼한 조화"}}
+```
+
+일반 후속 채팅은 `fieldName`과 `hasNext`가 없는 `STREAM` 청크만 내려오고 별도 완료 frame은 없다.
+
+```txt
+data:{"type":"STREAM","data":{"body":"산미가 "}}
+
+data:{"type":"STREAM","data":{"body":"잘 어울립니다."}}
+```
 
 ## 프론트엔드 구현 메모
 
-- 이미지 OCR API는 body를 raw 바이너리로 보낸다. `multipart/form-data`가 아니다.
-- OCR 이미지 body는 서버에서 최대 10MiB까지 읽는다.
-- 현재 OCR API 응답은 OCR 원본 행을 화면 후보로 내려주지 않고, 내부 DB에서 매칭된 와인 후보를 중심으로 내려준다.
-- SSE API는 `EventSource`로 POST를 보낼 수 없으므로 `fetch` + `ReadableStream` 파싱이 필요하다.
-- 페어링 요청의 `wines[].id`에는 숫자형 DB 와인 ID만 보낼 수 있다. 이름만 있는 OCR 항목은 직접 요청할 수 없다.
-- 페어링 SSE에는 `index`가 없다. `fieldName`, `status`, `isStreaming`과 완성된 `pairing` payload를 기준으로 조립한다.
-- 페어링 SSE의 최종 `pairing.data`에는 카드 표시용 요약 필드와 함께 상세 `wine` 객체가 포함된다.
-- `/v1/wine-pairing/stream/pairing`으로 대화를 시작한 `X-Chat-Id`만 `/v1/wine-pairing/stream/chat`에서 사용할 수 있다.
-- 후속 채팅은 일반 답변이면 `chat` text chunk를 반환하고, 재추천 의도로 판단되면 페어링 SSE와 같은 추천 frame을 반환할 수 있다.
-- 일반 후속 채팅에는 별도의 완료 frame이 없으므로 응답 stream 종료를 완료 신호로 사용한다.
-- `/v1/upload/presigned-menu-image-url`의 서비스 구현은 현재 `TODO("Not implemented yet")` 상태라 실제 호출 시 500 계열 오류가 날 수 있다.
+- `POST` SSE는 `EventSource`를 사용할 수 없으므로 `fetch` + `ReadableStream`으로 `data:` line을 파싱한다.
+- OCR 결과의 `wines[].id`는 저장된 wine snapshot UUID다. 메뉴 추천과 페어링 요청의 `wineIds`에 그대로 사용한다.
+- `wineIds`는 중복 없이 보내는 것이 안전하다. 중복 ID는 현재 전용 오류 응답으로 정리되어 있지 않다.
+- `menuCategories`는 문자열 배열이 아니라 `{ name }` 객체 배열로 보낸다.
+- `/stream/pairing`에서 사용한 `X-Chat-Id`를 `/stream/chat`에도 같은 값으로 보내야 페어링 이력을 이어갈 수 있다.
+- `STREAM` payload에 `fieldName`이 있으면 필드 스트리밍, 없으면 일반 채팅 텍스트로 처리한다.
+- 페어링 UI의 최종 카드는 `type: "JSON"` payload를 기준으로 확정한다. 중간 `STREAM` 청크는 진행 표시용으로만 써도 된다.
+- 전체 완료는 HTTP stream 종료로 판단한다. 현재 계약에는 전체 완료 전용 frame이 없다.
+- 기존 `fieldName/type/status/isStreaming` envelope, `imageUrl`, top-level `name`, top-level `summary`, 숫자형 `wines[].id`에 의존한 코드는 현재 API와 맞지 않는다.

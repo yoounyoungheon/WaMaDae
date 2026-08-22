@@ -1,4 +1,5 @@
 import type {
+  PairingFieldName,
   PairingSlidePayload,
   PairingStreamWine,
 } from "@/app/entity/wine-pairing/model/wine-pairing.type";
@@ -6,7 +7,7 @@ import type {
 /**
  * 캐러셀 슬라이드의 화면 모델.
  * 스트리밍 중에는 필드가 점진적으로 채워지고(`isCommitted: false`),
- * `pairing`(json) 프레임에서 최종 payload로 replace되며 `isCommitted: true`가 된다.
+ * `JSON` 프레임에서 최종 payload로 replace되며 `isCommitted: true`가 된다.
  */
 export type PairingSlideView = {
   imageUrl: string;
@@ -47,10 +48,9 @@ export type ConversationState = {
 export type ConversationAction =
   | { type: "PAIRING_START" }
   | { type: "RECOMMENDATION_START"; question: string }
-  | { type: "PAIRING_SLIDE_START"; imageUrl: string }
   | {
       type: "PAIRING_SLIDE_FIELD";
-      field: "rank" | "name" | "comment" | "reason";
+      field: PairingFieldName;
       data: string;
     }
   | { type: "PAIRING_SLIDE_COMMIT"; payload: PairingSlidePayload }

@@ -1,13 +1,19 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { Wine } from "lucide-react";
-import { cn } from "@/app/utils/style/helper";
 import type { PairingStreamWine } from "@/app/entity/wine-pairing/model/wine-pairing.type";
+import { cn } from "@/app/utils/style/helper";
 import type { WineRecommendationSlideProps } from "./wine-pairing-chat.props";
 
 const CARD_HEIGHT = "h-[330px]";
+const PLACEHOLDER_WINE_PROFILE_METRICS = [
+  { label: "바디", value: 6, max: 10 },
+  { label: "당도", value: 7, max: 10 },
+  { label: "타닌", value: 5, max: 10 },
+  { label: "산도", value: 4, max: 10 },
+] as const;
 
 type TooltipField = "comment" | "reason";
 
@@ -143,8 +149,10 @@ function WineDetailBack({
   height: string;
   onBack: () => void;
 }) {
-  const displayName = wine.koreanName ?? wine.name;
-  const subtitle = [wine.category, wine.country].filter(Boolean).join(" · ");
+  const displayName = wine.wineName;
+  const subtitle = [wine.country, wine.region].filter(Boolean).join(" · ");
+  const priceLabel = formatPriceLabel(wine.price);
+  const alcoholLabel = formatAlcoholLabel(wine.alcohol);
 
   return (
     <div
@@ -173,36 +181,17 @@ function WineDetailBack({
 
       <hr className="mt-3 shrink-0 border-main-gray-100" />
 
-      {/* 메타 데이터 */}
       <div className="mt-4 flex shrink-0 flex-col gap-1.5 text-[11px]">
-        {wine.grape ? <MetaRow label="품종" value={wine.grape} /> : null}
-        {wine.vintage ? <MetaRow label="빈티지" value={String(wine.vintage)} /> : null}
-        {wine.alcohol != null ? (
-          <MetaRow label="도수" value={`${wine.alcohol}%`} />
+        {priceLabel ? <MetaRow label="가격" value={priceLabel} /> : null}
+        {wine.vintage != null ? (
+          <MetaRow label="빈티지" value={String(wine.vintage)} />
         ) : null}
+        {alcoholLabel ? <MetaRow label="도수" value={alcoholLabel} /> : null}
+        {wine.country ? <MetaRow label="국가" value={wine.country} /> : null}
         {wine.region ? <MetaRow label="지역" value={wine.region} /> : null}
-        {wine.rating ? <MetaRow label="평점" value={`★ ${wine.rating}`} /> : null}
       </div>
 
-      {wine.body != null ||
-      wine.sweetness != null ||
-      wine.tannin != null ||
-      wine.acidity != null ? (
-        <div className="mt-8 flex shrink-0 gap-2">
-          {wine.body != null ? (
-            <VerticalGauge label="바디" value={wine.body} />
-          ) : null}
-          {wine.sweetness != null ? (
-            <VerticalGauge label="당도" value={wine.sweetness} />
-          ) : null}
-          {wine.tannin != null ? (
-            <VerticalGauge label="타닌" value={wine.tannin} />
-          ) : null}
-          {wine.acidity != null ? (
-            <VerticalGauge label="산도" value={wine.acidity} />
-          ) : null}
-        </div>
-      ) : null}
+      <WineProfilePreview />
     </div>
   );
 }
@@ -216,54 +205,88 @@ function MetaRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-const GAUGE_W = 28;
-const GAUGE_H = 60;
-const GAUGE_R = 7; // 위쪽만 rounded-xl 수준
-
-/** 위쪽 두 모서리만 둥근 사각형 SVG path */
-function topRoundedPath(y: number, h: number, r: number): string {
-  const cr = Math.min(r, h / 2, GAUGE_W / 2);
-  return [
-    `M 0 ${y + h}`,
-    `L 0 ${y + cr}`,
-    `A ${cr} ${cr} 0 0 1 ${cr} ${y}`,
-    `L ${GAUGE_W - cr} ${y}`,
-    `A ${cr} ${cr} 0 0 1 ${GAUGE_W} ${y + cr}`,
-    `L ${GAUGE_W} ${y + h}`,
-    `Z`,
-  ].join(" ");
-}
-
-function VerticalGauge({ label, value }: { label: string; value: number }) {
-  const uid = useId();
-  const gradId = `gf-${uid}`;
-  const rounded = Math.round(value);
-  const fillH = GAUGE_H * Math.min(1, Math.max(0, rounded / 5));
-  const fillY = GAUGE_H - fillH;
-
+function WineProfilePreview() {
   return (
-    <div className="flex flex-1 flex-col items-center gap-1">
-      <svg
-        width={GAUGE_W}
-        height={GAUGE_H}
-        viewBox={`0 0 ${GAUGE_W} ${GAUGE_H}`}
+    <div
+      className="relative mt-5 min-h-0 flex-[1_1_92px] overflow-hidden rounded-xl border border-main-light-gray-600 bg-[#fbf8fd] p-1.5"
+      aria-label="와인 그래프 준비 중"
+    >
+      <div
         aria-hidden
+        className="flex h-full min-h-0 items-end justify-between gap-2 opacity-45"
       >
-        <defs>
-          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#D6B4F8" />
-            <stop offset="100%" stopColor="#A65BEF" />
-          </linearGradient>
-        </defs>
-        {/* 트랙: 위쪽만 둥근 사각형 */}
-        <path d={topRoundedPath(0, GAUGE_H, GAUGE_R)} fill="#f6effd" />
-        {/* 채움: 위쪽만 둥근 사각형, 바닥은 flat */}
-        {fillH > 0 && (
-          <path d={topRoundedPath(fillY, fillH, GAUGE_R)} fill={`url(#${gradId})`} />
-        )}
-      </svg>
-      <span className="text-[11px] font-bold text-primary-main">{rounded}</span>
-      <span className="text-[11px] text-main-gray-400">{label}</span>
+        {PLACEHOLDER_WINE_PROFILE_METRICS.map((metric) => (
+          <div
+            key={metric.label}
+            className="flex h-full min-h-0 flex-1 flex-col items-center justify-end gap-1"
+          >
+            <div className="flex min-h-0 w-full max-w-[24px] flex-1 items-end overflow-hidden rounded-t-lg bg-main-light-gray-400/50">
+              <div
+                className="w-full rounded-t-lg bg-primary-main"
+                style={{
+                  height: `${getMetricBarHeightPercent(
+                    metric.value,
+                    metric.max
+                  )}%`,
+                }}
+              />
+            </div>
+            <span className="shrink-0 text-[10px] font-bold leading-none text-main-gray-500">
+              {metric.label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-[1px]">
+        <span className="rounded-full bg-white/15 px-3 py-1.5 text-[12px] font-bold leading-none text-white shadow-sm">
+          준비중인 기능이에요.
+        </span>
+      </div>
     </div>
   );
+}
+
+function getMetricBarHeightPercent(value: number, max: number): number {
+  if (!Number.isFinite(value) || !Number.isFinite(max) || max <= 0) {
+    return 0;
+  }
+
+  return Math.min(100, Math.max(0, (value / max) * 100));
+}
+
+function formatPriceLabel(price: PairingStreamWine["price"]): string | null {
+  const firstPrice = price?.find((item) => String(item.amount).trim().length > 0);
+
+  if (!firstPrice) {
+    return null;
+  }
+
+  const amountLabel =
+    typeof firstPrice.amount === "number"
+      ? firstPrice.amount.toLocaleString(
+          firstPrice.currency === "KRW" ? "ko-KR" : "en-US"
+        )
+      : firstPrice.amount.trim();
+
+  if (firstPrice.currency === "KRW") {
+    return `${amountLabel}${firstPrice.koreanUnit || "원"}`;
+  }
+
+  return `${firstPrice.currencySign || firstPrice.currency}${amountLabel}`;
+}
+
+function formatAlcoholLabel(alcohol: PairingStreamWine["alcohol"]): string | null {
+  if (alcohol == null) {
+    return null;
+  }
+
+  const label =
+    typeof alcohol === "number" ? alcohol.toLocaleString("ko-KR") : alcohol.trim();
+
+  if (label.length === 0) {
+    return null;
+  }
+
+  return label.endsWith("%") ? label : `${label}%`;
 }

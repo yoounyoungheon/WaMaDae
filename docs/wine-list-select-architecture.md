@@ -290,7 +290,7 @@ sequenceDiagram
 검색 응답은 두 가격을 구분한다.
 
 - `searchPriceLabel`: 검색 row에 표시하는 검색 결과 가격
-- `priceLabel`: 선택 후 WINES 카드에 표시하는 와인 상세 가격
+- `priceLabel`: 와인 모델/BFF 응답에는 유지하지만, 현재 선택 후 WINES 카드 UI에서는 표시하지 않는다. OCR 분석 결과의 가격 노출은 UI에서만 제거했고 API 응답 shape은 유지한다.
 
 ### 8.2 검색 결과 선택
 
@@ -339,7 +339,7 @@ sequenceDiagram
   C->>M: mutate(file)
   M->>R: multipart 업로드
   R->>R: content-type/length·크기·타입·매직바이트 검증
-  R->>R: OCR 원본 제외, 유효한 DB 후보만 카드 DTO로 변환
+  R->>R: WINE_DATA_TYPE과 일치하는 UUID snapshot만 카드 DTO로 변환
   R-->>M: { wines: WineDetailDto[] }
   M-->>C: onSuccess(wines)
   C->>Cache: 응답 wines를 known cache에 저장
@@ -350,8 +350,9 @@ sequenceDiagram
 - 진행 상태는 `mutation.isPending`, 오류는 `mutation.error`를 그대로 사용한다.
 - `mutation.isPending`은 `PhotoUploadBox.isLoading`으로 전달되며, 사진 미리보기 위에
   primary 색상 `LoadingSpinner`를 오버레이한다. 별도 로딩 `useState`는 두지 않는다.
-- BFF는 `type: "OCR"` 항목을 제거하고 유효한 ID가 있는 `type: "DB"` 후보만
-  분석 결과와 자동 선택 목록에 노출한다.
+- BFF는 `.env`의 `WINE_DATA_TYPE`으로 사용할 OCR 응답 항목 타입을 결정한다.
+  현재 로컬/배포 대상 값은 `WINE_DATA_TYPE="OCR"`이며, `type: "OCR"`이고 UUID `id`가 있는 snapshot만 분석 결과와 자동 선택 목록에 노출한다.
+- 선택 카드(`SelectedWineCard`)는 `priceLabel`을 렌더하지 않는다. 가격 데이터는 후속 계약 호환을 위해 모델에 남기지만 OCR 분석 결과 리스트 UI에서는 숨긴다.
 - **검증은 2단계**다. 클라이언트(크기·MIME)에서 1차로 걸러 즉시 피드백을 주고,
   서버에서 content-type/length·크기·MIME·**파일 시그니처(매직바이트)**까지 재검증한다.
 
@@ -382,7 +383,7 @@ SelectedWineCard onRemove(id) -> handleRemoveWine -> store.removeWineId(id)
 | 메서드/경로 | 검증과 처리 | 성공 응답 |
 |---|---|---|
 | `GET /api/wines/search?q=` | 공백 제거, 빈 검색어, 최대 100자 검증 | `{ wines: WineSearchItemDto[] }` |
-| `POST /api/wine-lists/analyze` | multipart, 크기, MIME, 실제 파일 시그니처 검증 후 DB 후보만 매핑 | `{ wines: WineDetailDto[] }` |
+| `POST /api/wine-lists/analyze` | multipart, 크기, MIME, 실제 파일 시그니처 검증 후 `WINE_DATA_TYPE`과 일치하는 UUID snapshot만 매핑 | `{ wines: WineDetailDto[] }` |
 
 분석 endpoint의 주요 실패 status:
 
@@ -436,5 +437,5 @@ app/layout.tsx (Server)
 - 비즈니스 조합: `web/src/app/feature/wine-list-select/model/use-wine-list-select-controller.ts`
 - 브라우저 API: `web/src/app/entity/wine/api/wine.api.ts`
 - BFF Route Handler: `web/src/app/api/wines/*`, `web/src/app/api/wine-lists/analyze/route.ts`
-- API 명세: `api/wine-list-select.md`
-- 마이그레이션 배경과 의사결정: `plans/P1_PLAN.md`
+- API 명세: `api/mysom-api.md`
+- 마이그레이션 배경과 의사결정: `plans/P1_PLAN.md`, `plans/mysom-api-contract-migration-plan.md`

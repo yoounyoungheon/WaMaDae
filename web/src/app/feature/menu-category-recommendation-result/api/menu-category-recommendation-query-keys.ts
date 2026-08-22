@@ -2,6 +2,6 @@ import type { MenuCategoryRecommendationRequest } from "@/app/entity/menu-catego
 
 export const menuCategoryRecommendationQueryKeys = {
   all: ["menu-category-recommendations"] as const,
-  recommend: (wines: MenuCategoryRecommendationRequest["wines"]) =>
-    [...menuCategoryRecommendationQueryKeys.all, "recommend", { wines }] as const,
+  recommend: (wineIds: MenuCategoryRecommendationRequest["wineIds"]) =>
+    [...menuCategoryRecommendationQueryKeys.all, "recommend", { wineIds }] as const,
 };

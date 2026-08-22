@@ -21,7 +21,7 @@ export default function NextRecommendationButton({
   const router = useRouter();
 
   const request = buildMenuCategoryRecommendationRequest(wines);
-  const isDisabled = request.wines.length === 0 || hasMissingWineData;
+  const isDisabled = request.wineIds.length === 0 || hasMissingWineData;
 
   const handleClick = () => {
     // 선택 payload를 sessionStorage에 스냅샷해 결과 화면 리로드 시에도 복원되게 한다.

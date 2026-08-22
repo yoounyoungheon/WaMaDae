@@ -4,12 +4,12 @@ import {
   recommendMenuCategories,
 } from "@/app/entity/menu-category-recommendation/api/menu-category-recommendation.server";
 import type { MenuCategoryRecommendationRequest } from "@/app/entity/menu-category-recommendation/model/menu-category-recommendation.type";
+import { normalizeUuid } from "@/app/shared/lib/validation/uuid";
 
 const MAX_WINES = 100;
-const MAX_FIELD_LENGTH = 200;
 
 type RecommendRequestBody = {
-  wines?: unknown;
+  wineIds?: unknown;
 };
 
 export async function POST(request: Request) {
@@ -22,8 +22,8 @@ export async function POST(request: Request) {
 
   const body = (await request.json().catch(() => null)) as RecommendRequestBody | null;
 
-  const wines = parseWines(body?.wines);
-  if (!wines) {
+  const wineIds = parseWineIds(body?.wineIds);
+  if (!wineIds) {
     return NextResponse.json(
       { message: "추천할 와인을 1개 이상 선택해 주세요." },
       { status: 400 }
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const categories = await recommendMenuCategories({ wines });
+    const categories = await recommendMenuCategories({ wineIds });
     return NextResponse.json({ categories });
   } catch (error) {
     if (
@@ -44,6 +44,16 @@ export async function POST(request: Request) {
       );
     }
 
+    if (
+      error instanceof MenuCategoryRecommendationBackendError &&
+      error.status === 404
+    ) {
+      return NextResponse.json(
+        { message: "선택한 와인을 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       { message: "추천 메뉴를 불러오지 못했습니다." },
       { status: 502 }
@@ -52,47 +62,25 @@ export async function POST(request: Request) {
 }
 
 /**
- * `wines` 입력을 백엔드 계약 shape으로 검증한다.
- * 최소 1개, 각 항목의 `id`/`name`/`koreanName`은 공백이 아닌 문자열이어야 한다.
+ * `wineIds` 입력을 백엔드 계약 shape으로 검증한다.
+ * 최소 1개, 각 항목은 UUID 문자열이어야 한다.
  */
-function parseWines(
+function parseWineIds(
   input: unknown
-): MenuCategoryRecommendationRequest["wines"] | null {
+): MenuCategoryRecommendationRequest["wineIds"] | null {
   if (!Array.isArray(input) || input.length === 0 || input.length > MAX_WINES) {
     return null;
   }
 
-  const wines: MenuCategoryRecommendationRequest["wines"] = [];
+  const wineIds: string[] = [];
 
   for (const item of input) {
-    if (typeof item !== "object" || item === null) {
+    const wineId = normalizeUuid(item);
+    if (!wineId) {
       return null;
     }
-
-    const { id, name, koreanName } = item as {
-      id?: unknown;
-      name?: unknown;
-      koreanName?: unknown;
-    };
-
-    if (
-      !isNonBlankString(id) ||
-      !isNonBlankString(name) ||
-      !isNonBlankString(koreanName)
-    ) {
-      return null;
-    }
-
-    wines.push({ id, name, koreanName });
+    wineIds.push(wineId);
   }
 
-  return wines;
-}
-
-function isNonBlankString(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    value.trim().length > 0 &&
-    value.length <= MAX_FIELD_LENGTH
-  );
+  return [...new Set(wineIds)];
 }

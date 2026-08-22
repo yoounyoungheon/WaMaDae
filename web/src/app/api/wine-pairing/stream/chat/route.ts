@@ -65,6 +65,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (error instanceof WinePairingBackendError && error.status === 404) {
+      return NextResponse.json(
+        { message: "이전 와인 추천 대화를 찾을 수 없습니다." },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       { message: "채팅 응답을 불러오지 못했습니다." },
       { status: 502 }
