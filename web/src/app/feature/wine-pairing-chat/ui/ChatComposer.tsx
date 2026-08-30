@@ -34,7 +34,10 @@ export default function ChatComposer({
   return (
     <form
       onSubmit={handleSubmit}
-      className={cn("flex items-center gap-2", className)}
+      className={cn(
+        "flex h-[56px] items-center gap-2 rounded-[20px] border border-white/80 bg-white/55 p-1.5 pl-4 shadow-[0_12px_28px_rgba(72,52,112,0.08)] [&_.relative>div]:!bg-transparent",
+        className
+      )}
       aria-label="와인 페어링 후속 질문"
     >
       <div className="min-w-0 flex-1">
@@ -46,7 +49,7 @@ export default function ChatComposer({
           aria-label="후속 질문 입력"
           enterKeyHint="send"
           // focus 시 테두리 색이 변한 것처럼 보이는 focus ring을 제거한다.
-          className="focus-visible:ring-0"
+          className="h-11 border-0 bg-transparent p-0 text-[14px] text-ink-page shadow-none placeholder:text-ink-muted focus-visible:ring-0"
         />
       </div>
       <Button
@@ -57,7 +60,7 @@ export default function ChatComposer({
         radius="full"
         disabled={disabled || message.trim().length === 0}
         aria-label="질문 보내기"
-        className="shrink-0"
+        className="h-11 w-11 shrink-0 bg-primary text-white shadow-none hover:bg-primary/90"
       >
         <ArrowUp className="h-4 w-4" strokeWidth={2.5} />
       </Button>

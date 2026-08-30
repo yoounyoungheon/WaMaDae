@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/app/utils/style/helper";
 import WineRecommendationSlide from "./WineRecommendationSlide";
 import type { WineRecommendationCarouselProps } from "./wine-pairing-chat.props";
@@ -39,32 +39,24 @@ export default function WineRecommendationCarousel({
     );
   };
 
-  // 새 슬라이드가 추가되면 그 슬라이드가 보이도록 스크롤한다.
-  useEffect(() => {
-    const element = scrollRef.current;
-    if (!element || slides.length === 0) {
-      return;
-    }
-    element.scrollTo({ left: element.scrollWidth, behavior: "smooth" });
-  }, [slides.length]);
-
   if (slides.length === 0) {
     return null;
   }
 
   return (
     <div className={cn("flex w-full flex-col", className)}>
-      {/* 스크롤 영역은 w-full(화면 폭)이고 카드 여백은 슬라이드 내부 패딩으로 준다.
-          이웃 카드가 뷰포트 경계에서 23px 안쪽에 시작하므로 스냅이 어긋나도 비치지 않는다. */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-5 [scroll-padding-inline:20px] [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {slides.map((slide, index) => (
           <div
             key={`slide-${index}`}
-            className="w-full shrink-0 snap-center px-[23px]"
+            className={cn(
+              "max-w-[560px] shrink-0 snap-start",
+              slides.length === 1 ? "w-full" : "w-[88%]"
+            )}
           >
             <WineRecommendationSlide slide={slide} />
           </div>
@@ -75,7 +67,7 @@ export default function WineRecommendationCarousel({
         <div
           role="tablist"
           aria-label="추천 와인 슬라이드"
-          className="mt-3 flex items-center justify-center gap-1.5"
+          className="mt-4 flex items-center justify-center gap-1.5"
         >
           {slides.map((_, index) => (
             <span
@@ -85,7 +77,7 @@ export default function WineRecommendationCarousel({
               aria-label={`${index + 1}번째 추천`}
               className={cn(
                 "h-1.5 w-1.5 rounded-full transition-colors",
-                index === activeIndex ? "bg-primary-main" : "bg-main-gray-300"
+                index === activeIndex ? "bg-primary" : "bg-ink-muted/25"
               )}
             />
           ))}

@@ -5,7 +5,8 @@ import type { Wine } from "@/app/entity/wine/model/wine.type";
 const wine: Wine = {
   id: "selected-wine-1",
   name: "몬테스 알파 카베르네 소비뇽",
-  imageUrl: "/ExampleImage.png",
+  imageUrl: "",
+  wineType: "RED",
   rating: 4.3,
   title: "몬테스 알파 카베르네 소비뇽 2021",
   recommendationText: "진한 풍미를 원한다면 추천",
@@ -48,6 +49,30 @@ export default meta;
 type Story = StoryObj<typeof SelectedWineCard>;
 
 export const Default: Story = {};
+
+export const WhiteWineWithoutImage: Story = {
+  args: {
+    wine: {
+      ...wine,
+      name: "클라우디 베이 소비뇽 블랑",
+      title: "클라우디 베이 소비뇽 블랑 2023",
+      imageUrl: "",
+      wineType: "WHITE",
+    },
+  },
+};
+
+export const SparklingWineWithoutImage: Story = {
+  args: {
+    wine: {
+      ...wine,
+      name: "모엣 샹동 브뤼 임페리얼",
+      title: "모엣 샹동 브뤼 임페리얼",
+      imageUrl: "",
+      wineType: "SPARKLING",
+    },
+  },
+};
 
 export const LongTitle: Story = {
   args: {

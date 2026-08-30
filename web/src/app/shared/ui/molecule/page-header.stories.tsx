@@ -18,6 +18,11 @@ const meta: Meta<typeof PageHeader> = {
       description:
         "뒤로가기 링크의 이동 경로입니다. 값이 없으면 뒤로가기 아이콘을 표시하지 않습니다.",
     },
+    variant: {
+      control: "select",
+      options: ["default", "centered"],
+      description: "기본형 또는 와인 플로우용 가운데 정렬 헤더입니다.",
+    },
     className: {
       control: "text",
       description: "헤더 wrapper에 추가할 className입니다.",
@@ -39,6 +44,17 @@ export default meta;
 type Story = StoryObj<typeof PageHeader>;
 
 export const Default: Story = {};
+
+export const Centered: Story = {
+  args: {
+    variant: "centered",
+  },
+  render: (args) => (
+    <div className="w-[350px] bg-canvas bg-violet-haze">
+      <PageHeader {...args} />
+    </div>
+  ),
+};
 
 export const WithoutBackLink: Story = {
   args: {

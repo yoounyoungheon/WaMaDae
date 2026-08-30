@@ -3,7 +3,7 @@ import DefaultMenuCategoryCard from "./DefaultMenuCategoryCard";
 import type { DefaultMenuCategoryGridProps } from "./menu-category-recommendation-result.props";
 
 /**
- * 서버에서 받지 않은 기본 메뉴 카테고리 3열 카드 Grid.
+ * 서버에서 받지 않은 기본 메뉴 카테고리 텍스트 Grid.
  */
 export default function DefaultMenuCategoryGrid({
   categories,
@@ -12,7 +12,7 @@ export default function DefaultMenuCategoryGrid({
   className,
 }: DefaultMenuCategoryGridProps) {
   return (
-    <ul className={cn("grid grid-cols-3 gap-3", className)}>
+    <ul className={cn("grid grid-cols-3 gap-2.5", className)}>
       {categories.map((category) => (
         <li key={category.id}>
           <DefaultMenuCategoryCard

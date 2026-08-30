@@ -46,7 +46,7 @@ export default function WinePairingChatView({
   return (
     <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
       <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
-        <div className="flex min-h-full flex-col gap-6 px-[23px] py-7">
+        <div className="mx-auto flex min-h-full w-full max-w-[680px] flex-col gap-7 px-5 pb-10 pt-5">
           {!isHydrated ? (
             <StatePanel tone="pending" message="와인 추천을 준비하고 있어요." />
           ) : !hasRequest ? (
@@ -67,6 +67,17 @@ export default function WinePairingChatView({
             />
           ) : (
             <>
+              <section aria-labelledby="wine-recommendation-intro-title">
+                <h2
+                  id="wine-recommendation-intro-title"
+                  className="text-[25px] font-extrabold leading-tight text-ink-page"
+                >
+                  마이쏨이 추천하는 와인이에요
+                </h2>
+                <p className="mt-3 text-[14px] font-medium leading-relaxed text-ink-secondary">
+                  선택한 메뉴와 잘 어울리는 순서예요
+                </p>
+              </section>
               {turns.map((turn, index) =>
                 turn.kind === "pairing" ? (
                   <PairingTurnSection
@@ -84,16 +95,18 @@ export default function WinePairingChatView({
         </div>
       </main>
 
-      <div className="shrink-0 border-t border-main-light-gray-600 bg-white px-[22px] pb-3.5 pt-3 shadow-[0_-4px_16px_rgba(26,26,26,0.08)]">
-        <ChatComposer
-          disabled={!isComposerEnabled}
-          placeholder={
-            isPairingDone
-              ? "채팅을 입력하세요"
-              : "와인 추천이 끝나면 질문할 수 있어요"
-          }
-          onSend={sendChat}
-        />
+      <div className="shrink-0 border-t border-white/70 bg-canvas/90 px-5 pb-[calc(14px_+_env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(60,45,96,0.08)] backdrop-blur-md">
+        <div className="mx-auto w-full max-w-[640px]">
+          <ChatComposer
+            disabled={!isComposerEnabled}
+            placeholder={
+              isPairingDone
+                ? "채팅을 입력하세요"
+                : "와인 추천이 끝나면 질문할 수 있어요"
+            }
+            onSend={sendChat}
+          />
+        </div>
       </div>
     </div>
   );
@@ -108,12 +121,8 @@ function PairingTurnSection({
 }) {
   return (
     <section aria-label="추천 와인" className="flex flex-col gap-4">
-      {turn.source === "initial" ? (
-        <h1 className="text-[16px] font-extrabold leading-snug text-text-01">
-          마이쏨이 추천하는 와인이에요
-        </h1>
-      ) : turn.question ? (
-        <p className="self-end rounded-2xl rounded-br-sm bg-primary-main px-4 py-3 text-[14px] leading-snug text-white">
+      {turn.source === "recommendation" && turn.question ? (
+        <p className="max-w-[88%] self-end rounded-[16px] rounded-br-md border border-white/80 bg-white/55 px-4 py-3 text-[14px] leading-relaxed text-ink-page shadow-[0_8px_20px_rgba(72,52,112,0.05)]">
           {turn.question}
         </p>
       ) : null}
@@ -123,7 +132,7 @@ function PairingTurnSection({
         // 카드 여백은 캐러셀 슬라이드 내부 패딩(px-[23px])이 담당한다.
         <WineRecommendationCarousel
           slides={turn.slides}
-          className="-mx-[23px] w-auto"
+          className="-mx-5 w-auto"
         />
       ) : null}
 
@@ -165,7 +174,7 @@ function StatePanel({
   return (
     <div
       role={tone === "error" ? "alert" : tone === "pending" ? "status" : undefined}
-      className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-main-light-gray-600 bg-white px-5 py-10 text-center"
+      className="flex flex-col items-center justify-center gap-4 rounded-[16px] border border-white/80 bg-white/45 px-5 py-10 text-center shadow-[0_10px_26px_rgba(72,52,112,0.05)]"
     >
       {tone === "pending" ? (
         <LoadingSpinner label="와인 추천 준비 중" className="h-10 w-10" />
@@ -173,7 +182,7 @@ function StatePanel({
       <p
         className={cn(
           "text-[15px] leading-relaxed",
-          tone === "error" ? "text-error-main" : "text-text-02"
+          tone === "error" ? "text-error-main" : "text-ink-secondary"
         )}
       >
         {message}

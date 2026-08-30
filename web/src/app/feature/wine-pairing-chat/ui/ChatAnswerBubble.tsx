@@ -14,14 +14,14 @@ export default function ChatAnswerBubble({
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      <p className="max-w-[80%] self-end break-words rounded-2xl rounded-br-md bg-primary-main px-4 py-2.5 text-[14px] leading-relaxed text-white">
+      <p className="max-w-[88%] self-end break-words rounded-[16px] rounded-br-md border border-white/80 bg-white/55 px-4 py-3 text-[14px] leading-relaxed text-ink-page shadow-[0_8px_20px_rgba(72,52,112,0.05)]">
         {turn.question}
       </p>
 
       <div
         role={turn.status === "error" ? "alert" : undefined}
         aria-busy={isStreaming}
-        className="max-w-[85%] self-start whitespace-pre-wrap break-words rounded-2xl rounded-bl-md bg-white px-4 py-2.5 text-[14px] leading-relaxed text-text-01 shadow-sm"
+        className="max-w-[94%] self-start whitespace-pre-wrap break-words px-0.5 py-2 text-[15px] leading-[1.8] text-ink-page"
       >
         {turn.answer}
         {isStreaming ? (
@@ -45,7 +45,7 @@ function TypingDot({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "h-1 w-1 animate-bounce rounded-full bg-main-gray-300 motion-reduce:animate-none",
+        "h-1 w-1 animate-bounce rounded-full bg-ink-muted motion-reduce:animate-none",
         className
       )}
     />

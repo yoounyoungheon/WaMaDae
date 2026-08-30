@@ -7,6 +7,18 @@
 이 문서의 코드 경로는 별도 표기가 없으면 `web/src/app/`을 기준으로 한다.
 계획 문서가 아니라 현재 구현을 설명하며, 코드 변경 시 함께 갱신한다.
 
+## 0. 개선 디자인 UI (2026-08-23)
+
+- `wine/list/page.tsx`는 `bg-canvas bg-violet-haze` shell과 가운데 정렬 `PageHeader`를 사용한다.
+- `WineListSelectPage`는 인트로 → 메뉴판 사진 업로드/분석 → 선택 와인 순서다.
+- `PhotoUploadBox`는 빈 상태에서 카메라 아이콘, 업로드 명령, 보조 문구를 표시하고 파일 선택 후에는 실제 미리보기와 파일명을 표시한다.
+- 사진이 없거나 분석 중이면 "와인 리스트 분석" 버튼을 비활성화한다.
+- 업로드 프레임과 분석 버튼은 반투명 white layer, `backdrop-blur-xl`, inset highlight를 조합한 glass 스타일이다. disabled 버튼도 불투명 회색으로 덮지 않고 muted glass 상태를 유지한다.
+- 직접 검색 feature와 API 코드는 유지하지만 현재 `WineListSelectPage`에서는 검색 섹션을 렌더링하지 않는다.
+- 선택 와인이 생기면 하단 safe-area 위에 `NextRecommendationButton`을 고정하고, 스크롤 콘텐츠가 버튼 뒤에 가려지지 않게 별도 영역으로 배치한다.
+- 앱 shell은 `w-screen max-w-[350px]`여서 WebView 기준 폭을 유지하면서 320px 기기에서도 수평 overflow를 만들지 않는다.
+- 사용 색상은 Tailwind의 `canvas`, `primary`, `ink-*`, `violet-haze` semantic token을 사용한다. 설명·placeholder 토큰에 추가 opacity를 적용하지 않는다.
+
 ## 1. 한눈에 보기
 
 ### UI와 상태 관리 구조

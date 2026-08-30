@@ -79,7 +79,15 @@ function StatefulWineMenuPhotoSection(
   );
 }
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(
+      canvas.getByRole("button", { name: "와인 리스트 분석" })
+    ).toBeDisabled();
+  },
+};
 
 export const WithImageName: Story = {
   args: {

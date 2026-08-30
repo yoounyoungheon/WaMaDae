@@ -140,7 +140,6 @@ function mapWineMenuOcrExtractItemToWineDetailDto(
     wine.region,
     wine.vintage != null ? `${wine.vintage} 빈티지` : null,
     formatAlcohol(wine.alcohol),
-    `${wine.type} 와인 후보입니다.`,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -148,7 +147,7 @@ function mapWineMenuOcrExtractItemToWineDetailDto(
   return {
     id: wine.id.trim(),
     display_name: displayName,
-    image_url: "/ExampleImage.png",
+    image_url: "",
     rating: 0,
     title: displayName,
     recommendation_text: description,

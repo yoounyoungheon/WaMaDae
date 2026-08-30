@@ -9,6 +9,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        /* ===== Enhanced Wine Flow ===== */
+        canvas: "#F2F4F8",
+        primary: "#6E3AF5",
+        "ink-page": "#241C3D",
+        "ink-card": "#2A2148",
+        "ink-emphasis": "#332853",
+        "ink-secondary": "#645986",
+        "ink-muted": "#6F6488",
+
         /* ===== Primary ===== */
         "primary-main": "#A65BEF",
         "primary-action": "#7641AA",
@@ -114,6 +123,11 @@ const config: Config = {
       boxShadow: {
         /* Tailwind v4의 shadow-xs와 동일한 극소 그림자 */
         xs: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      },
+
+      backgroundImage: {
+        "violet-haze":
+          "radial-gradient(80% 30% at 50% 4%, rgba(84, 95, 255, 0.1) 0%, rgba(84, 95, 255, 0) 72%)",
       },
 
       keyframes: {

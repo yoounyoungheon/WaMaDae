@@ -11,7 +11,8 @@ const selectedWines: Wine[] = [
   {
     id: "analyzed-wine-1",
     name: "몬테스 알파 카베르네 소비뇽",
-    imageUrl: "/ExampleImage.png",
+    imageUrl: "",
+    wineType: "RED",
     rating: 4.3,
     title: "몬테스 알파 카베르네 소비뇽 2021",
     recommendationText: "진한 풍미를 원한다면 추천",
@@ -20,7 +21,8 @@ const selectedWines: Wine[] = [
   {
     id: "analyzed-wine-2",
     name: "샤토 마고",
-    imageUrl: "/ExampleImage.png",
+    imageUrl: "",
+    wineType: "WHITE",
     rating: 4.7,
     title: "샤토 마고 그랑 크뤼 2019",
     recommendationText: "부드러운 탄닌과 긴 여운",

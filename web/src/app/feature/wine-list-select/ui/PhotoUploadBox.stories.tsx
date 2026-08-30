@@ -89,12 +89,13 @@ export const Loading: Story = {
     const status = canvas.getByRole("status", {
       name: "와인 메뉴판 분석 중",
     });
+    const animatedSkeleton = status.querySelector(".animate-pulse");
     const input = canvasElement.querySelector<HTMLInputElement>(
       'input[type="file"]'
     );
 
     await expect(status).toBeVisible();
-    await expect(status).toHaveClass("text-primary-main");
+    await expect(animatedSkeleton).toBeInTheDocument();
     await expect(input).toBeDisabled();
   },
 };

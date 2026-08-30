@@ -38,7 +38,7 @@ export default function NextRecommendationButton({
         radius="lg"
         disabled={isDisabled}
         onClick={handleClick}
-        className="h-11 w-full rounded-lg px-4 py-3 text-[14px] font-bold"
+        className="h-[52px] w-full rounded-[18px] border border-white/70 bg-white/[0.14] px-4 py-3 text-[15px] font-bold text-ink-emphasis shadow-[inset_0_1px_0_rgba(255,255,255,0.9),inset_0_-1px_0_rgba(110,58,245,0.08),0_12px_30px_rgba(72,52,112,0.08)] backdrop-blur-2xl backdrop-saturate-150 hover:bg-white/[0.22]"
       >
         다음
       </Button>

@@ -14,7 +14,7 @@ export default function MenuCategoryList({
   className,
 }: MenuCategoryListProps) {
   return (
-    <ul className={cn("flex flex-col gap-2.5", className)}>
+    <ul className={cn("flex flex-col gap-3", className)}>
       {categories.map((category, index) => (
         <MenuCategoryItem
           key={`${category}-${index}`}

@@ -1,9 +1,12 @@
 export type WineId = string;
 
+export type WineType = "RED" | "WHITE" | "SPARKLING";
+
 export type Wine = {
   id: WineId;
   name: string;
   imageUrl: string;
+  wineType?: WineType;
   rating: number;
   title: string;
   recommendationText: string;
@@ -28,7 +31,10 @@ export type MenuImagePreview = {
 export type WineDetailDto = {
   id: string;
   display_name: string;
-  image_url: string;
+  image_url?: string | null;
+  wine_type?: string | null;
+  wineType?: string | null;
+  type?: string | null;
   rating: number;
   title: string;
   recommendation_text: string;

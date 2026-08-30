@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { expect, userEvent, within } from "storybook/test";
 import WineRecommendationSlide from "./WineRecommendationSlide";
 import type { PairingSlideView } from "../model/conversation.types";
 
@@ -54,6 +55,16 @@ export const LongText: Story = {
       reason:
         "된장의 감칠맛이 와인의 과실향을 더 또렷하게 만들어줌. 부담 없이 마시기 좋음. 가성비 괜찮음. 타닌이 부드럽고 산도가 적당해 다양한 한식 메뉴와 두루 어울리며, 특히 발효 소스를 쓰는 요리와 궁합이 좋습니다.",
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(
+      canvas.getByRole("button", { name: "추천 이유 전체 보기" })
+    );
+    await expect(
+      canvas.getByRole("button", { name: "상세 설명 닫기" })
+    ).toHaveTextContent("타닌이 부드럽고 산도가 적당해");
   },
 };
 

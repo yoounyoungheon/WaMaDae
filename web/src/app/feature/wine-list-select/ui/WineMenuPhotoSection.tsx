@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import Button from "@/app/shared/ui/atom/button";
 import { cn } from "@/app/utils/style/helper";
 import PhotoUploadBox from "./PhotoUploadBox";
@@ -20,13 +20,13 @@ export default function WineMenuPhotoSection({
   return (
     <section className={cn("w-full", className)}>
       <div className="flex items-center justify-between">
-        <h2 className="text-[12px] font-bold text-text-02">
-          사진으로 와인 찾아볼게요
+        <h2 className="sr-only">
+          사진으로 와인 리스트 찾기
         </h2>
         <button
           type="button"
           aria-expanded={isOpen}
-          className="flex items-center gap-1 text-[10px] font-medium text-text-03 transition-colors hover:text-text-02"
+          className="ml-auto flex min-h-9 items-center gap-1 px-1 text-[12px] font-medium text-ink-muted transition-colors hover:text-ink-emphasis"
           onClick={() => onOpenChange(!isOpen)}
         >
           {isOpen ? (
@@ -34,7 +34,7 @@ export default function WineMenuPhotoSection({
           ) : (
             <ChevronDown className="h-3 w-3" />
           )}
-          {isOpen ? "접어둘래요" : "다시 볼래요"}
+          {isOpen ? "접어둘래요" : "사진으로 찾기"}
         </button>
       </div>
 
@@ -45,28 +45,26 @@ export default function WineMenuPhotoSection({
             accept={WINE_MENU_IMAGE_ACCEPT}
             disabled={isAnalyzing}
             isLoading={isAnalyzing}
-            className="mt-3"
+            className="mt-1"
             onFileChange={onImageChange}
           />
 
           <Button
             htmlType="button"
-            variant="solid"
-            type={isUnavailable ? "cancel" : "primary"}
+            variant="outline"
+            type="primary"
             size="default"
             radius="lg"
             disabled={isUnavailable}
             aria-busy={isAnalyzing}
             className={cn(
-              "mt-2 h-11 w-full gap-2 rounded-xl px-4 py-3 text-[13px] font-bold shadow-[0_8px_16px_rgba(15,23,42,0.08)]",
+              "mt-3 h-[48px] w-full rounded-[18px] border border-white/55 bg-white/[0.04] px-4 py-3 text-[14px] font-bold text-ink-emphasis shadow-[inset_0_1px_0_rgba(255,255,255,0.82),inset_0_-1px_0_rgba(110,58,245,0.06),0_14px_34px_rgba(72,52,112,0.045)] backdrop-blur-2xl backdrop-saturate-150 hover:bg-white/[0.09] disabled:!opacity-100",
+              isUnavailable &&
+                "!border-white/45 !bg-white/[0.02] !text-ink-muted !shadow-[inset_0_1px_0_rgba(255,255,255,0.68),inset_0_-1px_0_rgba(110,58,245,0.04),0_10px_28px_rgba(72,52,112,0.025)] hover:!bg-white/[0.02]",
               isAnalyzing && "cursor-wait"
             )}
             onClick={onAnalyze}
           >
-            <Sparkles
-              className={cn("h-4 w-4", isAnalyzing && "animate-pulse")}
-              strokeWidth={2}
-            />
             {isAnalyzing ? "분석 중" : "와인 리스트 분석"}
           </Button>
 
