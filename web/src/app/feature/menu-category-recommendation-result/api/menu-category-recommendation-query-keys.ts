@@ -1,7 +1,14 @@
-import type { MenuCategoryRecommendationRequest } from "@/app/entity/menu-category-recommendation/model/menu-category-recommendation.type";
-
-export const menuCategoryRecommendationQueryKeys = {
-  all: ["menu-category-recommendations"] as const,
-  recommend: (wineIds: MenuCategoryRecommendationRequest["wineIds"]) =>
-    [...menuCategoryRecommendationQueryKeys.all, "recommend", { wineIds }] as const,
+/**
+ * 메뉴 추천 query key factory.
+ *
+ * 세션마다 추천 결과가 다르므로 sessionId와 pairingWineIds를 모두 key에 포함한다.
+ * 서로 다른 세션 값이 같은 cache로 섞이지 않게 한다.
+ */
+export const menuRecommendationQueryKeys = {
+  all: ["wine-pairings", "recommend-menu"] as const,
+  recommend: (sessionId: string, pairingWineIds: readonly string[]) =>
+    [
+      ...menuRecommendationQueryKeys.all,
+      { sessionId, pairingWineIds },
+    ] as const,
 };

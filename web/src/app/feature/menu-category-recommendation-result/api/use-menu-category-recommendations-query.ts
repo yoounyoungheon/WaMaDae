@@ -1,24 +1,30 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { fetchMenuCategoryRecommendations } from "@/app/entity/menu-category-recommendation/api/menu-category-recommendation.api";
-import type { MenuCategoryRecommendationRequest } from "@/app/entity/menu-category-recommendation/model/menu-category-recommendation.type";
-import { menuCategoryRecommendationQueryKeys } from "./menu-category-recommendation-query-keys";
+import { fetchMenuRecommendations } from "@/app/entity/menu-category-recommendation/api/menu-category-recommendation.api";
+import { menuRecommendationQueryKeys } from "./menu-category-recommendation-query-keys";
 
 /**
- * 선택 와인으로 메뉴 카테고리 추천을 동기 조회한다.
+ * 같은 세션과 선택 wine으로 메뉴 추천을 조회한다.
  *
- * 동일한 선택(와인 목록)에 대한 추천은 안정적이므로 요청 wineIds를 query key로 사용하고
- * `staleTime: Infinity`로 재방문 시 재요청하지 않는다. 선택이 없으면 비활성화한다.
+ * `POST`지만 화면 생명주기 동안 같은 입력을 재사용하는 조회 성격이다.
+ * backend가 추천 결과를 세션에 저장하므로 자동 refetch/retry는 결과를 바꿀 수 있어
+ * `staleTime: Infinity`, `refetchOnWindowFocus: false`, `retry: 0`으로 둔다.
  */
-export function useMenuCategoryRecommendationsQuery(
-  request: MenuCategoryRecommendationRequest
+export function useMenuRecommendationsQuery(
+  sessionId: string | null,
+  pairingWineIds: string[]
 ) {
   return useQuery({
-    queryKey: menuCategoryRecommendationQueryKeys.recommend(request.wineIds),
-    queryFn: ({ signal }) => fetchMenuCategoryRecommendations(request, signal),
-    enabled: request.wineIds.length > 0,
+    queryKey: menuRecommendationQueryKeys.recommend(
+      sessionId ?? "",
+      pairingWineIds
+    ),
+    queryFn: ({ signal }) =>
+      fetchMenuRecommendations(sessionId as string, { pairingWineIds }, signal),
+    enabled: Boolean(sessionId) && pairingWineIds.length > 0,
     staleTime: Infinity,
-    retry: 1,
+    refetchOnWindowFocus: false,
+    retry: 0,
   });
 }

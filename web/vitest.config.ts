@@ -32,6 +32,19 @@ export default defineConfig({
           setupFiles: ['.storybook/vitest.setup.ts'],
         },
       },
+      {
+        // 순수 함수(mapper/reducer/storage/sse/validation) 단위 테스트. Node 환경에서 실행한다.
+        resolve: {
+          alias: {
+            '@': path.join(dirname, 'src'),
+          },
+        },
+        test: {
+          name: 'unit',
+          environment: 'node',
+          include: ['src/**/*.test.ts'],
+        },
+      },
     ],
   },
 });

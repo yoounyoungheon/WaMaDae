@@ -1,5 +1,7 @@
 # P1 데이터 흐름 및 레이어 마이그레이션 계획
 
+> 보관 문서: 이 계획은 구현 당시 계약을 기록한다. 현재 API 대응 설계는 [`/wine/list` 세션 기반 와인 메뉴 추출 설계](./wine-list-enhanced-design-plan.md)를 기준으로 한다.
+
 ## 기준
 
 이 계획은 `mysom-frontend-guidance-mcp`의 `data-flow-layering` 가이드

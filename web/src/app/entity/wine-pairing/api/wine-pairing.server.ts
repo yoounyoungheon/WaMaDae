@@ -6,9 +6,9 @@ import type {
   WinePairingRequest,
 } from "../model/wine-pairing.type";
 
-const PAIRING_STREAM_PATH = "/v1/wine-pairing/stream/pairing";
-const CHAT_STREAM_PATH = "/v1/wine-pairing/stream/chat";
-const CHAT_ID_HEADER = "X-Chat-Id";
+const PAIRING_PATH = "/v1/wine-pairings/pairing";
+const CHAT_PATH = "/v1/wine-pairings/chat";
+const SESSION_ID_HEADER = "X-Session-Id";
 
 /**
  * 서버 전용 백엔드 오류.
@@ -28,25 +28,25 @@ export class WinePairingBackendError extends Error {
  */
 export async function openWinePairingStream(
   request: WinePairingRequest,
-  chatId: string,
+  sessionId: string,
   signal?: AbortSignal
 ): Promise<Response> {
-  return openStream(PAIRING_STREAM_PATH, request, chatId, signal);
+  return openStream(PAIRING_PATH, request, sessionId, signal);
 }
 
 /** 서버 전용 후속 채팅 스트림 오픈 helper. */
 export async function openWinePairingChatStream(
   request: WinePairingChatRequest,
-  chatId: string,
+  sessionId: string,
   signal?: AbortSignal
 ): Promise<Response> {
-  return openStream(CHAT_STREAM_PATH, request, chatId, signal);
+  return openStream(CHAT_PATH, request, sessionId, signal);
 }
 
 async function openStream(
   path: string,
   body: unknown,
-  chatId: string,
+  sessionId: string,
   signal?: AbortSignal
 ): Promise<Response> {
   const response = await fetch(buildMysomApiUrl(path), {
@@ -54,7 +54,7 @@ async function openStream(
     headers: {
       "Content-Type": "application/json",
       Accept: "text/event-stream",
-      [CHAT_ID_HEADER]: chatId,
+      [SESSION_ID_HEADER]: sessionId,
     },
     body: JSON.stringify(body),
     cache: "no-store",

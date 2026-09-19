@@ -1,19 +1,23 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
-  clearWinePairingRequest,
-  saveWinePairingRequest,
-} from "@/app/entity/wine-pairing/lib/wine-pairing-request-storage";
+  clearWinePairingConsumed,
+  clearWinePairingSnapshot,
+  saveWinePairingSnapshot,
+} from "@/app/entity/wine-pairing-workflow/lib/workflow-snapshot-storage";
+import { WORKFLOW_SNAPSHOT_VERSION } from "@/app/entity/wine-pairing-workflow/model/workflow-snapshot.type";
 import type {
   PairingSlidePayload,
   PairingStreamWine,
 } from "@/app/entity/wine-pairing/model/wine-pairing.type";
 import WinePairingChatView from "./WinePairingChatView";
 
+const SESSION_ID = "0198b013-f4a7-7a91-a232-20f4fe638b38";
+
 const sampleWine = {
   id: "11111111-1111-4111-8111-111111111111",
   wineName: "샤또 라 로즈 드 비트락 루즈",
   vintage: 2020,
-  alcohol: 13,
+  alcohol: "13.0% ~ 13.5%",
   price: [
     {
       amount: 55000,
@@ -24,6 +28,11 @@ const sampleWine = {
   ],
   country: "France",
   region: "Bordeaux",
+  tannin: 4,
+  body: null,
+  sweetness: 1,
+  acid: 3,
+  wineBottleImageUrl: "/ExampleImage.png",
 } satisfies PairingStreamWine;
 
 const samplePayloads: PairingSlidePayload[] = [
@@ -58,11 +67,7 @@ function pairingFrames(payloads: PairingSlidePayload[]): unknown[] {
     },
     {
       type: "STREAM",
-      data: {
-        fieldName: "name",
-        hasNext: false,
-        body: payload.wine.wineName,
-      },
+      data: { fieldName: "name", hasNext: false, body: payload.wine.wineName },
     },
     {
       type: "STREAM",
@@ -77,12 +82,10 @@ function pairingFrames(payloads: PairingSlidePayload[]): unknown[] {
 }
 
 function chatFrames(answer: string): unknown[] {
-  return answer
-    .split(" ")
-    .map((word) => ({
-      type: "STREAM",
-      data: { body: `${word} ` },
-    }));
+  return answer.split(" ").map((word) => ({
+    type: "STREAM",
+    data: { body: `${word} ` },
+  }));
 }
 
 function sseResponse(
@@ -127,23 +130,26 @@ function stubStoryEnv(options: {
   return async () => {
     const originalFetch = globalThis.fetch;
 
-    clearWinePairingRequest();
+    clearWinePairingSnapshot();
+    clearWinePairingConsumed();
     if (options.seedRequest) {
-      saveWinePairingRequest({
+      saveWinePairingSnapshot({
+        version: WORKFLOW_SNAPSHOT_VERSION,
+        sessionId: SESSION_ID,
         wineIds: [
           "11111111-1111-4111-8111-111111111111",
           "22222222-2222-4222-8222-222222222222",
         ],
-        menuCategories: [{ name: "스테이크" }, { name: "파스타" }],
+        menuNames: ["해산물 파전", "바지락 오일 파스타"],
       });
     }
 
     globalThis.fetch = (async (input: RequestInfo | URL) => {
       const url = String(input);
-      if (url.includes("/api/wine-pairing/stream/pairing") && options.onPairing) {
+      if (url.includes("/api/wine-pairings/pairing") && options.onPairing) {
         return options.onPairing();
       }
-      if (url.includes("/api/wine-pairing/stream/chat") && options.onChat) {
+      if (url.includes("/api/wine-pairings/chat") && options.onChat) {
         return options.onChat();
       }
       return jsonResponse({ message: "stubbed" }, 404);
@@ -151,7 +157,8 @@ function stubStoryEnv(options: {
 
     return () => {
       globalThis.fetch = originalFetch;
-      clearWinePairingRequest();
+      clearWinePairingSnapshot();
+      clearWinePairingConsumed();
     };
   };
 }

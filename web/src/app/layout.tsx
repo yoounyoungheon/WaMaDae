@@ -38,8 +38,8 @@ export default function RootLayout({
       >
         <Providers>
           <div className="h-[100dvh] overflow-hidden bg-white">
-            {/* WebView 기준 폭을 유지하되 350px보다 좁은 기기에서는 viewport에 맞춘다. */}
-            <div className="h-[100dvh] w-screen max-w-[350px] overflow-hidden bg-white pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]">
+            {/* 최대 폭(480px)만 제한하고 그 안에서는 viewport 폭에 반응형으로 채운다. */}
+            <div className="h-[100dvh] w-screen max-w-[480px] overflow-hidden bg-white pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]">
               {children}
             </div>
           </div>

@@ -22,7 +22,7 @@ export default function PageHeader({
       className={cn(
         "relative flex shrink-0 items-center",
         isCentered
-          ? "h-[92px] justify-center bg-transparent px-5"
+          ? "h-[72px] justify-center bg-transparent px-5"
           : "h-[50px] border-b border-main-light-gray-600 bg-white px-4",
         className
       )}

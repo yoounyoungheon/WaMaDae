@@ -13,10 +13,11 @@ import WineRecommendationCarousel from "./WineRecommendationCarousel";
 import type { WinePairingChatViewProps } from "./wine-pairing-chat.props";
 
 /**
- * 와인 페어링 스트리밍 대화 화면(designs/p6.png).
+ * 와인 페어링 스트리밍 대화 화면(designs/enhanced_design_3_*.png).
  *
- * 진입 시 페어링 SSE로 추천 캐러셀을 점진 렌더하고, 완료 후에는 하단 입력창으로
- * 후속 질문을 보내 답변 말풍선을 대화에 누적한다.
+ * 진입 시 페어링 SSE로 추천 캐러셀을 점진 렌더하고, 완료 후 하단 입력창으로
+ * 후속 질문(일반 대화 또는 재페어링)을 보낸다. 초기 pairing 실패나 리로드는
+ * 자동 재호출하지 않고 "처음부터 다시 시작" 안내로 복구한다.
  */
 export default function WinePairingChatView({
   className,
@@ -24,11 +25,11 @@ export default function WinePairingChatView({
   const {
     turns,
     hasRequest,
+    alreadyConsumed,
     isHydrated,
     isPairingDone,
     isComposerEnabled,
     sendChat,
-    retryPairing,
   } = useWinePairingConversation();
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -43,27 +44,23 @@ export default function WinePairingChatView({
     }
   }, [lastChatAnswerLength]);
 
+  const showRestart = isHydrated && (!hasRequest || alreadyConsumed);
+
   return (
-    <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
+    <div className={cn("relative flex min-h-0 flex-1 flex-col", className)}>
       <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
-        <div className="mx-auto flex min-h-full w-full max-w-[680px] flex-col gap-7 px-5 pb-10 pt-5">
+        <div className="mx-auto flex min-h-full w-full max-w-[680px] flex-col gap-7 px-5 pb-28 pt-5">
           {!isHydrated ? (
             <StatePanel tone="pending" message="와인 추천을 준비하고 있어요." />
-          ) : !hasRequest ? (
+          ) : showRestart ? (
             <StatePanel
               tone="empty"
-              message="추천 정보를 찾을 수 없어요. 와인과 메뉴를 먼저 선택해 주세요."
-              action={
-                <Button
-                  asChild
-                  variant="outline"
-                  type="primary"
-                  radius="lg"
-                  className="h-11 rounded-lg px-6 py-3 text-[14px] font-bold"
-                >
-                  <Link href="/wine/list">와인 선택하러 가기</Link>
-                </Button>
+              message={
+                alreadyConsumed
+                  ? "이미 진행한 추천이에요. 새 추천을 시작해 주세요."
+                  : "추천 정보를 찾을 수 없어요. 와인과 메뉴를 먼저 선택해 주세요."
               }
+              action={<RestartLink />}
             />
           ) : (
             <>
@@ -75,16 +72,12 @@ export default function WinePairingChatView({
                   마이쏨이 추천하는 와인이에요
                 </h2>
                 <p className="mt-3 text-[14px] font-medium leading-relaxed text-ink-secondary">
-                  선택한 메뉴와 잘 어울리는 순서예요
+                  선택한 메뉴와 잘 어울리는 순서예요 · 카드를 뒤집어 상세를 볼 수 있어요
                 </p>
               </section>
               {turns.map((turn, index) =>
                 turn.kind === "pairing" ? (
-                  <PairingTurnSection
-                    key={`turn-${index}`}
-                    turn={turn}
-                    onRetry={retryPairing}
-                  />
+                  <PairingTurnSection key={`turn-${index}`} turn={turn} />
                 ) : (
                   <ChatAnswerBubble key={`turn-${index}`} turn={turn} />
                 )
@@ -95,8 +88,8 @@ export default function WinePairingChatView({
         </div>
       </main>
 
-      <div className="shrink-0 border-t border-white/70 bg-canvas/90 px-5 pb-[calc(14px_+_env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(60,45,96,0.08)] backdrop-blur-md">
-        <div className="mx-auto w-full max-w-[640px]">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-5 pb-[calc(16px_+_env(safe-area-inset-bottom))]">
+        <div className="pointer-events-auto mx-auto w-full max-w-[640px]">
           <ChatComposer
             disabled={!isComposerEnabled}
             placeholder={
@@ -112,13 +105,7 @@ export default function WinePairingChatView({
   );
 }
 
-function PairingTurnSection({
-  turn,
-  onRetry,
-}: {
-  turn: PairingTurn;
-  onRetry: () => void;
-}) {
+function PairingTurnSection({ turn }: { turn: PairingTurn }) {
   return (
     <section aria-label="추천 와인" className="flex flex-col gap-4">
       {turn.source === "recommendation" && turn.question ? (
@@ -128,12 +115,8 @@ function PairingTurnSection({
       ) : null}
 
       {turn.slides.length > 0 ? (
-        // 캐러셀 스크롤 영역은 페이지 패딩(px-[23px])을 상쇄해 화면 전체 폭을 쓴다.
-        // 카드 여백은 캐러셀 슬라이드 내부 패딩(px-[23px])이 담당한다.
-        <WineRecommendationCarousel
-          slides={turn.slides}
-          className="-mx-5 w-auto"
-        />
+        // 캐러셀 스크롤 영역은 페이지 패딩(px-5)을 상쇄해 화면 전체 폭을 쓴다.
+        <WineRecommendationCarousel slides={turn.slides} className="-mx-5 w-auto" />
       ) : null}
 
       {turn.status === "streaming" && turn.slides.length === 0 ? (
@@ -144,21 +127,24 @@ function PairingTurnSection({
         <StatePanel
           tone="error"
           message={turn.errorMessage ?? "와인 추천을 불러오지 못했습니다."}
-          action={
-            <Button
-              htmlType="button"
-              variant="outline"
-              type="primary"
-              radius="lg"
-              onClick={onRetry}
-              className="h-11 rounded-lg px-6 py-3 text-[14px] font-bold"
-            >
-              다시 시도
-            </Button>
-          }
+          action={<RestartLink />}
         />
       ) : null}
     </section>
+  );
+}
+
+function RestartLink() {
+  return (
+    <Button
+      asChild
+      variant="outline"
+      type="primary"
+      radius="lg"
+      className="h-11 rounded-lg px-6 py-3 text-[14px] font-bold"
+    >
+      <Link href="/wine/list">처음부터 다시 시작</Link>
+    </Button>
   );
 }
 

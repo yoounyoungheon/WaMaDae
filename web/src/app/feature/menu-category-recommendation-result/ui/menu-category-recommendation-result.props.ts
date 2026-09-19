@@ -1,33 +1,20 @@
-import type { DefaultMenuCategory } from "../model/default-menu-categories";
+import type { RecommendedMenu } from "@/app/entity/menu-category-recommendation/model/menu-category-recommendation.type";
 
 export interface MenuCategoryRecommendationPageProps {
   className?: string;
 }
 
-export interface MenuCategoryListProps {
-  categories: string[];
-  selectedCategories?: readonly string[];
-  onToggleCategory?: (category: string) => void;
+export interface RecommendedMenuListProps {
+  menus: RecommendedMenu[];
+  /** 선택된 메뉴 `name` 목록. category가 아니라 name이 선택 식별자다. */
+  selectedNames?: readonly string[];
+  onToggleName?: (name: string) => void;
   className?: string;
 }
 
-export interface MenuCategoryItemProps {
-  category: string;
+export interface MenuNameBadgeProps {
+  name: string;
   isSelected?: boolean;
-  onToggle?: (category: string) => void;
-  className?: string;
-}
-
-export interface DefaultMenuCategoryGridProps {
-  categories: readonly DefaultMenuCategory[];
-  selectedCategories?: readonly string[];
-  onToggleCategory?: (category: string) => void;
-  className?: string;
-}
-
-export interface DefaultMenuCategoryCardProps {
-  category: DefaultMenuCategory;
-  isSelected?: boolean;
-  onToggle?: (category: string) => void;
+  onToggle?: (name: string) => void;
   className?: string;
 }

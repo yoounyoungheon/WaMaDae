@@ -1,65 +1,42 @@
-import type { Wine, WineType } from "../model/wine.type";
+import type { Wine } from "../model/wine.type";
 
-const DEFAULT_WINE_IMAGES: Record<WineType, string> = {
-  RED: "/images/wines/wine-red.png",
-  WHITE: "/images/wines/wine-white.png",
-  SPARKLING: "/images/wines/wine-sparkling.png",
+/**
+ * 병 이미지가 없을 때 사용할 fallback 이미지들.
+ * seed 기반으로 결정적으로 하나를 골라 같은 와인에 항상 같은 이미지를 보여준다.
+ */
+export const FALLBACK_WINE_BOTTLE_IMAGES = [
+  "https://wine21.speedgabia.com/WINE_MST/TITLE/0149000/W0149862.jpg",
+  "https://wine21.speedgabia.com/WINE_MST/TITLE/0158000/W0158280.jpg",
+  "https://wine21.speedgabia.com/WINE_MST/IMAGE/0144000/T0144699_002.png",
+] as const;
+
+export type ResolvedWineImage = {
+  src: string;
+  /** 실제 병 이미지가 아니라 fallback(준비중) 이미지인지 여부. */
+  isPlaceholder: boolean;
 };
 
-const SPARKLING_KEYWORDS = [
-  "sparkling",
-  "champagne",
-  "prosecco",
-  "cava",
-  "brut",
-  "샴페인",
-  "스파클링",
-];
-
-const WHITE_KEYWORDS = [
-  "white",
-  "blanc",
-  "bianco",
-  "chardonnay",
-  "sauvignon",
-  "riesling",
-  "grigio",
-  "chenin",
-  "moscato",
-  "화이트",
-  "샤르도네",
-  "소비뇽 블랑",
-  "리슬링",
-];
-
-export function getWineImageUrl(wine: Wine): string {
-  const imageUrl = wine.imageUrl?.trim();
-  if (imageUrl) {
-    return imageUrl;
+function hashSeed(seed: string): number {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) | 0;
   }
-
-  return DEFAULT_WINE_IMAGES[
-    wine.wineType ?? inferWineType(`${wine.name} ${wine.title}`)
-  ];
+  return Math.abs(hash);
 }
 
-export function normalizeWineType(value?: string | null): WineType | null {
-  if (!value) return null;
-
-  const normalized = value.trim().toLowerCase();
-  if (SPARKLING_KEYWORDS.some((keyword) => normalized.includes(keyword))) {
-    return "SPARKLING";
+/**
+ * 표시할 병 이미지를 결정한다.
+ * 실제 `wineBottleImageUrl`이 있으면 그대로(placeholder=false),
+ * 없으면 seed로 고른 fallback 이미지를 반환하고 placeholder=true로 표시한다.
+ */
+export function resolveWineBottleImage(
+  wine: Pick<Wine, "wineBottleImageUrl">,
+  seed: string
+): ResolvedWineImage {
+  const url = wine.wineBottleImageUrl?.trim();
+  if (url && url.length > 0) {
+    return { src: url, isPlaceholder: false };
   }
-  if (WHITE_KEYWORDS.some((keyword) => normalized.includes(keyword))) {
-    return "WHITE";
-  }
-  if (normalized === "red" || normalized.includes("레드")) {
-    return "RED";
-  }
-
-  return null;
-}
-
-export function inferWineType(label: string): WineType {
-  return normalizeWineType(label) ?? "RED";
+  const index = hashSeed(seed) % FALLBACK_WINE_BOTTLE_IMAGES.length;
+  return { src: FALLBACK_WINE_BOTTLE_IMAGES[index], isPlaceholder: true };
 }

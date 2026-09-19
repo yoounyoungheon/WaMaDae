@@ -1,112 +1,165 @@
-# `/wine/keywords` 개선 디자인 구현 계획
+# `/wine/keywords` 세션 기반 메뉴 추천 설계
 
 ## 1. 범위와 기준
 
 - 대상 라우트: `web/src/app/wine/keywords/page.tsx`
-- 대상 시안: `designs/enhanced_design_2.png`
-- 활성 API 명세: `api/mysom-api.md`의 `POST /v1/wine-pairing/menu-category/recommend`
-- 적용 가이드: `rsc-rendering`, `rcc-rendering`, `data-flow-layering`, `css-only-state`, `style-implementation`, `storybook-authoring`
-- 목적: 추천 메뉴와 전체 메뉴를 빠르게 비교·선택하고, 선택 결과로 와인 추천을 요청하는 화면을 개선한다.
+- 화면 시안: `designs/enhanced_design_2.png`
+- API 명세: `api/mysom-wine-pairing.md`의 `POST /v1/wine-pairings/recommend-menu`
+- 기준 백엔드: `mysom-api-demo` `68a0cb7`
+- 적용 가이드: `web/GUIDE.md`, `data-flow-layering`, `bff-api-gateway`, `rsc-rendering`, `rcc-rendering`, `storybook-authoring`
+- 범위: 설계만 작성하며 코드는 변경하지 않는다.
 
-## 2. 제품 결정
+이 페이지는 `/wine/list`에서 선택한 session wine으로 추천 메뉴를 조회하고, 사용자가 실제 페어링에 사용할 **추천 메뉴명**을 고르는 단계다.
 
-- 메뉴 카테고리 항목은 이번 단계에서 **이미지와 설명 없이 이름만 표시**한다.
-- AI 추천 항목과 기본 카테고리는 동일한 선택 모델을 공유하지만, 정보 우선순위에 따라 서로 다른 밀도로 배치한다.
-- 시안의 선택 표시는 상태 예시일 뿐이다. 서버 추천 첫 항목을 자동 선택하지 않고 사용자가 명시적으로 선택하게 한다.
-- 기존 카테고리 SVG 파일은 삭제하지 않지만 이 화면에서는 렌더링하지 않는다.
-- API가 반환하지 않는 카테고리 설명이나 이미지를 프론트 상수로 새로 만들지 않는다.
+## 2. 변경 계약과 제품 영향
 
-## 3. 화면 구조
+| 구분 | 현재 프론트 | 변경 계약 | 설계 결정 |
+| --- | --- | --- | --- |
+| path | `/v1/wine-pairing/menu-category/recommend` | `/v1/wine-pairings/recommend-menu` | 새 path 사용 |
+| header | 없음 | `X-Session-Id: UUID` | list snapshot에서 복원 |
+| request | `{ wineIds }` | `{ pairingWineIds }` | 필드명 변경 |
+| response | `{ menuCategories: [{name}] }` | `{ recommendedMenus: [{name, category}] }` | 객체 모델 보존 |
+| pairing input | category 객체 | 정확한 추천 `name` 문자열 | 추천 name만 선택 허용 |
+
+백엔드는 현재 세션에 저장한 추천 menu name만 다음 페어링에서 허용한다. 따라서 프론트 상수인 “기본 카테고리”나 사용자가 임의 입력한 이름을 pairing 요청에 포함하면 `404 PAIRING_MENU_NOT_FOUND`가 발생할 수 있다.
+
+## 3. 페이지 구조
 
 ```text
 WineKeywordsPage [Server]
 ├─ PageHeader [Server]
-│  ├─ 뒤로가기
-│  └─ 가운데 제목 "추천 메뉴"
-└─ MenuCategoryRecommendationPage [Client]
+└─ MenuRecommendationPage [Client]
    ├─ IntroSection
-   │  ├─ "어울리는 메뉴를 골라봤어요"
-   │  └─ 선택 와인 기준 안내
-   ├─ RecommendedCategorySection
-   │  ├─ loading/error/empty 상태
-   │  └─ MenuCategoryList
-   │     └─ MenuCategoryItem[] (텍스트 + 선택 체크)
-   ├─ OtherCategorySection
-   │  ├─ "원하는 메뉴가 없나요?"
-   │  ├─ 접기/펼치기 버튼
-   │  └─ DefaultMenuCategoryGrid
-   │     └─ 기존 아이콘을 사용하는 glass 카테고리 선택 항목[]
-   └─ 하단 고정 "와인 추천받기" 버튼
+   ├─ RecommendationState
+   │  ├─ LoadingSpinner
+   │  ├─ Error/EmptyPanel
+   │  └─ RecommendedMenuList
+   │     └─ RecommendedMenuItem[]
+   │        ├─ menu name
+   │        ├─ category badge
+   │        └─ selected check
+   └─ PairingCta
 ```
 
-## 4. 시각·상호작용 원칙
+- `page.tsx`와 정적 header는 Server Component다.
+- sessionStorage, query, 선택, router를 쓰는 page body만 Client Component다.
+- `Button`, `Card`, `LoadingSpinner`, `PageHeader`는 `shared/ui`를 재사용한다.
+- 추천 menu item은 도메인 의미가 있으므로 feature UI에 두고 page/feature story를 작성한다.
+- 기존 `DefaultMenuCategoryGrid`는 활성 선택 플로우에서 제거한다. 장식용으로 남길 경우 button semantics와 selected state를 제거해 사용자가 페어링 입력으로 오인하지 않게 한다.
 
-- 페이지 shell은 `/wine/list`와 동일한 `bg-canvas bg-violet-haze`를 사용한다.
-- 본문/페이지 제목은 `ink-page`, 카드 제목은 `ink-card`, 강조와 밝은 CTA 라벨은 `ink-emphasis`, 설명은 `ink-secondary`, caption/placeholder는 `ink-muted`를 사용한다.
-- 선택 테두리·체크·focus-visible에는 `primary`(`#6E3AF5`)를 사용한다. `ink-secondary`와 `ink-muted`에 추가 opacity를 적용해 대비를 낮추지 않는다.
-- 추천 카테고리는 세로 목록으로 두고, 항목 높이·간격·테두리를 통일해 빠르게 스캔할 수 있게 한다.
-- 비선택 항목은 중성 배경과 얕은 테두리, 선택 항목은 보라 테두리/옅은 강조 배경/체크 아이콘으로 구분한다.
-- 이미지가 빠진 자리를 불필요한 빈 썸네일로 남기지 않는다. 항목 전체가 이름과 선택 상태에 맞춰 축소되도록 한다.
-- 기본 카테고리는 기존 SVG 아이콘을 사용하는 3열 glass 카드로 구성한다. 긴 이름은 줄바꿈하고 카드 높이는 동일하게 유지한다.
-- "다른 메뉴 보기"는 초기 화면 길이를 줄이는 접기/펼치기 제어로 제공한다. 페이지가 이미 Client Component이고 선택 상태와 함께 동작하므로 로컬 `useState`를 사용한다.
-- 선택 개수는 CTA 문구 또는 CTA 인접 보조 정보로 표현하고, 별도의 큰 알림 카드를 추가하지 않는다.
-- 하단 CTA는 safe-area를 포함해 고정하되 스크롤 콘텐츠 마지막 항목과 겹치지 않는 padding을 확보한다.
+## 4. 입력 snapshot과 검증
 
-## 5. 컴포넌트 책임과 변경 대상
+```ts
+type MenuRecommendationSnapshotV2 = {
+  version: 2;
+  sessionId: string;
+  pairingWineIds: string[];
+};
+```
 
-- `wine/keywords/page.tsx`: Server Component 유지, 가운데 정렬 `PageHeader` variant 적용.
-- `MenuCategoryRecommendationPage.tsx`: 인트로, 추천/기본 섹션, 펼침 상태, CTA 배치를 조합한다.
-- `MenuCategoryList.tsx`: API 응답 순서와 문자열 목록 계약을 유지한다.
-- `MenuCategoryItem.tsx`: 텍스트 전용 selectable list item을 담당한다.
-- `DefaultMenuCategoryGrid.tsx`: 고정 메뉴 아이콘을 포함한 3열 선택 grid를 담당한다.
-- `DefaultMenuCategoryCard.tsx`: 기존 고정 메뉴 SVG 아이콘과 이름/체크 상태를 glass 카드로 렌더링한다.
-- `default-menu-categories.ts`: 화면 모델을 `id`, `name` 중심으로 단순화한다. `iconPath`가 다른 소비자에게 쓰이는지 확인한 뒤 이 feature에서만 제거한다.
-- 신규 공용 UI가 필요하면 `shared/ui`에 먼저 추가하고 Storybook을 작성한다. 도메인 선택 로직 자체는 feature에 둔다.
-- 색상은 `/wine/list` 계획에서 등록한 `canvas`, `primary`, `ink-*`, `violet-haze` token을 재사용하고 feature 파일에 동일 hex를 반복하지 않는다.
+- `/wine/list` CTA가 선택한 UUID를 dedupe하고 snapshot을 저장한 뒤 이동한다.
+- `sessionId`와 wine ID를 하나의 versioned 객체에 저장해 서로 다른 세션 값이 섞이지 않게 한다.
+- hydration 전에는 “요청 없음” empty state를 렌더하지 않고 loading shell을 유지한다.
+- snapshot이 없거나 invalid면 API를 호출하지 않고 `/wine/list` 복귀 액션을 제공한다.
+- legacy `{ wineIds }` snapshot은 묵시적으로 변환하지 않고 invalid 처리한다. 사용자가 새 추출 세션부터 시작하게 한다.
 
-## 6. RSC/RCC와 상태 관리
+## 5. 상태 관리
 
-- `wine/keywords/page.tsx`는 Server Component로 유지한다.
-- `MenuCategoryRecommendationPage`는 `sessionStorage`, TanStack Query, 라우팅, 다중 선택 때문에 Client Component를 유지한다.
-- 추천 결과는 TanStack Query가 소유하고 `useState`나 Zustand로 복제하지 않는다.
-- 선택 카테고리와 기본 메뉴 펼침 여부는 이 화면에서만 의미가 있으므로 로컬 `useState`로 관리한다.
-- `selectedCount`, pairing request, CTA 활성 여부는 `request`와 `selectedCategories`에서 파생한다.
-- 추천/기본 목록에서 같은 이름을 선택하면 하나의 선택값으로 취급한다. 현재 문자열 이름 계약을 유지한다.
+| 상태 | 출처 | 관리 방식 |
+| --- | --- | --- |
+| session ID / 선택 wine IDs | 이전 페이지 snapshot | hydration 후 로컬 읽기 |
+| 추천 메뉴 | backend server state | TanStack Query |
+| 선택 menu names | 현재 페이지 UI draft | `useState<string[]>` |
+| CTA 활성 | query 성공 + 선택 개수 | 파생값 |
 
-## 7. 데이터와 API/BFF 흐름
+추천 응답을 Zustand나 별도 `useState`에 복제하지 않는다. query key에는 세션과 선택 wine을 모두 포함한다.
+
+```ts
+["wine-pairings", "recommend-menu", { sessionId, pairingWineIds }]
+```
+
+`POST`지만 같은 입력을 화면 생명주기 동안 재사용하는 조회 성격이므로 TanStack Query를 유지할 수 있다. 다만 backend가 추천 결과를 세션에 저장하므로 자동 refetch는 결과를 바꿀 수 있다. `staleTime: Infinity`, `refetchOnWindowFocus: false`, 자동 retry 없음으로 두고 사용자의 명시적 “다시 추천”만 새 호출을 만든다.
+
+## 6. 데이터 및 BFF 흐름
 
 ```text
-sessionStorage에서 { wineIds } 복원
--> TanStack Query
--> POST /api/wine-pairing/menu-category/recommend
--> BFF가 UUID 검증
--> POST /v1/wine-pairing/menu-category/recommend
--> { menuCategories: [{ name }] }
--> mapper/BFF가 string[]로 정규화
--> 텍스트 카테고리 목록 렌더
-
-사용자 카테고리 선택
--> buildWinePairingRequest(wineIds, selectedCategories)
--> sessionStorage에 WinePairingRequest 저장
+sessionStorage snapshot 복원
+-> POST /api/wine-pairings/recommend-menu
+   Header X-Session-Id
+   { pairingWineIds }
+-> BFF UUID/배열 개수 검증
+-> POST /v1/wine-pairings/recommend-menu
+   Header X-Session-Id
+   { pairingWineIds }
+-> { recommendedMenus: [{ name, category }] }
+-> DTO schema 검증 후 TanStack Query cache
+-> 사용자가 recommendedMenus[].name 선택
+-> { version, sessionId, wineIds, menuNames } snapshot 저장
 -> /wine/chat 이동
 ```
 
-- API/BFF/entity/query key와 요청 shape는 디자인 작업에서 변경하지 않는다.
-- 활성 계약은 `wineIds: UUID[]`, `menuCategories: { name: string }[]`이다.
-- 추천 API가 실패해도 기본 카테고리 선택과 다음 단계 이동 가능성은 유지한다.
+BFF는 `X-Session-Id`를 body로 옮기지 않고 명시적 header로 전달한다. backend 오류 body는 status만 참고해 safe response로 바꾼다.
 
-## 8. Storybook 및 검증
+```ts
+type RecommendedMenu = {
+  name: string;
+  category:
+    | "기타" | "붉은 고기" | "돼지고기" | "가금류" | "해산물"
+    | "파스타 및 면" | "밥" | "채소" | "치즈" | "빵" | "디저트";
+};
+```
 
-- `MenuCategoryItem`: 기본, 선택, 긴 이름, focus-visible, 비활성 콜백 상태.
-- `MenuCategoryList`: 추천 1개/여러 개/빈 목록/선택 포함.
-- `DefaultMenuCategoryGrid`: 접힌/펼친 상태, 선택 포함, 긴 이름, 좁은 폭.
-- `MenuCategoryRecommendationPage`: loading, error, empty, no request, 성공, 다중 선택, 하단 CTA 활성.
-- 이미지와 설명 없이도 선택 가능성이 명확한지 Storybook a11y 검사와 키보드 조작으로 확인한다.
-- 320px 및 390px 모바일, 태블릿 폭에서 grid overflow와 CTA 겹침을 확인한다.
+mapper는 response 순서를 유지한다. 알 수 없는 category를 조용히 다른 값으로 바꾸지 않고 계약 오류로 처리한다. selection key와 다음 요청 값은 `name`이다.
 
-## 9. 완료 기준
+## 7. 상호작용과 오류 정책
 
-- AI 추천은 텍스트 전용 glass 행으로, 기본 카테고리는 기존 아이콘을 포함한 glass 카드로 표시된다.
-- 추천 로딩/오류/빈 상태와 기본 카테고리 선택이 서로 독립적으로 동작한다.
-- 선택/해제, 중복 제거, CTA 활성화, `/wine/chat` 이동의 기존 동작이 유지된다.
-- 화면 길이와 정보 밀도가 시안보다 간결해지면서도 선택 상태와 키보드 포커스가 분명하다.
+- 추천 항목은 처음에 자동 선택하지 않는다.
+- 같은 `name`은 한 번만 선택하며 category는 식별자가 아니다.
+- 추천 조회 성공 전, 빈 응답, 오류 상태에서는 CTA를 비활성화한다.
+- `400`: snapshot/request 손상으로 보고 list부터 다시 시작 안내
+- `404`: session 또는 wine 불일치로 보고 local workflow를 폐기하고 list 복귀
+- `409 WINE_MENU_CHANGED`: 이전 단계부터 다시 분석하도록 안내
+- `500/502`: 현재 snapshot을 유지하고 명시적 재시도 제공
+- “다시 추천” 성공 시 기존 selection을 모두 초기화해 이전 허용 목록의 name을 보내지 않는다.
+
+## 8. 다음 페이지 snapshot
+
+```ts
+type WinePairingSnapshotV2 = {
+  version: 2;
+  sessionId: string;
+  wineIds: string[];
+  menuNames: string[];
+};
+```
+
+`menuNames`는 현재 query response에 존재하는 선택된 `name`만 사용한다. 정적 기본 카테고리, `category` 문자열, 오래된 추천 결과를 섞지 않는다.
+
+## 9. 파일별 구현 범위
+
+```text
+web/src/app/wine/keywords/page.tsx
+web/src/app/feature/menu-category-recommendation-result/**
+web/src/app/entity/menu-category-recommendation/**
+web/src/app/entity/wine-pairing-workflow/**
+web/src/app/api/wine-pairings/recommend-menu/route.ts
+```
+
+기존 same-origin BFF path를 유지할 수는 있지만 새 backend 용어와의 혼동을 줄이기 위해 `/api/wine-pairings/recommend-menu`로 정렬하는 것을 권장한다.
+
+## 10. Storybook·검증 범위
+
+- item: 기본/선택/긴 name/각 category/focus-visible
+- list: 1개/6개/중복 없는 순서/좁은 화면
+- page: hydration, snapshot 없음, loading, success, empty, 400/404/409/500, 재추천
+- query: session ID가 다르면 cache가 분리되는지 검증
+- BFF: header 누락/invalid UUID, 빈/과다 `pairingWineIds`, backend status mapping, invalid response category
+- keyboard와 screen reader에서 checkbox 선택 상태가 전달되는지 확인
+
+## 11. 완료 기준
+
+- 같은 `X-Session-Id`와 `pairingWineIds`로 추천 API를 호출한다.
+- 메뉴의 `name`과 `category`를 손실 없이 표시한다.
+- 서버가 반환하지 않은 메뉴는 페어링 선택값이 될 수 없다.
+- 선택한 `recommendedMenus[].name`만 다음 페이지의 `menuNames`로 저장된다.
+- stale/invalid session은 자동 보정하지 않고 워크플로 재시작으로 복구한다.

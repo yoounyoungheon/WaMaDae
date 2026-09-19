@@ -100,7 +100,7 @@ export const WithWineDetail: Story = {
         id: "11111111-1111-4111-8111-111111111111",
         wineName: "샤또 라 로즈 드 비트락 루즈",
         vintage: 2020,
-        alcohol: 13,
+        alcohol: "13.0% ~ 13.5%",
         price: [
           {
             amount: 55000,
@@ -111,6 +111,38 @@ export const WithWineDetail: Story = {
         ],
         country: "France",
         region: "Bordeaux",
+        tannin: 4,
+        body: 3,
+        sweetness: 1,
+        acid: 3,
+        wineBottleImageUrl: "/ExampleImage.png",
+        variety: "Chardonnay",
+        wineType: "White Wine",
+        aromas: ["청사과", "시트러스", "미네랄"],
+      },
+    },
+  },
+};
+
+/** 현재 backend pairing mapper는 `body`를 누락하므로 body가 null인 상태를 확인한다. */
+export const WithNullTaste: Story = {
+  args: {
+    slide: {
+      ...slide,
+      isCommitted: true,
+      wine: {
+        id: "22222222-2222-4222-8222-222222222222",
+        wineName: "정보가 일부 비어 있는 와인",
+        vintage: null,
+        alcohol: null,
+        price: null,
+        country: "Italy",
+        region: null,
+        tannin: 2,
+        body: null,
+        sweetness: null,
+        acid: 4,
+        wineBottleImageUrl: null,
       },
     },
   },

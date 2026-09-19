@@ -2,37 +2,40 @@ import "server-only";
 
 import { buildMysomApiUrl } from "@/app/utils/http/server-api";
 import type {
-  MenuCategoryRecommendationDto,
-  MenuCategoryRecommendationRequest,
+  MenuRecommendationRequest,
+  MenuRecommendationResponseDto,
+  RecommendedMenu,
 } from "../model/menu-category-recommendation.type";
-import { mapMenuCategoryRecommendationDto } from "./menu-category-recommendation.mapper";
+import { mapMenuRecommendationDto } from "./menu-category-recommendation.mapper";
 
-const MENU_CATEGORY_RECOMMEND_PATH = "/v1/wine-pairing/menu-category/recommend";
-const BACKEND_TIMEOUT_MS = 30_000;
+const RECOMMEND_MENU_PATH = "/v1/wine-pairings/recommend-menu";
+const BACKEND_TIMEOUT_MS = 60_000;
 
 /**
  * 서버 전용 백엔드 오류.
  * Route Handler가 상태 코드만 참고해 safe message로 변환하도록 status를 담는다.
  */
-export class MenuCategoryRecommendationBackendError extends Error {
+export class MenuRecommendationBackendError extends Error {
   constructor(readonly status: number) {
-    super(`Menu category recommendation backend responded with ${status}`);
-    this.name = "MenuCategoryRecommendationBackendError";
+    super(`Menu recommendation backend responded with ${status}`);
+    this.name = "MenuRecommendationBackendError";
   }
 }
 
 /**
- * 서버 전용 메뉴 카테고리 추천 helper.
- * 동기 API를 호출해 추천된 메뉴 카테고리 문자열 목록을 반환한다.
+ * 서버 전용 메뉴 추천 helper.
+ * 세션 UUID를 `X-Session-Id` 헤더로 전달하고 추천 메뉴 목록을 반환한다.
  */
-export async function recommendMenuCategories(
-  request: MenuCategoryRecommendationRequest
-): Promise<string[]> {
-  const response = await fetch(buildMysomApiUrl(MENU_CATEGORY_RECOMMEND_PATH), {
+export async function recommendMenus(
+  sessionId: string,
+  request: MenuRecommendationRequest
+): Promise<RecommendedMenu[]> {
+  const response = await fetch(buildMysomApiUrl(RECOMMEND_MENU_PATH), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      "X-Session-Id": sessionId,
     },
     body: JSON.stringify(request),
     cache: "no-store",
@@ -40,9 +43,9 @@ export async function recommendMenuCategories(
   });
 
   if (!response.ok) {
-    throw new MenuCategoryRecommendationBackendError(response.status);
+    throw new MenuRecommendationBackendError(response.status);
   }
 
-  const dto = (await response.json()) as MenuCategoryRecommendationDto;
-  return mapMenuCategoryRecommendationDto(dto);
+  const dto = (await response.json()) as MenuRecommendationResponseDto;
+  return mapMenuRecommendationDto(dto);
 }

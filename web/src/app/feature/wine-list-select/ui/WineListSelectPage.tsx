@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/app/utils/style/helper";
+import ExtractedWineSection from "./ExtractedWineSection";
 import NextRecommendationButton from "./NextRecommendationButton";
-import SelectedWineSection from "./SelectedWineSection";
 import WineMenuPhotoSection from "./WineMenuPhotoSection";
 import { useWineListSelectController } from "../model/use-wine-list-select-controller";
 import type { WineListSelectPageProps } from "./wine-list-select.props";
@@ -11,17 +11,22 @@ export default function WineListSelectPage({
   className,
 }: WineListSelectPageProps) {
   const {
-    isPhotoSectionOpen,
-    setIsPhotoSectionOpen,
-    menuImagePreview,
+    previews,
+    imageErrorMessage,
+    isExtracting,
+    hasExtractionResult,
+    extractionErrorMessage,
+    wines,
+    sessionId,
     selectedWineIds,
-    selectedWines,
-    isAnalyzing,
-    analysisErrorMessage,
-    handleImageChange,
+    handleAddFiles,
+    handleRemoveFile,
     handleAnalyze,
-    handleRemoveWine,
+    handleToggleWine,
   } = useWineListSelectController();
+
+  const isEmptyResult = hasExtractionResult && wines.length === 0;
+  const hasWines = wines.length > 0;
 
   return (
     <>
@@ -31,8 +36,17 @@ export default function WineListSelectPage({
           className
         )}
       >
-        <div className="mx-auto flex w-full max-w-[680px] flex-col px-5 pb-5">
-          <section className="pb-9 pt-7 text-center" aria-labelledby="wine-list-intro-title">
+        <div
+          className={cn(
+            "mx-auto flex w-full max-w-[680px] flex-col px-5",
+            // floating CTA에 마지막 카드가 가려지지 않도록 하단 여백을 확보한다.
+            hasWines ? "pb-28" : "pb-5"
+          )}
+        >
+          <section
+            className="pb-9 pt-7 text-center"
+            aria-labelledby="wine-list-intro-title"
+          >
             <h2
               id="wine-list-intro-title"
               className="text-[23px] font-extrabold leading-[1.36] text-ink-page"
@@ -46,36 +60,46 @@ export default function WineListSelectPage({
             </p>
           </section>
 
-          <div>
-            <WineMenuPhotoSection
-              isOpen={isPhotoSectionOpen}
-              image={menuImagePreview}
-              isAnalyzing={isAnalyzing}
-              errorMessage={analysisErrorMessage}
-              onOpenChange={setIsPhotoSectionOpen}
-              onImageChange={handleImageChange}
-              onAnalyze={handleAnalyze}
-            />
-          </div>
+          <WineMenuPhotoSection
+            previews={previews}
+            isAnalyzing={isExtracting}
+            imageErrorMessage={imageErrorMessage}
+            extractionErrorMessage={extractionErrorMessage}
+            onAddFiles={handleAddFiles}
+            onRemoveFile={handleRemoveFile}
+            onAnalyze={handleAnalyze}
+          />
 
-          {selectedWineIds.length > 0 ? (
+          {isEmptyResult ? (
+            <div
+              role="status"
+              className="mt-7 rounded-[16px] border border-white/55 bg-white/[0.04] px-5 py-8 text-center text-[14px] font-medium leading-relaxed text-ink-secondary shadow-[inset_0_1px_0_rgba(255,255,255,0.78),0_10px_26px_rgba(72,52,112,0.04)] backdrop-blur-2xl"
+            >
+              인식한 와인이 없습니다.
+              <br />
+              메뉴판이 선명하게 보이도록 다시 촬영해 주세요.
+            </div>
+          ) : null}
+
+          {hasWines ? (
             <div className="pt-7">
-              <SelectedWineSection
-                wines={selectedWines}
-                onRemoveWine={handleRemoveWine}
+              <ExtractedWineSection
+                wines={wines}
+                selectedWineIds={selectedWineIds}
+                onToggleWine={handleToggleWine}
               />
             </div>
           ) : null}
         </div>
       </main>
 
-      {selectedWineIds.length > 0 ? (
-        <div className="shrink-0 border-t border-white/70 bg-canvas/90 px-5 pb-[calc(14px_+_env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(60,45,96,0.08)] backdrop-blur-md">
-          <div className="mx-auto w-full max-w-[640px]">
-          <NextRecommendationButton
-            wines={selectedWines}
-            hasMissingWineData={selectedWines.length < selectedWineIds.length}
-          />
+      {hasWines ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 px-5 pb-[calc(16px_+_env(safe-area-inset-bottom))]">
+          <div className="pointer-events-auto mx-auto w-full max-w-[640px]">
+            <NextRecommendationButton
+              sessionId={sessionId}
+              selectedWineIds={selectedWineIds}
+            />
           </div>
         </div>
       ) : null}

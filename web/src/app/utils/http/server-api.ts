@@ -1,6 +1,6 @@
 import "server-only";
 
-import { MYSOM_API_BASE_URL } from "@/app/utils/http/api-query";
+import { getMysomApiBaseUrl } from "@/app/utils/http/api-query";
 
 interface ApiErrorResponse {
   status?: number;
@@ -12,7 +12,7 @@ const buildRequestUrl = (path: string) => {
 };
 
 export const buildMysomApiUrl = (path: string) =>
-  new URL(path, MYSOM_API_BASE_URL);
+  new URL(path, getMysomApiBaseUrl());
 
 export const requestServerApi = (path: string, init?: RequestInit) => {
   return fetch(buildRequestUrl(path), {
