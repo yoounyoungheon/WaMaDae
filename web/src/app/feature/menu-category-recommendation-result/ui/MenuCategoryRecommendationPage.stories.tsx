@@ -1,19 +1,20 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/nextjs-vite";
-import { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { expect, userEvent, within } from "storybook/test";
 import {
-  clearMenuCategoryRecommendationRequest,
-  saveMenuCategoryRecommendationRequest,
-} from "@/app/entity/menu-category-recommendation/lib/recommendation-request-storage";
-import type { MenuCategoryRecommendationRequest } from "@/app/entity/menu-category-recommendation/model/menu-category-recommendation.type";
+  clearWinePairingSnapshot,
+  clearWineSelectionSnapshot,
+  saveWineSelectionSnapshot,
+} from "@/app/entity/wine-pairing-workflow/lib/workflow-snapshot-storage";
+import { WORKFLOW_SNAPSHOT_VERSION } from "@/app/entity/wine-pairing-workflow/model/workflow-snapshot.type";
 import MenuCategoryRecommendationPage from "./MenuCategoryRecommendationPage";
 
-const sampleRequest: MenuCategoryRecommendationRequest = {
-  wineIds: [
-    "11111111-1111-4111-8111-111111111111",
-    "22222222-2222-4222-8222-222222222222",
-  ],
-};
+const SESSION_ID = "0198b013-f4a7-7a91-a232-20f4fe638b38";
+
+const recommendedMenus = [
+  { name: "한우 등심 구이", category: "붉은 고기" },
+  { name: "해산물 파전", category: "해산물" },
+  { name: "바지락 오일 파스타", category: "파스타 및 면" },
+] as const;
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -22,46 +23,62 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-/**
- * Story별로 선택 스냅샷(sessionStorage)과 /api 응답을 함께 스텁한다.
- * cleanup으로 sessionStorage와 fetch를 복원해 상태 누수를 막는다.
- */
+function pendingResponse(signal?: AbortSignal): Promise<Response> {
+  return new Promise((_, reject) => {
+    const abort = () =>
+      reject(signal?.reason ?? new DOMException("Aborted", "AbortError"));
+
+    if (signal?.aborted) {
+      abort();
+      return;
+    }
+
+    signal?.addEventListener("abort", abort, { once: true });
+  });
+}
+
+/** Story마다 selection snapshot과 same-origin BFF 응답을 격리한다. */
 function stubStoryEnv(options: {
-  request?: MenuCategoryRecommendationRequest;
-  fetchHandler?: () => Promise<Response>;
+  status?: number;
+  body?: unknown;
+  pending?: boolean;
 }) {
   return async () => {
     const originalFetch = globalThis.fetch;
 
-    clearMenuCategoryRecommendationRequest();
-    if (options.request) {
-      saveMenuCategoryRecommendationRequest(options.request);
-    }
-    if (options.fetchHandler) {
-      globalThis.fetch = (() => options.fetchHandler!()) as typeof fetch;
-    }
+    clearWineSelectionSnapshot();
+    clearWinePairingSnapshot();
+    saveWineSelectionSnapshot({
+      version: WORKFLOW_SNAPSHOT_VERSION,
+      sessionId: SESSION_ID,
+      pairingWineIds: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+      ],
+    });
+
+    globalThis.fetch = (async (_input, init) => {
+      if (options.pending) return pendingResponse(init?.signal ?? undefined);
+
+      return jsonResponse(
+        options.body ?? { recommendedMenus },
+        options.status ?? 200
+      );
+    }) as typeof fetch;
 
     return () => {
       globalThis.fetch = originalFetch;
-      clearMenuCategoryRecommendationRequest();
+      clearWineSelectionSnapshot();
+      clearWinePairingSnapshot();
     };
   };
 }
 
-/**
- * Story별 QueryClient 인스턴스를 분리해 캐시 누수를 막는다.
- */
-const withPageProviders: Decorator = function PageProvidersDecorator(Story) {
-  const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  );
-
+const withPageLayout: Decorator = function PageLayoutDecorator(Story) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="flex h-[720px] w-[360px] flex-col overflow-hidden bg-background-03">
-        <Story />
-      </div>
-    </QueryClientProvider>
+    <div className="flex h-[720px] w-[390px] flex-col overflow-hidden bg-background-03">
+      <Story />
+    </div>
   );
 };
 
@@ -73,43 +90,53 @@ const meta: Meta<typeof MenuCategoryRecommendationPage> = {
   parameters: {
     layout: "centered",
   },
-  decorators: [withPageProviders],
+  decorators: [withPageLayout],
 };
 
 export default meta;
 
 type Story = StoryObj<typeof MenuCategoryRecommendationPage>;
 
-export const Succeeded: Story = {
-  beforeEach: stubStoryEnv({
-    request: sampleRequest,
-    fetchHandler: async () =>
-      jsonResponse({ categories: ["소고기 스테이크", "숙성 치즈", "해산물"] }),
-  }),
+export const Default: Story = {
+  beforeEach: stubStoryEnv({}),
+};
+
+export const Selected: Story = {
+  beforeEach: stubStoryEnv({}),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(
+      await canvas.findByRole("button", { name: "한우 등심 구이" })
+    );
+
+    await expect(canvas.getByText("1개 선택")).toHaveClass("text-ink-card");
+  },
+};
+
+export const MultipleSelected: Story = {
+  beforeEach: stubStoryEnv({}),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(
+      await canvas.findByRole("button", { name: "한우 등심 구이" })
+    );
+    await userEvent.click(
+      canvas.getByRole("button", { name: "해산물 파전" })
+    );
+
+    await expect(canvas.getByText("2개 선택")).toBeVisible();
+  },
 };
 
 export const Loading: Story = {
-  beforeEach: stubStoryEnv({
-    request: sampleRequest,
-    fetchHandler: () => new Promise<Response>(() => {}),
-  }),
-};
-
-export const EmptyResult: Story = {
-  beforeEach: stubStoryEnv({
-    request: sampleRequest,
-    fetchHandler: async () => jsonResponse({ categories: [] }),
-  }),
+  beforeEach: stubStoryEnv({ pending: true }),
 };
 
 export const Error: Story = {
   beforeEach: stubStoryEnv({
-    request: sampleRequest,
-    fetchHandler: async () =>
-      jsonResponse({ message: "추천 메뉴를 불러오지 못했습니다." }, 502),
+    status: 502,
+    body: { message: "추천 메뉴를 불러오지 못했습니다." },
   }),
-};
-
-export const NoSelection: Story = {
-  beforeEach: stubStoryEnv({}),
 };

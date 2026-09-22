@@ -12,17 +12,18 @@ type ErrorResponse = {
 
 /**
  * 브라우저 전용 페어링 스트림.
- * same-origin BFF만 호출하고 SSE 프레임을 순서대로 yield한다.
+ * same-origin BFF(`/api/wine-pairings/pairing`)만 호출하고 세션 UUID를
+ * `X-Session-Id` 헤더로 전달한다. SSE 프레임을 도착 순서대로 yield한다.
  */
 export async function* streamWinePairing(
   request: WinePairingRequest,
-  chatId: string,
+  sessionId: string,
   signal?: AbortSignal
 ): AsyncGenerator<PairingStreamEvent, void, undefined> {
   const body = await openBffStream(
-    "/api/wine-pairing/stream/pairing",
+    "/api/wine-pairings/pairing",
     request,
-    chatId,
+    sessionId,
     "와인 추천을 불러오지 못했습니다.",
     signal
   );
@@ -32,17 +33,17 @@ export async function* streamWinePairing(
 
 /**
  * 브라우저 전용 후속 채팅 스트림.
- * 일반 답변(`chat` 프레임) 또는 재추천(`imageUrl`/`pairing` 등 페어링 프레임)을 yield한다.
+ * 일반 답변(field name 없는 STREAM) 또는 재페어링(field STREAM + JSON)을 yield한다.
  */
 export async function* streamWinePairingChat(
   request: WinePairingChatRequest,
-  chatId: string,
+  sessionId: string,
   signal?: AbortSignal
 ): AsyncGenerator<PairingChatStreamEvent, void, undefined> {
   const body = await openBffStream(
-    "/api/wine-pairing/stream/chat",
+    "/api/wine-pairings/chat",
     request,
-    chatId,
+    sessionId,
     "채팅 응답을 불러오지 못했습니다.",
     signal
   );
@@ -53,7 +54,7 @@ export async function* streamWinePairingChat(
 async function openBffStream(
   path: string,
   request: unknown,
-  chatId: string,
+  sessionId: string,
   fallbackMessage: string,
   signal?: AbortSignal
 ): Promise<ReadableStream<Uint8Array>> {
@@ -62,7 +63,7 @@ async function openBffStream(
     headers: {
       "Content-Type": "application/json",
       Accept: "text/event-stream",
-      "X-Chat-Id": chatId,
+      "X-Session-Id": sessionId,
     },
     body: JSON.stringify(request),
     signal,

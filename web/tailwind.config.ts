@@ -139,10 +139,15 @@ const config: Config = {
           "0%": { transform: "translateY(0)" },
           "100%": { transform: "translateY(100%)" },
         },
+        "toast-in": {
+          "0%": { transform: "translateY(16px)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
       },
       animation: {
         "bottom-sheet-in": "bottom-sheet-in 300ms ease-out",
         "bottom-sheet-out": "bottom-sheet-out 200ms ease-in",
+        "toast-in": "toast-in 280ms cubic-bezier(0.16, 1, 0.3, 1)",
       },
     },
   },

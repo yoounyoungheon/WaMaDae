@@ -48,14 +48,14 @@ export default function WineRecommendationCarousel({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-5 [scroll-padding-inline:20px] [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-5 pb-3 [scroll-padding-inline:20px] [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {slides.map((slide, index) => (
           <div
             key={`slide-${index}`}
             className={cn(
               "max-w-[560px] shrink-0 snap-start",
-              slides.length === 1 ? "w-full" : "w-[88%]"
+              slides.length === 1 ? "w-full" : "w-[92%]"
             )}
           >
             <WineRecommendationSlide slide={slide} />

@@ -1,5 +1,7 @@
 # `/wine/list` 메뉴 카테고리 추천 진입 계획
 
+> 보관 문서: 이 계획은 이전 API 계약을 설명한다. 현재 설계는 [`/wine/list` 세션 기반 와인 메뉴 추출 설계](./wine-list-enhanced-design-plan.md)를 기준으로 한다.
+
 ## 1. 기준
 
 - 대상 라우트: `web/src/app/wine/list/page.tsx`

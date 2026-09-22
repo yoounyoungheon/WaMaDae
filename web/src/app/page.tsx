@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+import HomeView from "@/app/feature/home/ui/HomeView";
+
+export const metadata: Metadata = {
+  title: "마이쏨 | 메뉴에 어울리는 와인",
+};
+
 export default function Home() {
-  return <div className="min-h-screen px-4 py-6 flex flex-col gap-4"></div>;
+  return <HomeView />;
 }

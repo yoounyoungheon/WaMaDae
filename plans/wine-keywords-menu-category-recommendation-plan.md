@@ -1,5 +1,7 @@
 # `/wine/keywords` 메뉴 카테고리 추천 조회 계획
 
+> 보관 문서: 이 계획은 이전 API 계약을 설명한다. 현재 설계는 [`/wine/keywords` 세션 기반 메뉴 추천 설계](./wine-keywords-enhanced-design-plan.md)를 기준으로 한다.
+
 ## 1. 기준
 
 - 대상 라우트: `web/src/app/wine/keywords/page.tsx`

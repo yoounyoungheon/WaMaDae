@@ -1,34 +1,12 @@
-import type {
-  Wine,
-  WineDetailDto,
-  WineSearchItem,
-  WineSearchItemDto,
-} from "../model/wine.type";
-import { inferWineType, normalizeWineType } from "../lib/wine-image";
+import type { ExtractedWine } from "../model/wine.type";
+import { extractedWineSchema } from "../model/wine.schema";
 
-export function mapWineDetailDto(dto: WineDetailDto): Wine {
-  const name = dto.display_name.trim();
-
-  return {
-    id: dto.id,
-    name,
-    imageUrl: dto.image_url?.trim() ?? "",
-    wineType:
-      normalizeWineType(dto.wine_type ?? dto.wineType ?? dto.type) ??
-      inferWineType(name),
-    rating: dto.rating,
-    title: dto.title,
-    recommendationText: dto.recommendation_text,
-    priceLabel: dto.price_label,
-  };
-}
-
-export function mapWineSearchItemDto(dto: WineSearchItemDto): WineSearchItem {
-  return {
-    ...mapWineDetailDto(dto.append_wine),
-    id: dto.id,
-    name: dto.name,
-    regionAndType: dto.region_and_type,
-    searchPriceLabel: dto.price_label,
-  };
+/**
+ * BFF가 정규화해 반환한 추출 와인 항목을 앱 모델로 매핑한다.
+ * BFF에서 이미 검증했지만 브라우저 경계에서도 방어적으로 다시 파싱한다.
+ * 스키마에 맞지 않는 항목은 제외한다(계약 위반 대신 안전한 부분 표시).
+ */
+export function mapExtractedWineDto(value: unknown): ExtractedWine | null {
+  const parsed = extractedWineSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }

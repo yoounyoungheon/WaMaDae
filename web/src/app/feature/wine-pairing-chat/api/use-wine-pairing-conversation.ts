@@ -1,23 +1,24 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useReducer,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import {
   streamWinePairing,
   streamWinePairingChat,
 } from "@/app/entity/wine-pairing/api/wine-pairing.api";
-import { loadWinePairingRequest } from "@/app/entity/wine-pairing/lib/wine-pairing-request-storage";
 import type {
   ChatStreamEvent,
   PairingChatStreamEvent,
+  PairingFieldName,
+  PairingSlidePayload,
   PairingStreamEvent,
   WinePairingRequest,
 } from "@/app/entity/wine-pairing/model/wine-pairing.type";
+import {
+  isWinePairingConsumed,
+  loadWinePairingSnapshot,
+  markWinePairingConsumed,
+} from "@/app/entity/wine-pairing-workflow/lib/workflow-snapshot-storage";
+import type { WinePairingSnapshot } from "@/app/entity/wine-pairing-workflow/model/workflow-snapshot.type";
 import {
   conversationReducer,
   initialConversationState,
@@ -26,9 +27,17 @@ import type { ConversationAction } from "../model/conversation.types";
 
 const PAIRING_ERROR_FALLBACK = "와인 추천을 불러오지 못했습니다.";
 const CHAT_ERROR_FALLBACK = "채팅 응답을 불러오지 못했습니다.";
+const PAIRING_FIELD_NAMES: readonly PairingFieldName[] = [
+  "rank",
+  "name",
+  "comment",
+  "reason",
+];
 
-type StoredPairingRequest = {
-  request: WinePairingRequest | null;
+type HydratedSnapshot = {
+  snapshot: WinePairingSnapshot | null;
+  /** 이 세션의 pairing이 이미 소비됐는지(리로드 중복 페어링 방지). */
+  alreadyConsumed: boolean;
   isHydrated: boolean;
 };
 
@@ -36,18 +45,23 @@ type StoredPairingRequest = {
  * 와인 페어링 대화 컨트롤러 훅.
  *
  * - 순수 reducer가 대화 상태를 계산하고, 스트림 읽기(부수효과)는 이 훅에 격리한다.
- * - chatId는 페어링 실행마다 새로 생성한다(한 chatId로 pairing은 1회만 허용).
+ * - 추출 단계에서 생성한 동일 `X-Session-Id`를 pairing과 모든 chat에 재사용한다.
+ * - 같은 session으로 pairing을 자동 재시도/자동 재호출하지 않는다(중복 생성 방지).
  * - SSE 데이터는 Zustand/TanStack Query에 저장하지 않는다(뷰 로컬 상태).
  */
 export function useWinePairingConversation() {
-  // sessionStorage 스냅샷은 hydration 이후 클라이언트에서 한 번 읽는다.
-  const [stored, setStored] = useState<StoredPairingRequest>({
-    request: null,
+  const [hydrated, setHydrated] = useState<HydratedSnapshot>({
+    snapshot: null,
+    alreadyConsumed: false,
     isHydrated: false,
   });
 
   useEffect(() => {
-    setStored({ request: loadWinePairingRequest(), isHydrated: true });
+    const snapshot = loadWinePairingSnapshot();
+    const alreadyConsumed = snapshot
+      ? isWinePairingConsumed(snapshot.sessionId)
+      : false;
+    setHydrated({ snapshot, alreadyConsumed, isHydrated: true });
   }, []);
 
   const [state, dispatch] = useReducer(
@@ -55,24 +69,28 @@ export function useWinePairingConversation() {
     initialConversationState
   );
 
-  const chatIdRef = useRef<string | null>(null);
   const startedRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
-  const [runNonce, setRunNonce] = useState(0);
 
-  const { request, isHydrated } = stored;
+  const { snapshot, alreadyConsumed, isHydrated } = hydrated;
+  const sessionId = snapshot?.sessionId ?? null;
 
   useEffect(() => {
-    if (!isHydrated || !request || startedRef.current) {
+    if (!isHydrated || !snapshot || alreadyConsumed || startedRef.current) {
       return;
     }
     startedRef.current = true;
 
     const controller = new AbortController();
     abortRef.current = controller;
-    chatIdRef.current = crypto.randomUUID();
+    // 리로드 시 이 세션 pairing을 자동 재호출하지 않도록 소비 표시한다.
+    markWinePairingConsumed(snapshot.sessionId);
 
-    void runPairingStream(request, chatIdRef.current, controller, dispatch);
+    const request: WinePairingRequest = {
+      wineIds: snapshot.wineIds,
+      menuNames: snapshot.menuNames,
+    };
+    void runPairingStream(request, snapshot.sessionId, controller, dispatch);
 
     return () => {
       // StrictMode 재마운트/실제 언마운트 모두 스트림을 취소하고 재시작 가능 상태로 되돌린다.
@@ -80,27 +98,19 @@ export function useWinePairingConversation() {
       startedRef.current = false;
       dispatch({ type: "RESET" });
     };
-  }, [isHydrated, request, runNonce]);
-
-  /** 페어링 실패 시 새 chatId로 처음부터 다시 시작한다. */
-  const retryPairing = useCallback(() => {
-    abortRef.current?.abort();
-    startedRef.current = false;
-    dispatch({ type: "RESET" });
-    setRunNonce((nonce) => nonce + 1);
-  }, []);
+  }, [isHydrated, snapshot, alreadyConsumed]);
 
   const isPairingDone = state.pairing === "done";
   const isChatStreaming = state.chat === "streaming";
-  const isComposerEnabled = isPairingDone && !isChatStreaming;
+  const isComposerEnabled =
+    isPairingDone && state.committedPairingCount > 0 && !isChatStreaming;
 
   const sendChat = useCallback(
     (rawMessage: string) => {
       const message = rawMessage.trim();
-      const chatId = chatIdRef.current;
       const signal = abortRef.current?.signal;
 
-      if (!message || !chatId || !isComposerEnabled) {
+      if (!message || !sessionId || !isComposerEnabled) {
         return;
       }
 
@@ -113,7 +123,7 @@ export function useWinePairingConversation() {
         try {
           for await (const event of streamWinePairingChat(
             { message },
-            chatId,
+            sessionId,
             signal
           )) {
             if (signal?.aborted) return;
@@ -126,18 +136,14 @@ export function useWinePairingConversation() {
                 turnKind = "pairing";
                 // RECOMMENDATION_START가 빈 ChatTurn을 제거하고 PairingTurn으로 대체한다.
                 dispatch({ type: "RECOMMENDATION_START", question: message });
-                const action = mapPairingEventToAction(event);
-                if (action) dispatch(action);
+                dispatchPairingEvent(event, dispatch);
               }
             } else if (turnKind === "chat") {
               if (isChatStreamEvent(event)) {
                 dispatch({ type: "CHAT_APPEND", chunk: event.data.body });
               }
-            } else {
-              if (isPairingStreamEvent(event)) {
-                const action = mapPairingEventToAction(event);
-                if (action) dispatch(action);
-              }
+            } else if (isPairingStreamEvent(event)) {
+              dispatchPairingEvent(event, dispatch);
             }
           }
 
@@ -163,12 +169,13 @@ export function useWinePairingConversation() {
         }
       })();
     },
-    [isComposerEnabled]
+    [sessionId, isComposerEnabled]
   );
 
   return {
     turns: state.turns,
-    hasRequest: Boolean(request),
+    hasRequest: Boolean(snapshot),
+    alreadyConsumed: alreadyConsumed && !startedRef.current,
     isHydrated,
     pairingStatus: state.pairing,
     chatStatus: state.chat,
@@ -177,13 +184,12 @@ export function useWinePairingConversation() {
     isComposerEnabled,
     errorMessage: state.errorMessage ?? null,
     sendChat,
-    retryPairing,
   };
 }
 
 async function runPairingStream(
   request: WinePairingRequest,
-  chatId: string,
+  sessionId: string,
   controller: AbortController,
   dispatch: (action: ConversationAction) => void
 ) {
@@ -192,17 +198,13 @@ async function runPairingStream(
   try {
     for await (const event of streamWinePairing(
       request,
-      chatId,
+      sessionId,
       controller.signal
     )) {
       if (controller.signal.aborted) {
         return;
       }
-
-      const action = mapPairingEventToAction(event);
-      if (action) {
-        dispatch(action);
-      }
+      dispatchPairingEvent(event, dispatch);
     }
     dispatch({ type: "PAIRING_DONE" });
   } catch (error) {
@@ -217,22 +219,43 @@ async function runPairingStream(
 }
 
 /**
- * SSE 프레임을 reducer 액션으로 변환한다.
- * `STREAM`은 필드 청크를 이어붙이고, `JSON`은 전체 replace한다.
- * 알 수 없는 프레임은 무시한다(forward-compat).
+ * 페어링 SSE 프레임을 reducer 액션으로 변환해 dispatch한다.
+ * 알 수 없거나 잘못된 frame은 UI 상태에 반영하지 않는다.
  */
-function mapPairingEventToAction(
-  event: PairingStreamEvent
-): ConversationAction | null {
+function dispatchPairingEvent(
+  event: PairingStreamEvent,
+  dispatch: (action: ConversationAction) => void
+): void {
   if (event.type === "JSON") {
-    return { type: "PAIRING_SLIDE_COMMIT", payload: event.data };
+    if (isValidPairingPayload(event.data)) {
+      dispatch({ type: "PAIRING_SLIDE_COMMIT", payload: event.data });
+    }
+    return;
   }
 
-  return {
-    type: "PAIRING_SLIDE_FIELD",
-    field: event.data.fieldName,
-    data: event.data.body,
-  };
+  const fieldName = event.data?.fieldName;
+  if (
+    PAIRING_FIELD_NAMES.includes(fieldName) &&
+    typeof event.data.body === "string"
+  ) {
+    dispatch({
+      type: "PAIRING_SLIDE_FIELD",
+      field: fieldName,
+      data: event.data.body,
+    });
+  }
+}
+
+function isValidPairingPayload(
+  payload: PairingSlidePayload | undefined
+): payload is PairingSlidePayload {
+  return Boolean(
+    payload &&
+      typeof payload === "object" &&
+      payload.wine &&
+      typeof payload.wine.id === "string" &&
+      typeof payload.wine.wineName === "string"
+  );
 }
 
 function toErrorMessage(error: unknown, fallback: string): string {

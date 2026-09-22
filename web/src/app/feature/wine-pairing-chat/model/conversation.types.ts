@@ -42,6 +42,8 @@ export type ConversationState = {
   turns: ConversationTurn[];
   pairing: "idle" | "streaming" | "done" | "error";
   chat: "idle" | "streaming" | "error";
+  /** 확정(JSON)된 pairing slide 총 개수. 최초 pairing 완료/composer 활성 판단에 쓴다. */
+  committedPairingCount: number;
   errorMessage?: string;
 };
 

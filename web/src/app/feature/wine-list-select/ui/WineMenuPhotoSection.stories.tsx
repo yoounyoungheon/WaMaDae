@@ -1,145 +1,71 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { type ComponentProps, useEffect, useState } from "react";
-import { expect, within } from "storybook/test";
+import type { MenuImagePreview } from "@/app/entity/wine/model/wine.type";
 import WineMenuPhotoSection from "./WineMenuPhotoSection";
 
+const previews = [
+  {
+    id: "1",
+    file: new File([], "menu-front.png"),
+    fileName: "menu-front.png",
+    previewUrl: "/images/wines/wine-red.png",
+  },
+  {
+    id: "2",
+    file: new File([], "menu-back.png"),
+    fileName: "menu-back.png",
+    previewUrl: "/images/wines/wine-white.png",
+  },
+] satisfies MenuImagePreview[];
+
 const meta: Meta<typeof WineMenuPhotoSection> = {
-  title: "Feature/wine-list/WineMenuPhotoSection",
+  title: "Feature/wine-list-select/WineMenuPhotoSection",
   component: WineMenuPhotoSection,
   tags: ["autodocs"],
-  parameters: {
-    layout: "centered",
-  },
+  parameters: { layout: "centered" },
   argTypes: {
-    isOpen: {
-      control: "boolean",
-      description: "사진 업로드 박스와 분석 버튼의 펼침 여부입니다.",
-    },
-    image: {
-      control: "object",
-      description: "첨부된 메뉴판 이미지 표시 정보입니다.",
-    },
-    isAnalyzing: {
-      control: "boolean",
-      description: "와인 리스트 분석 요청 진행 상태입니다.",
-    },
-    errorMessage: {
-      control: "text",
-      description: "이미지 검증 또는 분석 실패 시 표시할 메시지입니다.",
-    },
-    onOpenChange: {
-      action: "openChanged",
-      description: "접기/다시 보기 버튼 클릭 시 다음 펼침 상태를 전달합니다.",
-    },
-    onImageChange: {
-      action: "imageChanged",
-      description: "사용자가 이미지를 선택했을 때 호출됩니다.",
-    },
-    onAnalyze: {
-      action: "analyzeClicked",
-      description: "와인 리스트 분석 버튼 클릭 핸들러입니다.",
-    },
-    className: {
-      control: "text",
-      description: "섹션 wrapper에 추가할 className입니다.",
-    },
+    previews: { control: "object" },
+    isAnalyzing: { control: "boolean" },
+    imageErrorMessage: { control: "text" },
+    extractionErrorMessage: { control: "text" },
+    onAddFiles: { action: "add-files", control: false },
+    onRemoveFile: { action: "remove-file", control: false },
+    onAnalyze: { action: "analyze", control: false },
   },
   args: {
-    isOpen: true,
-    image: null,
+    previews: [],
     isAnalyzing: false,
   },
-  render: (args) => <StatefulWineMenuPhotoSection {...args} />,
+  render: (args) => (
+    <div className="w-[360px] max-w-full bg-background-03 p-4">
+      <WineMenuPhotoSection {...args} />
+    </div>
+  ),
 };
 
 export default meta;
 
 type Story = StoryObj<typeof WineMenuPhotoSection>;
 
-function StatefulWineMenuPhotoSection(
-  args: ComponentProps<typeof WineMenuPhotoSection>
-) {
-  const [isOpen, setIsOpen] = useState(args.isOpen);
+export const Empty: Story = {};
 
-  useEffect(() => {
-    setIsOpen(args.isOpen);
-  }, [args.isOpen]);
-
-  return (
-    <div className="w-[304px] bg-background-03">
-      <WineMenuPhotoSection
-        {...args}
-        isOpen={isOpen}
-        onOpenChange={(nextIsOpen) => {
-          args.onOpenChange?.(nextIsOpen);
-          setIsOpen(nextIsOpen);
-        }}
-      />
-    </div>
-  );
-}
-
-export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(
-      canvas.getByRole("button", { name: "와인 리스트 분석" })
-    ).toBeDisabled();
-  },
-};
-
-export const WithImageName: Story = {
-  args: {
-    image: {
-      fileName: "wine-menu-photo.jpg",
-    },
-  },
-};
-
-export const WithPreview: Story = {
-  args: {
-    image: {
-      fileName: "wine-menu-preview.jpg",
-      previewUrl: "/ExampleImage.png",
-    },
-  },
-};
-
-export const Collapsed: Story = {
-  args: {
-    isOpen: false,
-    image: {
-      fileName: "wine-menu-photo.jpg",
-    },
-  },
+export const WithPhotos: Story = {
+  args: { previews },
 };
 
 export const Analyzing: Story = {
-  args: {
-    image: {
-      fileName: "wine-menu-preview.jpg",
-      previewUrl: "/ExampleImage.png",
-    },
-    isAnalyzing: true,
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  args: { previews, isAnalyzing: true },
+};
 
-    await expect(
-      canvas.getByRole("status", { name: "와인 메뉴판 분석 중" })
-    ).toBeVisible();
-    await expect(
-      canvas.getByRole("button", { name: "분석 중" })
-    ).toHaveAttribute("aria-busy", "true");
+export const InvalidFile: Story = {
+  args: {
+    previews,
+    imageErrorMessage: "JPG, PNG 이미지만 첨부할 수 있습니다.",
   },
 };
 
-export const Error: Story = {
+export const ExtractionError: Story = {
   args: {
-    image: {
-      fileName: "wine-menu-photo.jpg",
-    },
-    errorMessage: "와인 리스트 분석에 실패했습니다.",
+    previews,
+    extractionErrorMessage: "와인 메뉴 이미지 분석에 실패했습니다.",
   },
 };

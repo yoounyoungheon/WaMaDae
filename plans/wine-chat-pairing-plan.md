@@ -1,5 +1,7 @@
 # `/wine/chat` 와인 페어링 스트리밍 화면 개발 계획
 
+> 보관 문서: 이 계획은 이전 API 계약을 설명한다. 현재 설계는 [`/wine/chat` 세션 기반 페어링·후속 대화 설계](./wine-chat-enhanced-design-plan.md)를 기준으로 한다.
+
 ## 1. 기준
 
 - 대상 라우트: `web/src/app/wine/chat/page.tsx` (신규)
