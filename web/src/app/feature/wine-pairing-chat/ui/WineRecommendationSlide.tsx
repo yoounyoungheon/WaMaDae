@@ -128,8 +128,8 @@ function RecommendationFront({
         </button>
       ) : null}
 
-      <div className="flex min-h-[126px] items-start gap-4">
-        <div className="relative flex aspect-[3/7] w-[54px] shrink-0 items-center justify-center overflow-hidden rounded-[12px] bg-white/70 text-primary">
+      <div className="flex min-h-[136px] items-start gap-4 min-[480px]:min-h-[144px]">
+        <div className="relative flex h-[136px] w-[68px] shrink-0 items-center justify-center overflow-hidden rounded-[12px] bg-white/70 text-primary min-[480px]:h-[144px] min-[480px]:w-[72px]">
           {image ? (
             <>
               <Image
@@ -137,8 +137,8 @@ function RecommendationFront({
                 alt=""
                 fill
                 unoptimized
-                sizes="54px"
-                className="object-cover"
+                sizes="(min-width: 480px) 72px, 68px"
+                className="object-contain p-1"
               />
               {image.isPlaceholder ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/45">

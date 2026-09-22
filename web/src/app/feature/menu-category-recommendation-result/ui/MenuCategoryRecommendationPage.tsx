@@ -106,7 +106,10 @@ function RecommendationBody({
               어울리는 메뉴를 골라봤어요
             </h2>
             <p className="mt-3 text-[14px] font-medium leading-relaxed text-ink-secondary">
-              선택한 와인을 기준으로 마이쏨이 추천했어요
+              <span className="block">
+                선택한 와인을 기준으로 마이쏨이 추천했어요.
+              </span>
+              <span className="block">원하는 메뉴를 선택해 주세요.</span>
             </p>
           </section>
 
@@ -116,7 +119,7 @@ function RecommendationBody({
                 추천 메뉴
               </h2>
               {validSelectedNames.length > 0 ? (
-                <p className="ml-auto text-[13px] font-bold text-primary">
+                <p className="ml-auto text-[13px] font-bold text-ink-card">
                   {validSelectedNames.length}개 선택
                 </p>
               ) : null}

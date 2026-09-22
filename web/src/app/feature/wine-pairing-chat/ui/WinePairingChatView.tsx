@@ -72,7 +72,12 @@ export default function WinePairingChatView({
                   마이쏨이 추천하는 와인이에요
                 </h2>
                 <p className="mt-3 text-[14px] font-medium leading-relaxed text-ink-secondary">
-                  선택한 메뉴와 잘 어울리는 순서예요 · 카드를 뒤집어 상세를 볼 수 있어요
+                  <span className="block">
+                    선택한 메뉴와 잘 어울리는 순서예요.
+                  </span>
+                  <span className="block">
+                    카드를 뒤집어 상세 정보를 확인해 보세요.
+                  </span>
                 </p>
               </section>
               {turns.map((turn, index) =>

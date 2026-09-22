@@ -23,6 +23,7 @@ WineChatPage [Server]  (page.tsx)
 ```
 
 - `page.tsx`는 Server Component, SSE/reducer/scroll/carousel/flip/composer만 Client다.
+- 인트로는 추천 순서와 카드 상세 확인 방법을 의도된 두 줄 문장으로 안내한다.
 
 ## 진입 snapshot과 세션 수명
 
@@ -91,7 +92,11 @@ React key는 `pairingId + wine.id + rank`를 결합한다(pairingId는 slide마�
 
 ## 와인 화면 모델
 
-- 앞면 이미지는 `wineBottleImageUrl`, 없거나 로드 실패면 placeholder(`Wine` 아이콘).
+- 앞면 이미지는 기본 모바일에서 `68px`, 480px 이상에서 `72px` 폭으로 표시한다.
+  높이는 각각 `136px`, `144px`이며 `object-contain`으로 원본 비율을 유지한다.
+- `wineBottleImageUrl`이 없으면 catalog fallback 이미지를 준비 중 overlay와 함께 표시하고,
+  스트리밍 중 이미지 자체가 없으면 `Wine` 아이콘을 표시한다.
+- `next/image`의 `sizes`도 실제 표시 폭인 `68px`/`72px`에 맞춘다.
 - 뒷면 테이스트는 `body`/`sweetness`/`tannin`/`acid` 실제 값만 0..5로 그린다.
   null이면 "정보 없음"으로 두고 0으로 그리지 않는다.
 - 현재 backend pairing mapper는 `body`를 누락하므로 body는 항상 null일 수 있다(정상 nullable).
@@ -110,9 +115,13 @@ React key는 `pairingId + wine.id + rank`를 결합한다(pairingId는 slide마�
 
 ## Storybook
 
-- `Feature/wine-pairing-chat/WineRecommendationSlide` (streaming/committed/null taste/long)
+- `Feature/wine-pairing-chat/WineRecommendationSlide`
+  (default/wine detail/long text/no image/streaming/null taste/flip round trip)
 - `WineRecommendationCarousel`, `ChatAnswerBubble`, `ChatComposer`
-- `WinePairingChatView` (PairingDone/Streaming/Error/NoRequest) — fetch/sessionStorage 스텁
+- `WinePairingChatView` (Default/PairingDone/Streaming/Error/NoRequest) — fetch/sessionStorage 스텁
+
+slide story의 interaction은 상세 면 전환과 복귀, 숨겨진 면의 `tabIndex`, 긴 추천 이유
+overlay의 열기/닫기를 확인한다.
 
 ## 남은 제약
 

@@ -16,14 +16,15 @@ WineKeywordsPage [Server]  (page.tsx)
 └─ MenuCategoryRecommendationPage [Client]
    ├─ Intro
    ├─ RecommendationResult (loading/error/empty/success)
-   │  └─ RecommendedMenuList → RecommendedMenuItem[] (name + category badge)
-   └─ PairingCta (sticky)
+   │  └─ RecommendedMenuList → MenuNameBadge[]
+   ├─ FallbackCategorySection → MenuNameBadge[]
+   └─ PairingCta (fixed)
 ```
 
 - `page.tsx`와 header는 Server Component, page body만 Client Component다.
-- 정적 기본 카테고리 그리드(`DefaultMenuCategory*`)는 활성 플로우에서 제거했다.
-  백엔드는 현재 세션에 저장된 추천 name만 pairing에서 허용하므로, 임의 카테고리를
-  넣으면 `404`가 된다.
+- 인트로는 추천 기준과 함께 `원하는 메뉴를 선택해 주세요.`라는 다음 행동을 안내한다.
+- AI 추천에 원하는 메뉴가 없을 때는 `FallbackCategorySection`에서 정적 카테고리를
+  선택할 수 있다. 단, 이 입력과 백엔드 pairing 계약 사이에는 아래의 알려진 제약이 있다.
 
 ## 입력 snapshot과 검증
 
@@ -39,7 +40,7 @@ shell을 유지하고, snapshot이 없거나 invalid(legacy shape 포함)면 API
 | session ID / pairingWineIds | list snapshot | hydration 후 로컬 읽기 |
 | 추천 메뉴 | 서버 상태 | TanStack Query |
 | 선택 menu name | 페이지 UI draft | `useState<string[]>` |
-| CTA 활성 | 파생값 | 현재 응답에 존재하는 선택 name 개수 |
+| CTA 활성 | 파생값 | 추천 name 또는 fallback category 선택 개수 |
 
 query key는 세션과 선택 wine을 모두 포함한다.
 
@@ -61,7 +62,8 @@ selection snapshot 복원
 → { recommendedMenus: [{ name, category }] }
 → mapper: 순서 유지, category enum 검증(알 수 없으면 계약 오류), name trim
 → TanStack Query cache → RecommendedMenuList
-→ 사용자가 name 선택 → WinePairingSnapshot 저장 → /wine/chat
+→ 사용자가 추천 name 또는 fallback category 선택
+→ WinePairingSnapshot 저장 → /wine/chat
 ```
 
 `mapMenuRecommendationDto`는 응답 순서(AI rank)를 유지하고, `MENU_CATEGORIES` enum에
@@ -74,26 +76,33 @@ type WinePairingSnapshot = {
   version: 2;
   sessionId: string;
   wineIds: string[];   // = pairingWineIds
-  menuNames: string[]; // 현재 응답에 존재하는 선택 name만
+  menuNames: string[]; // 추천 name 또는 fallback category label
 };
 ```
 
-현재 query 응답에 존재하는 선택 name만 `menuNames`로 저장한다(`validSelectedNames`).
-정적 카테고리·`category` 문자열·오래된 추천 결과는 섞지 않는다.
+`validSelectedNames`는 현재 query 응답의 menu name과 화면에 노출된 fallback category
+label만 허용한다. 오래된 추천 결과나 화면에 없는 임의 문자열은 저장하지 않는다.
 
 ## 오류 정책
 
 - 항목은 자동 선택하지 않고, 같은 `name`은 한 번만 선택한다(category는 식별자 아님).
-- 조회 성공 전/빈 응답/오류에서는 CTA를 비활성화한다.
+- 추천 또는 fallback 항목을 하나도 선택하지 않으면 CTA를 비활성화한다.
 - BFF status 매핑: 400(요청 손상), 404(세션·wine 불일치), 409(메뉴 변경), 그 외(재시도).
 - 오류 상태는 "다시 시도"(refetch) + "처음부터 다시 시작"(/wine/list) 액션을 함께 제공한다.
 
 ## Storybook
 
-- `Feature/menu-category-recommendation-result/RecommendedMenuItem` (default/selected/long/category)
-- `Feature/menu-category-recommendation-result/RecommendedMenuList` (default/single/none/max)
+- `Feature/menu-category-recommendation-result/MenuNameBadge`
+- `Feature/menu-category-recommendation-result/RecommendedMenuList`
+- `Feature/menu-category-recommendation-result/MenuCategoryRecommendationPage`
+  (default/selected/multiple selected/loading/error)
 
-## 남은 제약
+## 알려진 제약
 
 - 시안의 메뉴 썸네일·설명 문구는 API 계약(`{ name, category }`)에 없어 표시하지 않는다.
 - "다시 추천" 버튼은 별도로 두지 않았다. 필요 시 성공 시 selection 초기화를 포함해 추가한다.
+- fallback category label도 현재 `menuNames`에 저장할 수 있지만, 백엔드는 해당 세션의
+  최신 추천 결과에 저장된 실제 메뉴 name만 pairing 입력으로 허용한다. 따라서 fallback
+  category를 선택해 다음 단계로 이동하면 `PAIRING_MENU_NOT_FOUND` 404가 발생할 수 있다.
+  category를 실제 메뉴 name으로 변환할지, 백엔드가 category 입력을 받을지는 별도 계약
+  결정이 필요하다.

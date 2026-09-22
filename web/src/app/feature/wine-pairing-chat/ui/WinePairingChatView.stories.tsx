@@ -1,4 +1,5 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/nextjs-vite";
+import { expect, within } from "storybook/test";
 import {
   clearWinePairingConsumed,
   clearWinePairingSnapshot,
@@ -32,7 +33,7 @@ const sampleWine = {
   body: null,
   sweetness: 1,
   acid: 3,
-  wineBottleImageUrl: "/ExampleImage.png",
+  wineBottleImageUrl: "/images/wines/wine-white.png",
 } satisfies PairingStreamWine;
 
 const samplePayloads: PairingSlidePayload[] = [
@@ -165,7 +166,7 @@ function stubStoryEnv(options: {
 
 const withViewLayout: Decorator = function ViewLayoutDecorator(Story) {
   return (
-    <div className="flex h-[720px] w-[360px] flex-col overflow-hidden bg-background-03">
+    <div className="flex h-[720px] w-[calc(100vw-32px)] max-w-[520px] flex-col overflow-hidden bg-background-03">
       <Story />
     </div>
   );
@@ -185,6 +186,14 @@ export default meta;
 
 type Story = StoryObj<typeof WinePairingChatView>;
 
+export const Default: Story = {
+  beforeEach: stubStoryEnv({
+    seedRequest: true,
+    onPairing: () =>
+      sseResponse(pairingFrames(samplePayloads), { frameDelayMs: 0 }),
+  }),
+};
+
 /** 페어링이 완료되고 채팅 입력이 가능한 상태. 질문을 입력하면 스텁 답변이 스트리밍된다. */
 export const PairingDone: Story = {
   beforeEach: stubStoryEnv({
@@ -198,6 +207,16 @@ export const PairingDone: Story = {
         { frameDelayMs: 80 }
       ),
   }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(
+      await canvas.findByText("선택한 메뉴와 잘 어울리는 순서예요.")
+    ).toBeVisible();
+    await expect(
+      canvas.getByText("카드를 뒤집어 상세 정보를 확인해 보세요.")
+    ).toBeVisible();
+  },
 };
 
 /** 프레임이 천천히 도착해 슬라이드가 페인팅되는 중인 상태. */
