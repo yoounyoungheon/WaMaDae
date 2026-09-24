@@ -141,6 +141,37 @@
       "guideFiles": ["guidance/css-only-state.md"]
     },
     {
+      "id": "shadcn-ui-mcp",
+      "title": "shadcn/ui MCP 활용 가이드",
+      "summary": "기존 shared/ui로 해결되지 않는 요구에서 shadcn 레지스트리의 후보를 탐색·검토하고 공통 UI 계층에 도입하는 절차입니다.",
+      "triggers": {
+        "paths": [
+          "web/src/app/shared/ui/**",
+          "web/components.json"
+        ],
+        "keywords": [
+          "shadcn",
+          "shared/ui",
+          "공통 컴포넌트",
+          "컴포넌트 추가",
+          "ui 컴포넌트",
+          "registry",
+          "레지스트리"
+        ]
+      },
+      "sources": [
+        "guidance/shadcn-ui-mcp.md",
+        "web/GUIDE.md",
+        "web/components.json"
+      ],
+      "canonicalSources": [
+        "guidance/shadcn-ui-mcp.md",
+        "web/GUIDE.md",
+        "web/components.json"
+      ],
+      "guideFiles": ["guidance/shadcn-ui-mcp.md"]
+    },
+    {
       "id": "storybook-authoring",
       "title": "Storybook 작성 가이드",
       "summary": "story는 컴포넌트 옆에 두고, Default를 먼저 제공하며, 실제 레이아웃 맥락을 재현하는 최소 wrapper만 사용해야 합니다.",

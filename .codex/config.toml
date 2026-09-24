@@ -1,7 +1,7 @@
 [mcp_servers.mysom-frontend-guidance-mcp]
 command = "node"
 args = ["dist/index.js"]
-cwd = "/Users/yoon-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp"
+cwd = "/Users/yoon-yeongheon/dev/mysom-demo/mysom-web-demo/mysom-frontend-guide-mcp"
 startup_timeout_sec = 10
 tool_timeout_sec = 60
 enabled = true
@@ -11,3 +11,11 @@ approval_mode = "approve"
 
 [mcp_servers.mysom-frontend-guidance-mcp.tools.read_guide]
 approval_mode = "approve"
+
+[mcp_servers.shadcn]
+command = "npx"
+args = ["-y", "shadcn@latest", "mcp"]
+cwd = "/Users/yoon-yeongheon/dev/mysom-demo/mysom-web-demo/web"
+startup_timeout_sec = 30
+tool_timeout_sec = 60
+enabled = true
