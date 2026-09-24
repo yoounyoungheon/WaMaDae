@@ -4,8 +4,13 @@
       "type": "stdio",
       "command": "node",
       "args": [
-        "/Users/yoon-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp/dist/index.js"
+        "/Users/yoon-yeongheon/dev/mysom-demo/mysom-web-demo/mysom-frontend-guide-mcp/dist/index.js"
       ]
+    },
+    "shadcn": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "shadcn@latest", "mcp", "--cwd", "web"]
     }
   }
 }

@@ -29,7 +29,7 @@ MCP 클라이언트에 등록할 때는 이 프로젝트를 working directory로
 {
   "command": "node",
   "args": ["dist/index.js"],
-  "cwd": "/Users/yoon-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp"
+  "cwd": "/Users/yoon-yeongheon/dev/mysom-demo/mysom-web-demo/mysom-frontend-guide-mcp"
 }
 ```
 
@@ -41,7 +41,7 @@ Codex CLI와 Codex IDE extension은 같은 MCP 설정을 공유합니다. 사용
 [mcp_servers.mysom-frontend-guidance-mcp]
 command = "node"
 args = ["dist/index.js"]
-cwd = "/Users/yoon-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp"
+cwd = "/Users/yoon-yeongheon/dev/mysom-demo/mysom-web-demo/mysom-frontend-guide-mcp"
 startup_timeout_sec = 10
 tool_timeout_sec = 60
 enabled = true
@@ -50,7 +50,7 @@ enabled = true
 Codex CLI에서 직접 추가할 수도 있습니다. 이 방식은 `cwd`를 따로 적지 않으므로 `dist/index.js`의 절대 경로를 사용합니다.
 
 ```bash
-codex mcp add mysom-frontend-guidance-mcp -- node /Users/yoon-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp/dist/index.js
+codex mcp add mysom-frontend-guidance-mcp -- node /Users/yoon-yeongheon/dev/mysom-demo/mysom-web-demo/mysom-frontend-guide-mcp/dist/index.js
 ```
 
 등록 후 새 Codex 세션을 시작하거나 기존 세션을 재시작합니다. Codex TUI에서는 `/mcp`로 서버 연결 상태와 노출된 도구를 확인할 수 있습니다.
@@ -63,14 +63,14 @@ Claude Code에서는 local stdio MCP 서버로 추가합니다.
 
 ```bash
 claude mcp add --transport stdio mysom-frontend-guidance-mcp -- \
-  node /Users/yoon-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp/dist/index.js
+  node /Users/yoon-yeongheon/dev/mysom-demo/mysom-web-demo/mysom-frontend-guide-mcp/dist/index.js
 ```
 
 현재 프로젝트에서만 쓰는 기본 local scope 대신 팀 공유용 `.mcp.json`을 만들려면 `--scope project`를 붙입니다.
 
 ```bash
 claude mcp add --transport stdio --scope project mysom-frontend-guidance-mcp -- \
-  node /Users/yoon-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp/dist/index.js
+  node /Users/yoon-yeongheon/dev/mysom-demo/mysom-web-demo/mysom-frontend-guide-mcp/dist/index.js
 ```
 
 상태 확인:
@@ -97,7 +97,7 @@ Claude Desktop은 설정 화면에서 MCP config 파일을 열어 등록합니�
     "mysom-frontend-guidance-mcp": {
       "command": "node",
       "args": [
-        "/Users/yoon-yeongheon/dev/WaMaDae/mysom-frontend-guide-mcp/dist/index.js"
+        "/Users/yoon-yeongheon/dev/mysom-demo/mysom-web-demo/mysom-frontend-guide-mcp/dist/index.js"
       ]
     }
   }
@@ -203,6 +203,7 @@ tail -n 20 -f ~/Library/Logs/Claude/mcp*.log
 - `rsc-rendering`
 - `rcc-rendering`
 - `css-only-state`
+- `shadcn-ui-mcp`
 - `storybook-authoring`
 - `style-implementation`
 

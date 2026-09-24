@@ -3,10 +3,20 @@
 ## MUST: `shared/ui` 사용
 
 - `feature/` 하위의 컴포넌트를 개발하거나 수정할 때는 반드시 `shared/ui`의 공통 UI 컴포넌트를 사용한다.
-- UI를 구현하기 전에 `src/app/shared/ui`와 각 컴포넌트의 `*.stories.tsx` Storybook 문서를 반드시 확인하고, 기존 컴포넌트의 API, variant 또는 합성 방식으로 요구사항을 해결할 수 있는지 먼저 검토한다.
-- 필요한 공통 UI가 없다면 `feature/` 내부에 동일한 역할의 UI를 중복 구현하지 말고, 재사용 가능한 컴포넌트를 `shared/ui`에 먼저 추가한다.
-- 신규 공통 컴포넌트는 역할에 따라 `shared/ui/atom` 또는 `shared/ui/molecule`에 추가하고, 사용법과 공개 API를 설명하는 Storybook 스토리를 함께 작성한다.
 - `feature/`에서는 `shared/ui/shadcn`을 직접 사용하지 않고 `shared/ui/atom` 또는 `shared/ui/molecule`을 통해 사용한다.
+
+### 공통 UI 구현 우선순위
+
+공통 UI가 필요한 경우 다음 순서로 검토한다.
+
+1. `shared/ui/atom`, `shared/ui/molecule`의 기존 컴포넌트와 Storybook 스토리를 확인하고 그대로 재사용한다.
+2. 기존 컴포넌트의 variant 또는 합성으로 해결할 수 있으면 기존 공개 API를 확장한다.
+3. `shared/ui/shadcn`에 이미 설치된 primitive가 있으면 이를 atom 또는 molecule로 감싸서 사용한다.
+4. 적절한 primitive가 없으면 `mysom-frontend-guidance-mcp`의 `shadcn-ui-mcp` 가이드를 읽고 shadcn MCP로 후보, 사용 예시 및 의존성을 조사한다.
+5. 후보를 결정한 뒤 변경될 파일과 의존성을 확인하고 프로젝트에 추가한다.
+6. shadcn/ui로도 해결하기 어렵거나 프로젝트 고유 UI인 경우에만 직접 구현한다.
+
+신규 또는 확장된 공통 컴포넌트는 역할에 따라 `shared/ui/atom` 또는 `shared/ui/molecule`에 두고, 사용법과 공개 API를 설명하는 Storybook 스토리를 함께 작성한다. `feature/` 내부에는 동일한 역할의 UI를 중복 구현하지 않는다.
 
 ## MUST: MCP 개발 가이드 확인
 
