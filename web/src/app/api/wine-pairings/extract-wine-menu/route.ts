@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { hasValidWineMenuImageSignature } from "@/app/entity/wine/api/wine-menu-image.server";
 import {
   getWineMenuImageValidationMessage,
@@ -11,6 +11,10 @@ import { wineMenuExtractResponseSchema } from "@/app/entity/wine/model/wine.sche
 import { isCatalogExcluded } from "@/app/shared/config/wine-catalog";
 import { isUuidString } from "@/app/shared/lib/validation/uuid";
 import { buildMysomApiUrl } from "@/app/utils/http/server-api";
+import {
+  createBetaUnauthorizedResponse,
+  hasValidBetaAccess,
+} from "@/lib/auth/beta-request";
 
 const EXTRACT_WINE_MENU_PATH = "/v1/wine-pairings/extract-wine-menu";
 const SESSION_ID_HEADER = "X-Session-Id";
@@ -18,7 +22,11 @@ const BACKEND_TIMEOUT_MS = 295_000;
 
 export const maxDuration = 300;
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (!(await hasValidBetaAccess(request))) {
+    return createBetaUnauthorizedResponse();
+  }
+
   const sessionId = request.headers.get(SESSION_ID_HEADER)?.trim() ?? "";
   if (!isUuidString(sessionId)) {
     return NextResponse.json(
