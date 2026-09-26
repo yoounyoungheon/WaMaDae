@@ -1,9 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import {
   openWinePairingChatStream,
   WinePairingBackendError,
 } from "@/app/entity/wine-pairing/api/wine-pairing.server";
 import { isUuidString } from "@/app/shared/lib/validation/uuid";
+import {
+  createBetaUnauthorizedResponse,
+  hasValidBetaAccess,
+} from "@/lib/auth/beta-request";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,7 +20,11 @@ type ChatRequestBody = {
   message?: unknown;
 };
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (!(await hasValidBetaAccess(request))) {
+    return createBetaUnauthorizedResponse();
+  }
+
   const sessionId = request.headers.get(SESSION_ID_HEADER)?.trim() ?? "";
   if (!isUuidString(sessionId)) {
     return NextResponse.json(

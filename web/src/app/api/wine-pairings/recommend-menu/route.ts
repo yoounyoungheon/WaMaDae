@@ -1,9 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import {
   MenuRecommendationBackendError,
   recommendMenus,
 } from "@/app/entity/menu-category-recommendation/api/menu-category-recommendation.server";
 import { isUuidString, normalizeUuid } from "@/app/shared/lib/validation/uuid";
+import {
+  createBetaUnauthorizedResponse,
+  hasValidBetaAccess,
+} from "@/lib/auth/beta-request";
 
 const SESSION_ID_HEADER = "X-Session-Id";
 const MAX_WINES = 100;
@@ -12,7 +16,11 @@ type RecommendRequestBody = {
   pairingWineIds?: unknown;
 };
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (!(await hasValidBetaAccess(request))) {
+    return createBetaUnauthorizedResponse();
+  }
+
   const sessionId = request.headers.get(SESSION_ID_HEADER)?.trim() ?? "";
   if (!isUuidString(sessionId)) {
     return NextResponse.json(
