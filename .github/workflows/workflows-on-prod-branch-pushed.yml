@@ -7,9 +7,9 @@ on:
 
 env:
   REGION: asia-northeast3
-  ARTIFACT_REGISTRY: mysomm
+  ARTIFACT_REGISTRY: mysomm-frontend
 
-  IMAGE_NAME: mysomm-web
+  IMAGE_NAME: web
 
   GKE_CLUSTER: mysomm-shared
   GKE_LOCATION: asia-northeast3-a
