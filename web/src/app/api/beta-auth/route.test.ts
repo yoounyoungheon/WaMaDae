@@ -16,19 +16,31 @@ describe("POST /api/beta-auth", () => {
     vi.restoreAllMocks();
   });
 
-  it("sets an HttpOnly cookie for a valid access code", async () => {
+  it("sets HttpOnly access and refresh cookies for a valid access code", async () => {
     const response = await POST(createRequest(TEST_CODE));
     const body = await response.json();
-    const setCookie = response.headers.get("set-cookie") ?? "";
+    const accessCookie = response.cookies.get("beta_access");
+    const refreshCookie = response.cookies.get("beta_refresh");
 
     expect(response.status).toBe(200);
     expect(body).toEqual({ ok: true });
     expect(JSON.stringify(body)).not.toContain("token");
-    expect(setCookie).toContain("beta_access=");
-    expect(setCookie).toContain("HttpOnly");
-    expect(setCookie).toContain("SameSite=lax");
-    expect(setCookie).toContain("Path=/");
-    expect(setCookie).toContain("Max-Age=604800");
+    expect(accessCookie).toMatchObject({
+      name: "beta_access",
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 900,
+    });
+    expect(refreshCookie).toMatchObject({
+      name: "beta_refresh",
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 604800,
+    });
+    expect(accessCookie?.value).toBeTruthy();
+    expect(refreshCookie?.value).toBeTruthy();
   });
 
   it("returns 401 without setting a cookie for an invalid code", async () => {

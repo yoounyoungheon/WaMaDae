@@ -3,8 +3,11 @@ import { z } from "zod";
 import {
   BETA_ACCESS_COOKIE_NAME,
   BETA_ACCESS_MAX_AGE_SECONDS,
+  BETA_REFRESH_COOKIE_NAME,
+  BETA_REFRESH_MAX_AGE_SECONDS,
   BetaAuthConfigurationError,
-  createBetaToken,
+  createBetaAccessToken,
+  createBetaRefreshToken,
 } from "@/lib/auth/beta-token";
 
 const BetaAuthRequestSchema = z.object({
@@ -38,16 +41,28 @@ export async function POST(request: Request) {
   }
 
   try {
-    const token = await createBetaToken();
+    const [accessToken, refreshToken] = await Promise.all([
+      createBetaAccessToken(),
+      createBetaRefreshToken(),
+    ]);
     const response = jsonResponse({ ok: true }, 200);
     response.cookies.set({
       name: BETA_ACCESS_COOKIE_NAME,
-      value: token,
+      value: accessToken,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: BETA_ACCESS_MAX_AGE_SECONDS,
+    });
+    response.cookies.set({
+      name: BETA_REFRESH_COOKIE_NAME,
+      value: refreshToken,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: BETA_REFRESH_MAX_AGE_SECONDS,
     });
     return response;
   } catch (error) {

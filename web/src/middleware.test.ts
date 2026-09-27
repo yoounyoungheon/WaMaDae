@@ -3,9 +3,12 @@ import { SignJWT } from "jose/jwt/sign";
 import { NextRequest } from "next/server";
 import {
   BETA_ACCESS_COOKIE_NAME,
-  BETA_TOKEN_AUDIENCE,
+  BETA_ACCESS_TOKEN_AUDIENCE,
+  BETA_REFRESH_COOKIE_NAME,
+  BETA_REFRESH_TOKEN_AUDIENCE,
   BETA_TOKEN_ISSUER,
-  createBetaToken,
+  createBetaAccessToken,
+  createBetaRefreshToken,
 } from "@/lib/auth/beta-token";
 import { middleware } from "./middleware";
 
@@ -36,20 +39,69 @@ describe("beta access middleware", () => {
 
   it("redirects an authenticated /beta request to /", async () => {
     const response = await middleware(
-      createRequest("/beta", await createBetaToken())
+      createRequest("/beta", { access: await createBetaAccessToken() })
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/");
   });
 
-  it("allows a protected page with a valid cookie", async () => {
+  it("allows a protected page with a valid access token", async () => {
     const response = await middleware(
-      createRequest("/wine/list", await createBetaToken())
+      createRequest("/wine/list", { access: await createBetaAccessToken() })
     );
 
     expect(response.status).toBe(200);
     expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(response.cookies.get(BETA_ACCESS_COOKIE_NAME)).toBeUndefined();
+  });
+
+  it("renews a missing access token with a valid refresh token", async () => {
+    const response = await middleware(
+      createRequest("/wine/list", { refresh: await createBetaRefreshToken() })
+    );
+    const renewedAccess = response.cookies.get(BETA_ACCESS_COOKIE_NAME);
+
+    expect(response.status).toBe(200);
+    expect(renewedAccess).toMatchObject({
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 900,
+    });
+    expect(response.headers.get("x-middleware-request-cookie")).toContain(
+      `${BETA_ACCESS_COOKIE_NAME}=${renewedAccess?.value}`
+    );
+  });
+
+  it("renews an expired access token for the current API request", async () => {
+    const response = await middleware(
+      createRequest("/api/wine-pairings/chat", {
+        access: await createExpiredToken(
+          "beta-access",
+          BETA_ACCESS_TOKEN_AUDIENCE
+        ),
+        refresh: await createBetaRefreshToken(),
+      })
+    );
+    const renewedAccess = response.cookies.get(BETA_ACCESS_COOKIE_NAME);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(renewedAccess?.value).toBeTruthy();
+    expect(response.headers.get("x-middleware-request-cookie")).toContain(
+      `${BETA_ACCESS_COOKIE_NAME}=${renewedAccess?.value}`
+    );
+  });
+
+  it("renews access and redirects /beta when only refresh is valid", async () => {
+    const response = await middleware(
+      createRequest("/beta", { refresh: await createBetaRefreshToken() })
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("http://localhost/");
+    expect(response.cookies.get(BETA_ACCESS_COOKIE_NAME)?.maxAge).toBe(900);
   });
 
   it("rejects a protected API with 401 instead of redirecting", async () => {
@@ -67,17 +119,40 @@ describe("beta access middleware", () => {
     expect(response.status).toBe(401);
   });
 
-  it("redirects a request with a tampered cookie", async () => {
-    const token = await createBetaToken();
-    const response = await middleware(createRequest("/", `${token}tampered`));
+  it("redirects a request with a tampered access token and no refresh token", async () => {
+    const token = await createBetaAccessToken();
+    const response = await middleware(
+      createRequest("/", { access: `${token}tampered` })
+    );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/beta");
+    expect(response.cookies.get(BETA_ACCESS_COOKIE_NAME)?.maxAge).toBe(0);
   });
 
-  it("redirects a request with an expired cookie", async () => {
-    const token = await createExpiredToken();
-    const response = await middleware(createRequest("/", token));
+  it("clears both cookies when access and refresh tokens are expired", async () => {
+    const response = await middleware(
+      createRequest("/", {
+        access: await createExpiredToken(
+          "beta-access",
+          BETA_ACCESS_TOKEN_AUDIENCE
+        ),
+        refresh: await createExpiredToken(
+          "beta-refresh",
+          BETA_REFRESH_TOKEN_AUDIENCE
+        ),
+      })
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.cookies.get(BETA_ACCESS_COOKIE_NAME)?.maxAge).toBe(0);
+    expect(response.cookies.get(BETA_REFRESH_COOKIE_NAME)?.maxAge).toBe(0);
+  });
+
+  it("does not accept a refresh token as an access token", async () => {
+    const response = await middleware(
+      createRequest("/", { access: await createBetaRefreshToken() })
+    );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("http://localhost/beta");
@@ -98,19 +173,32 @@ describe("beta access middleware", () => {
   });
 });
 
-function createRequest(pathname: string, token?: string): NextRequest {
-  return new NextRequest(`http://localhost${pathname}`, {
-    headers: token
-      ? { cookie: `${BETA_ACCESS_COOKIE_NAME}=${token}` }
+function createRequest(
+  pathname: string,
+  tokens: { access?: string; refresh?: string } = {}
+): NextRequest {
+  const cookies = [
+    tokens.access
+      ? `${BETA_ACCESS_COOKIE_NAME}=${tokens.access}`
       : undefined,
+    tokens.refresh
+      ? `${BETA_REFRESH_COOKIE_NAME}=${tokens.refresh}`
+      : undefined,
+  ].filter(Boolean);
+
+  return new NextRequest(`http://localhost${pathname}`, {
+    headers: cookies.length > 0 ? { cookie: cookies.join("; ") } : undefined,
   });
 }
 
-async function createExpiredToken(): Promise<string> {
-  return new SignJWT({ type: "beta" })
+async function createExpiredToken(
+  type: "beta-access" | "beta-refresh",
+  audience: string
+): Promise<string> {
+  return new SignJWT({ type })
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .setIssuer(BETA_TOKEN_ISSUER)
-    .setAudience(BETA_TOKEN_AUDIENCE)
+    .setAudience(audience)
     .setIssuedAt()
     .setExpirationTime("-1s")
     .sign(new TextEncoder().encode(TEST_SECRET));
