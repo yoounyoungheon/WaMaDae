@@ -3,7 +3,7 @@ name: Deploy to GKE
 on:
   push:
     branches:
-      - prod
+      - main
 
 env:
   REGION: asia-northeast3
@@ -49,8 +49,12 @@ jobs:
       - name: Build Docker image
         env:
           IMAGE: ${{ env.REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          NEXT_PUBLIC_WINE_EXCLUDE_CATALOG: ${{ vars.NEXT_PUBLIC_WINE_EXCLUDE_CATALOG || 'true' }}
         run: |
-          docker build -t "$IMAGE" .
+          docker build \
+            --build-arg NODE_ENV=production \
+            --build-arg NEXT_PUBLIC_WINE_EXCLUDE_CATALOG="$NEXT_PUBLIC_WINE_EXCLUDE_CATALOG" \
+            -t "$IMAGE" -f web/Dockerfile web
 
       - name: Push Docker image
         env:
