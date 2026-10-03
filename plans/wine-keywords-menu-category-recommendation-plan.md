@@ -7,7 +7,6 @@
 - 대상 라우트: `web/src/app/wine/keywords/page.tsx`
 - 진입 라우트: `web/src/app/wine/list/page.tsx`
 - API 명세: `api/mysom-wine-pairing.md`의 `POST /v1/wine-pairing/menu-category/recommend`
-- 제거된 API 참고: `api/mysom-menu-category-recommendations.md`
 - 관련 디자인: `designs/p2.png`, `designs/p3.png`
 - 적용 가이드: `data-flow-layering`, `bff-api-gateway`, `rsc-rendering`, `rcc-rendering`, `storybook-authoring`, `style-implementation`
 

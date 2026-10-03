@@ -79,13 +79,11 @@ type WineMenuExtractResponse = {
 - 카탈로그 검색 실패 시 서버는 OCR 후보로 fallback할 수 있다.
 - `wines`가 빈 배열인 성공 응답도 가능하므로 프론트는 선택 단계로 진행시키지 않는다.
 
-### 서버 버전과 웹 표시 정책
+### 웹 표시 정책
 
-위 응답은 현재 `feature/wine-sample` 기준이다. OCR 전용 `dev` / `refact/wine-pairing`은 같은 요청을 받지만 `alcohol`이 숫자이고 `wineBottleImageUrl`, `isCatalogMatched`가 없다. 웹 BFF는 각각 `null`, `null`, `false`로 정규화한다. 이미지가 없으면 fallback 병 이미지를 표시한다.
+현재 웹 BFF는 `NEXT_PUBLIC_WINE_EXCLUDE_CATALOG`가 문자열 `"false"`가 아니면 `isCatalogMatched: true` 항목을 응답에서 제외한다. 서버가 추출한 후보 수보다 화면에 보이는 수가 적거나, 필터 후 빈 배열이 될 수 있다. 카탈로그 매칭 결과까지 전부 보려면 `NEXT_PUBLIC_WINE_EXCLUDE_CATALOG=false`로 설정하고 개발 서버 재시작 또는 재빌드한다. 이미지가 없으면 fallback 병 이미지를 표시한다.
 
-현재 웹 BFF는 `NEXT_PUBLIC_WINE_EXCLUDE_CATALOG`가 문자열 `"false"`가 아니면 `isCatalogMatched: true` 항목을 응답에서 제외한다. 서버가 추출한 후보 수보다 화면에 보이는 수가 적거나, 필터 후 빈 배열이 될 수 있다. 카탈로그 매칭 결과까지 전부 보려면 `NEXT_PUBLIC_WINE_EXCLUDE_CATALOG=false`로 설정하고 개발 서버 재시작 또는 재빌드한다. OCR 전용 서버는 모든 항목이 `false`로 정규화되므로 필터의 영향을 받지 않는다.
-
-전체 버전 비교와 실행 설정은 [공통 명세](./mysom-api.md#서버-버전별-응답-호환성)를 참고한다.
+연결 설정과 카탈로그 표시 정책은 [공통 명세](./mysom-api.md#웹-bff-연결과-카탈로그-표시-정책)를 참고한다.
 
 ### 세션 동작
 

@@ -156,7 +156,7 @@ data:{"type":"JSON","data":{"pairingId":"b9753122-8efa-4191-8df7-a0643a3a4caf","
 
 현재 `PairingStreamController` mapper는 domain wine의 `body`를 최종 `JSON.data.wine`에 전달하지 않아 페어링 응답의 `body`는 사실상 항상 `null`이다. OCR 응답에는 값이 있을 수 있다. 백엔드 mapper가 수정되기 전까지 채팅 상세 화면은 `body`가 없음을 정상 상태로 처리한다.
 
-위 `Wine` 예시는 현재 카탈로그 매칭 버전 기준이다. OCR 전용 `dev` / `refact/wine-pairing`에서도 요청과 SSE envelope는 동일하지만 공용 wine의 `alcohol`은 숫자이고 `wineBottleImageUrl`은 없다. 웹 스키마는 두 필드를 `null`로 정규화한다. `isCatalogMatched`는 추출 항목에만 정의되므로 이 SSE wine의 필수 필드로 가정하지 않는다. 상세 비교는 [공통 명세](./mysom-api.md#서버-버전별-응답-호환성)를 참고한다.
+`Wine`의 전체 정의는 [공통 명세](./mysom-api.md#공통-타입)를 참고한다. `isCatalogMatched`는 추출 항목에만 정의되므로 이 SSE wine의 필수 필드로 가정하지 않는다.
 
 ### Error cases
 

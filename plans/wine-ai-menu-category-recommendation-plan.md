@@ -7,7 +7,6 @@
 - 대상 라우트: `web/src/app/wine/list/page.tsx`
 - 다음 라우트: `web/src/app/wine/keywords/page.tsx`
 - API 명세: `api/mysom-wine-pairing.md`
-- 제거된 API 참고: `api/mysom-menu-category-recommendations.md`
 - 적용 가이드: `data-flow-layering`, `bff-api-gateway`, `rsc-rendering`, `rcc-rendering`, `storybook-authoring`, `style-implementation`
 
 이 문서는 과거 비동기 메뉴 카테고리 추천 생성 계획을 대체한다. 최신 `mysom-api`에는 메뉴 카테고리 추천 작업 생성 API가 없으므로, 이 단계에서는 추천 작업을 생성하지 않는다.
