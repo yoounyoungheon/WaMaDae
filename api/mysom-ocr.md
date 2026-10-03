@@ -1,6 +1,6 @@
 # Mysom 와인 메뉴 추출 API
 
-- 기준 백엔드: `mysom-api-demo` `68a0cb7`
+- 기준 백엔드: `mysom-api-demo` `feature/wine-sample` (기존 계약 확인: `68a0cb7`)
 - 워크플로 단계: 1/4
 
 ## POST /v1/wine-pairings/extract-wine-menu
@@ -79,6 +79,14 @@ type WineMenuExtractResponse = {
 - 카탈로그 검색 실패 시 서버는 OCR 후보로 fallback할 수 있다.
 - `wines`가 빈 배열인 성공 응답도 가능하므로 프론트는 선택 단계로 진행시키지 않는다.
 
+### 서버 버전과 웹 표시 정책
+
+위 응답은 현재 `feature/wine-sample` 기준이다. OCR 전용 `dev` / `refact/wine-pairing`은 같은 요청을 받지만 `alcohol`이 숫자이고 `wineBottleImageUrl`, `isCatalogMatched`가 없다. 웹 BFF는 각각 `null`, `null`, `false`로 정규화한다. 이미지가 없으면 fallback 병 이미지를 표시한다.
+
+현재 웹 BFF는 `NEXT_PUBLIC_WINE_EXCLUDE_CATALOG`가 문자열 `"false"`가 아니면 `isCatalogMatched: true` 항목을 응답에서 제외한다. 서버가 추출한 후보 수보다 화면에 보이는 수가 적거나, 필터 후 빈 배열이 될 수 있다. 카탈로그 매칭 결과까지 전부 보려면 `NEXT_PUBLIC_WINE_EXCLUDE_CATALOG=false`로 설정하고 개발 서버 재시작 또는 재빌드한다. OCR 전용 서버는 모든 항목이 `false`로 정규화되므로 필터의 영향을 받지 않는다.
+
+전체 버전 비교와 실행 설정은 [공통 명세](./mysom-api.md#서버-버전별-응답-호환성)를 참고한다.
+
 ### 세션 동작
 
 런타임 구현은 같은 세션에 아직 메뉴 추천이 저장되지 않았다면 현재 와인 메뉴 재추출을 허용한다. 메뉴 추천 이후 같은 세션으로 다시 추출하면 `409`다. 다만 Swagger 설명은 “미사용 세션 ID”를 요구하므로, 프론트의 안정적인 기본 정책은 **새 분석 시마다 새 UUID를 생성하는 것**이다.
@@ -95,4 +103,4 @@ type WineMenuExtractResponse = {
 | `413` | 이미지 한 장이 10MiB 초과 | 이미지 크기 제한 message |
 | `500` | OCR/AI 처리 실패 | `ErrorResponse` 또는 Spring 오류 |
 
-전체 이미지 수와 multipart 전체 크기에 대한 명시적인 업무 제한은 현재 코드에 없다. 프론트 BFF는 운영 안전을 위해 별도의 개수/총량 제한을 정하고 문서화해야 한다.
+백엔드에는 전체 이미지 수와 multipart 전체 크기에 대한 명시적인 업무 제한이 없다. 현재 프론트/BFF는 별도 운영 정책으로 최대 5장, 파일당 10MiB, 합계 50MiB를 검증한다 (`web/src/app/entity/wine/model/wine-menu-image.ts`).

@@ -1,6 +1,6 @@
 # Mysom Upload API 상태
 
-- 기준 백엔드: `mysom-api-demo` `68a0cb7`
+- 기준 백엔드: `mysom-api-demo` `feature/wine-sample` (기존 계약 확인: `68a0cb7`)
 - 상태: presigned upload API 제거됨
 
 현재 API 모듈에는 `/v1/upload/presigned-menu-image-url` 컨트롤러가 없다. 와인 메뉴 이미지는 외부 저장소에 먼저 올리지 않고 다음 API의 multipart file part로 직접 전송한다.

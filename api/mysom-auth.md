@@ -1,6 +1,6 @@
 # Mysom Auth API 상태
 
-- 기준 백엔드: `mysom-api-demo` `68a0cb7`
+- 기준 백엔드: `mysom-api-demo` `feature/wine-sample` (기존 계약 확인: `68a0cb7`)
 - 상태: 활성 인증 API 없음
 
 현재 API 모듈에는 로그인, 회원가입, token refresh, logout 컨트롤러와 Spring Security filter chain이 없다. 다음 경로는 호출 대상이 아니다.

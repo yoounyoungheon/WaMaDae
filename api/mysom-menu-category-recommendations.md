@@ -1,6 +1,6 @@
 # Mysom 과거 메뉴 카테고리 추천 API
 
-- 기준 백엔드: `mysom-api-demo` `68a0cb7`
+- 기준 백엔드: `mysom-api-demo` `feature/wine-sample` (기존 계약 확인: `68a0cb7`)
 - 상태: 제거됨
 
 다음 라우트는 현재 활성 컨트롤러에 없다.
